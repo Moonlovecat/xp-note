@@ -1,0 +1,45 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://weenai:weenai@postgres:5432/weenai?schema=public
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET before starting the share stack}
+      PORT: 3000
+      HOST: 0.0.0.0
+      NODE_ENV: production
+      TRUST_PROXY: "true"
+      COOKIE_SECURE: ${COOKIE_SECURE:-true}
+    ports:
+      - "3000:3000"
+    command: sh -c "npx prisma db push && npx prisma db seed && node src/server.js"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: weenai
+      POSTGRES_PASSWORD: weenai
+      POSTGRES_DB: weenai
+    volumes:
+      - weenai-share-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U weenai -d weenai"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    command: tunnel --no-autoupdate --url http://app:3000
+    depends_on:
+      - app
+
+volumes:
+  weenai-share-postgres-data:

@@ -1,0 +1,2965 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>XP Note - 게임 리뷰 MVP</title>
+  <style>
+    :root {
+      --bg: #111112;
+      --surface: #191a1d;
+      --surface-2: #23252a;
+      --surface-3: #2d3036;
+      --border: #393d45;
+      --border-soft: rgba(255, 255, 255, .08);
+      --text: #f4f5f7;
+      --muted: #a7adb7;
+      --faint: #747b87;
+      --accent: #24c8a0;
+      --accent-2: #f0bd45;
+      --critique: #8f7cff;
+      --review: #35c5d1;
+      --danger: #ff6a6a;
+      --success: #72d572;
+      --shadow: 0 18px 48px rgba(0, 0, 0, .28);
+      --radius: 8px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Pretendard, "Noto Sans KR", "Apple SD Gothic Neo", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      letter-spacing: 0;
+      overflow-x: hidden;
+    }
+
+    button,
+    input,
+    textarea,
+    select {
+      font: inherit;
+    }
+
+    button {
+      border: 0;
+    }
+
+    [hidden] {
+      display: none !important;
+    }
+
+    .app-header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      min-height: 64px;
+      padding: 12px 28px;
+      background: rgba(17, 17, 18, .92);
+      border-bottom: 1px solid var(--border-soft);
+      backdrop-filter: blur(14px);
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      color: var(--text);
+      cursor: pointer;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .brand-mark {
+      display: inline-grid;
+      place-items: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: var(--accent);
+      color: #07110e;
+      font-weight: 900;
+    }
+
+    .brand-text {
+      display: grid;
+      gap: 1px;
+      line-height: 1;
+    }
+
+    .brand-name {
+      font-size: 18px;
+      font-weight: 900;
+    }
+
+    .brand-sub {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .user-pill {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      min-height: 36px;
+      padding: 6px 11px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: var(--surface);
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .avatar-dot {
+      display: inline-grid;
+      place-items: center;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #08110f;
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      min-height: 36px;
+      padding: 8px 13px;
+      border-radius: var(--radius);
+      border: 1px solid transparent;
+      cursor: pointer;
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 800;
+      text-decoration: none;
+      transition: transform .16s ease, background .16s ease, border-color .16s ease, color .16s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #07110e;
+    }
+
+    .btn-secondary {
+      background: var(--surface-2);
+      border-color: var(--border);
+      color: var(--text);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      border-color: var(--border);
+      color: var(--muted);
+    }
+
+    .btn-ghost:hover,
+    .btn-secondary:hover {
+      border-color: var(--accent);
+      color: var(--text);
+    }
+
+    .btn-danger {
+      color: var(--danger);
+    }
+
+    .btn-full {
+      width: 100%;
+      min-height: 42px;
+    }
+
+    .app-shell {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 30px 0 54px;
+    }
+
+    .view { display: none; }
+    .view.active { display: block; }
+
+    .workspace-header {
+      display: block;
+      padding: 18px 0 28px;
+    }
+
+    .eyebrow {
+      margin: 0 0 10px;
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin-top: 0;
+    }
+
+    .workspace-title {
+      margin-bottom: 9px;
+      font-size: clamp(30px, 4vw, 46px);
+      font-weight: 950;
+      line-height: 1.05;
+      word-break: keep-all;
+      overflow-wrap: anywhere;
+    }
+
+    .workspace-copy {
+      max-width: 680px;
+      margin-bottom: 0;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.7;
+      overflow-wrap: anywhere;
+    }
+
+    .kpi-strip {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(88px, 1fr));
+      min-width: 330px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      background: var(--surface);
+    }
+
+    .kpi {
+      padding: 14px 16px;
+      border-right: 1px solid var(--border);
+    }
+
+    .kpi:last-child { border-right: 0; }
+
+    .kpi-value {
+      display: block;
+      color: var(--text);
+      font-size: 20px;
+      font-weight: 950;
+      line-height: 1;
+    }
+
+    .kpi-label {
+      display: block;
+      margin-top: 7px;
+      color: var(--faint);
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .activity-summary {
+      margin-bottom: 22px;
+    }
+
+    .activity-summary .kpi-strip {
+      width: min(520px, 100%);
+      min-width: 0;
+    }
+
+    .search-field {
+      position: relative;
+      display: block;
+      flex: 1 1 280px;
+    }
+
+    .search-field span {
+      position: absolute;
+      left: 13px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--faint);
+      font-size: 13px;
+      pointer-events: none;
+    }
+
+    .search-field input {
+      width: 100%;
+      min-height: 42px;
+      padding: 10px 14px 10px 46px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      outline: none;
+    }
+
+    .search-field input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(36, 200, 160, .14);
+    }
+
+    .segmented {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+    }
+
+    .segmented button {
+      min-height: 32px;
+      padding: 6px 12px;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .segmented button.active {
+      background: var(--accent);
+      color: #07110e;
+    }
+
+    .filter-control {
+      min-height: 42px;
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      color: var(--text);
+      outline: none;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .filter-control:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(36, 200, 160, .14);
+    }
+
+    .game-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(205px, 1fr));
+      gap: 16px;
+    }
+
+    .game-card {
+      display: grid;
+      grid-template-rows: auto 1fr;
+      min-height: 316px;
+      overflow: hidden;
+      padding: 0;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      text-align: left;
+      transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+    }
+
+    .game-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--accent);
+      box-shadow: var(--shadow);
+    }
+
+    .game-cover {
+      position: relative;
+      display: flex;
+      align-items: flex-end;
+      justify-content: flex-start;
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      padding: 12px;
+      overflow: hidden;
+    }
+
+    .game-cover::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, transparent 20%, rgba(0, 0, 0, .78));
+    }
+
+    .game-icon {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      font-size: 54px;
+    }
+
+    .platform-badge {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 2;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: rgba(0, 0, 0, .58);
+      color: rgba(255, 255, 255, .82);
+      font-size: 10px;
+      font-weight: 900;
+    }
+
+    .cover-title {
+      position: relative;
+      z-index: 2;
+      max-width: 100%;
+      font-size: 13px;
+      font-weight: 950;
+      line-height: 1.25;
+      word-break: keep-all;
+      overflow-wrap: anywhere;
+    }
+
+    .game-body {
+      display: grid;
+      gap: 11px;
+      padding: 13px;
+    }
+
+    .game-title {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 900;
+      line-height: 1.35;
+      word-break: keep-all;
+      overflow-wrap: anywhere;
+    }
+
+    .game-meta {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .rating-line {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: auto;
+    }
+
+    .rating-score {
+      color: var(--accent-2);
+      font-size: 20px;
+      font-weight: 950;
+      line-height: 1;
+    }
+
+    .rating-sub {
+      color: var(--faint);
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .type-counts {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .mini-badge,
+    .type-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      min-height: 22px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .mini-badge.critique,
+    .type-badge.critique {
+      background: rgba(143, 124, 255, .15);
+      color: #c9c0ff;
+      border: 1px solid rgba(143, 124, 255, .32);
+    }
+
+    .mini-badge.review,
+    .type-badge.review {
+      background: rgba(53, 197, 209, .14);
+      color: #9be9ef;
+      border: 1px solid rgba(53, 197, 209, .28);
+    }
+
+    .empty-state {
+      grid-column: 1 / -1;
+      display: grid;
+      gap: 9px;
+      justify-items: center;
+      padding: 54px 18px;
+      border: 1px dashed var(--border);
+      border-radius: var(--radius);
+      color: var(--muted);
+      background: var(--surface);
+      text-align: center;
+    }
+
+    .detail-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .detail-hero {
+      display: grid;
+      grid-template-columns: 220px minmax(0, 1fr);
+      gap: 28px;
+      align-items: start;
+      padding-bottom: 28px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .detail-cover {
+      position: relative;
+      display: grid;
+      place-items: center;
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      font-size: 68px;
+    }
+
+    .detail-content {
+      min-width: 0;
+    }
+
+    .detail-kicker {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+
+    .detail-title {
+      margin-bottom: 8px;
+      font-size: clamp(28px, 4vw, 40px);
+      font-weight: 950;
+      line-height: 1.1;
+      word-break: keep-all;
+      overflow-wrap: anywhere;
+    }
+
+    .detail-copy {
+      margin-bottom: 18px;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+
+    .detail-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .score-panel {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: 16px;
+      align-items: center;
+      margin: 19px 0;
+    }
+
+    .score-large {
+      color: var(--accent-2);
+      font-size: 54px;
+      font-weight: 950;
+      line-height: .9;
+    }
+
+    .stars {
+      display: inline-flex;
+      gap: 2px;
+      line-height: 1;
+    }
+
+    .star {
+      position: relative;
+      display: inline-block;
+      color: var(--surface-3);
+      font-size: 16px;
+    }
+
+    .star-fill {
+      position: absolute;
+      inset: 0 auto 0 0;
+      overflow: hidden;
+      color: var(--accent-2);
+      white-space: nowrap;
+    }
+
+    .star-lg .star {
+      font-size: 24px;
+    }
+
+    .review-meta {
+      margin-top: 7px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .section-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 330px;
+      gap: 26px;
+      align-items: start;
+      margin-top: 28px;
+    }
+
+    .section-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+
+    .section-title {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 950;
+    }
+
+    .review-controls {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: flex-end;
+    }
+
+    .review-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .review-card {
+      padding: 18px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+    }
+
+    .review-card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .reviewer {
+      display: flex;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .reviewer-name {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      flex-wrap: wrap;
+      margin-bottom: 5px;
+      font-size: 14px;
+      font-weight: 900;
+    }
+
+    .date-text {
+      color: var(--faint);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .review-rating {
+      display: grid;
+      justify-items: end;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    .review-rating strong {
+      color: var(--accent-2);
+      font-size: 20px;
+    }
+
+    .review-comment {
+      margin: 0 0 14px;
+      color: var(--text);
+      line-height: 1.75;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+    }
+
+    .score-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 28px;
+      padding: 5px 9px;
+      border-radius: 7px;
+      background: var(--surface-2);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .score-chip.good {
+      border: 1px solid rgba(53, 197, 209, .34);
+      background: rgba(53, 197, 209, .16);
+      color: #bdeff3;
+    }
+
+    .score-chip.mid {
+      border: 1px solid rgba(240, 189, 69, .36);
+      background: rgba(240, 189, 69, .15);
+      color: #f8dfa3;
+    }
+
+    .score-chip.low {
+      border: 1px solid rgba(255, 106, 106, .34);
+      background: rgba(255, 106, 106, .14);
+      color: #ffc1c1;
+    }
+
+    .score-chip strong {
+      color: var(--text);
+      font-weight: 950;
+    }
+
+    .side-panel {
+      position: sticky;
+      top: 86px;
+      display: grid;
+      gap: 16px;
+    }
+
+    .panel {
+      padding: 17px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+    }
+
+    .panel-title {
+      margin-bottom: 12px;
+      font-size: 15px;
+      font-weight: 950;
+    }
+
+    .bar-list {
+      display: grid;
+      gap: 11px;
+    }
+
+    .bar-row {
+      display: grid;
+      grid-template-columns: minmax(82px, 112px) minmax(0, 1fr) 34px;
+      gap: 9px;
+      align-items: center;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .bar-row span:first-child {
+      overflow-wrap: anywhere;
+    }
+
+    .bar-track {
+      height: 8px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: var(--surface-3);
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: inherit;
+      background: var(--accent);
+    }
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 500;
+      display: none;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 38px 18px;
+      overflow-y: auto;
+      background: rgba(0, 0, 0, .74);
+    }
+
+    .modal-overlay.open {
+      display: flex;
+    }
+
+    .modal {
+      width: min(560px, 100%);
+      margin: auto 0;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      box-shadow: var(--shadow);
+    }
+
+    .modal-lg {
+      width: min(760px, 100%);
+    }
+
+    .modal-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 18px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .modal-title {
+      margin: 0;
+      font-size: 19px;
+      font-weight: 950;
+    }
+
+    .modal-body {
+      padding: 20px;
+    }
+
+    .modal-close {
+      display: inline-grid;
+      place-items: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 7px;
+      background: var(--surface-2);
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 18px;
+    }
+
+    .form-grid {
+      display: grid;
+      gap: 14px;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .field {
+      display: grid;
+      gap: 7px;
+    }
+
+    .field label,
+    .field-label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .field input,
+    .field textarea,
+    .field select {
+      width: 100%;
+      min-height: 42px;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: #141518;
+      color: var(--text);
+      outline: none;
+    }
+
+    .field textarea {
+      min-height: 96px;
+      resize: vertical;
+      line-height: 1.55;
+    }
+
+    .field input:focus,
+    .field textarea:focus,
+    .field select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(36, 200, 160, .14);
+    }
+
+    .auth-tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      margin-bottom: 18px;
+      padding: 4px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: #141518;
+    }
+
+    .auth-tabs button {
+      min-height: 36px;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      font-weight: 900;
+    }
+
+    .auth-tabs button.active {
+      background: var(--accent);
+      color: #07110e;
+    }
+
+    .auth-form {
+      display: none;
+    }
+
+    .auth-form.active {
+      display: grid;
+      gap: 14px;
+    }
+
+    .template-options {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .template-option {
+      position: relative;
+      display: grid;
+      gap: 8px;
+      min-height: 118px;
+      padding: 15px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: #141518;
+      cursor: pointer;
+    }
+
+    .template-option input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .template-option:has(input:checked) {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(36, 200, 160, .12);
+    }
+
+    .template-name {
+      font-size: 15px;
+      font-weight: 950;
+    }
+
+    .template-desc {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .modal-note,
+    .score-input-help {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.6;
+      overflow-wrap: anywhere;
+    }
+
+    .score-input-list {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px 14px;
+    }
+
+    .score-input {
+      display: grid;
+      gap: 7px;
+      padding: 11px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: #141518;
+    }
+
+    .score-input-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+    }
+
+    .rating-picker {
+      display: grid;
+      gap: 9px;
+      padding: 13px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: #141518;
+    }
+
+    .rating-readout {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .rating-ticks {
+      display: grid;
+      grid-template-columns: repeat(10, 1fr);
+      color: var(--faint);
+      font-size: 10px;
+      font-weight: 800;
+      text-align: center;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 24px;
+      z-index: 800;
+      transform: translate(-50%, 20px);
+      max-width: min(520px, calc(100% - 28px));
+      padding: 12px 15px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface-2);
+      color: var(--text);
+      box-shadow: var(--shadow);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .18s ease, transform .18s ease;
+      font-size: 13px;
+      font-weight: 800;
+      text-align: center;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+
+    @media (max-width: 900px) {
+      .workspace-header,
+      .detail-hero,
+      .section-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .kpi-strip {
+        min-width: 0;
+      }
+
+      .toolbar {
+        grid-template-columns: 1fr;
+      }
+
+      .segmented,
+      .filter-control,
+      .toolbar .btn {
+        width: 100%;
+      }
+
+      .segmented button {
+        flex: 1;
+      }
+
+      .detail-cover {
+        max-width: 360px;
+      }
+
+      .side-panel {
+        position: static;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .app-header {
+        display: grid;
+        grid-template-columns: 1fr;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 12px 16px;
+      }
+
+      .brand-sub {
+        display: none;
+      }
+
+      .header-actions {
+        width: 100%;
+        gap: 6px;
+        justify-content: flex-start;
+      }
+
+      .header-actions .btn {
+        flex: 1;
+        min-width: 0;
+        padding-inline: 10px;
+      }
+
+      .app-shell {
+        width: calc(100% - 24px);
+        padding-top: 20px;
+      }
+
+      .workspace-title {
+        font-size: 25px;
+        line-height: 1.22;
+        word-break: keep-all;
+        overflow-wrap: normal;
+      }
+
+      .kpi-strip,
+      .form-row,
+      .template-options,
+      .score-input-list {
+        grid-template-columns: 1fr;
+      }
+
+      .game-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .review-card-header,
+      .score-panel,
+      .detail-actions,
+      .detail-topbar {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .review-rating {
+        justify-items: start;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="app-header">
+    <button class="brand" type="button" id="homeButton" aria-label="게임 목록으로 이동">
+      <span class="brand-mark">X</span>
+      <span class="brand-text">
+        <span class="brand-name">XP Note</span>
+        <span class="brand-sub">Korean Console Reviews</span>
+      </span>
+    </button>
+    <div class="header-actions">
+      <span class="user-pill" id="userPill"></span>
+      <button class="btn btn-ghost" type="button" id="loginButton">로그인</button>
+      <button class="btn btn-primary" type="button" id="signupButton">회원가입</button>
+      <button class="btn btn-ghost btn-danger" type="button" id="logoutButton" hidden>로그아웃</button>
+    </div>
+  </header>
+
+  <main class="app-shell">
+    <section class="view active" id="listView">
+      <div class="workspace-header">
+        <div>
+          <p class="eyebrow">Nintendo/Switch first MVP</p>
+          <h1 class="workspace-title">평론과 리뷰를 분리해서 보는 콘솔 게임 노트</h1>
+          <p class="workspace-copy">닌텐도·스위치 게임 20개를 기준으로 분석형 평론과 체감형 리뷰를 따로 쓰고, 별점과 항목별 점수를 함께 비교합니다.</p>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <label class="search-field">
+          <span>검색</span>
+          <input type="search" id="searchInput" autocomplete="off" placeholder="게임명, 장르, 제작사, 초성" />
+        </label>
+        <div class="segmented" aria-label="게임 정렬">
+          <button type="button" class="active" data-sort="popular">글 많은 순</button>
+          <button type="button" data-sort="newest">최근 출시순</button>
+          <button type="button" data-sort="rating">평점 높은 순</button>
+          <button type="button" data-sort="critique">평론 많은 순</button>
+          <button type="button" data-sort="review">리뷰 많은 순</button>
+        </div>
+        <select class="filter-control" id="genreFilter" aria-label="장르 필터">
+          <option value="">전체 장르</option>
+        </select>
+        <select class="filter-control" id="reviewTypeFilter" aria-label="작성 유형 필터">
+          <option value="">전체 유형</option>
+          <option value="critique">평론 있음</option>
+          <option value="review">리뷰 있음</option>
+        </select>
+        <select class="filter-control" id="ratingFilter" aria-label="평점 필터">
+          <option value="">전체 평점</option>
+          <option value="4.5">4.5점 이상</option>
+          <option value="4">4점 이상</option>
+          <option value="3.5">3.5점 이상</option>
+        </select>
+        <button class="btn btn-secondary" type="button" id="requestGameButton">＋ 게임 등록 신청</button>
+      </div>
+
+      <div class="activity-summary" aria-label="서비스 현황">
+        <div class="kpi-strip">
+          <div class="kpi">
+            <span class="kpi-value" id="gameCount">-</span>
+            <span class="kpi-label">Games</span>
+          </div>
+          <div class="kpi">
+            <span class="kpi-value" id="reviewCount">-</span>
+            <span class="kpi-label">Reviews</span>
+          </div>
+          <div class="kpi">
+            <span class="kpi-value" id="requestCount">-</span>
+            <span class="kpi-label">Requests</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="game-grid" id="gameGrid"></div>
+    </section>
+
+    <section class="view" id="detailView">
+      <div class="detail-topbar">
+        <button class="btn btn-ghost" type="button" id="backButton">← 목록</button>
+        <button class="btn btn-secondary" type="button" id="detailRequestButton">＋ 게임 등록 신청</button>
+      </div>
+      <div id="detailRoot"></div>
+    </section>
+  </main>
+
+  <div class="modal-overlay" id="authModal" role="dialog" aria-modal="true" aria-labelledby="authModalTitle">
+    <div class="modal">
+      <div class="modal-head">
+        <h2 class="modal-title" id="authModalTitle">로그인</h2>
+        <button class="modal-close" type="button" data-close-modal="authModal" aria-label="닫기">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="auth-tabs">
+          <button type="button" class="active" data-auth-tab="login">로그인</button>
+          <button type="button" data-auth-tab="signup">회원가입</button>
+        </div>
+
+        <form class="auth-form active" id="loginForm">
+          <div class="field">
+            <label for="loginEmail">이메일</label>
+            <input id="loginEmail" type="email" autocomplete="email" required />
+          </div>
+          <div class="field">
+            <label for="loginPassword">비밀번호</label>
+            <input id="loginPassword" type="password" autocomplete="current-password" required />
+          </div>
+          <button class="btn btn-primary btn-full" type="submit">로그인</button>
+        </form>
+
+        <form class="auth-form" id="signupForm">
+          <div class="field">
+            <label for="signupNickname">닉네임</label>
+            <input id="signupNickname" type="text" maxlength="20" autocomplete="nickname" required />
+          </div>
+          <div class="field">
+            <label for="signupEmail">이메일</label>
+            <input id="signupEmail" type="email" autocomplete="email" required />
+          </div>
+          <div class="field">
+            <label for="signupPassword">비밀번호</label>
+            <input id="signupPassword" type="password" minlength="8" autocomplete="new-password" required />
+            <p class="score-input-help">영문, 숫자, 특수문자를 포함해 8자 이상 입력해주세요.</p>
+          </div>
+          <button class="btn btn-primary btn-full" type="submit">가입하기</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="reviewModal" role="dialog" aria-modal="true" aria-labelledby="reviewModalTitle">
+    <div class="modal modal-lg">
+      <div class="modal-head">
+        <h2 class="modal-title" id="reviewModalTitle">평론/리뷰 작성</h2>
+        <button class="modal-close" type="button" data-close-modal="reviewModal" aria-label="닫기">×</button>
+      </div>
+      <form class="modal-body form-grid" id="reviewForm">
+        <p class="modal-note">리뷰는 별점과 짧은 코멘트만, 평론은 게임 구조와 완성도 분석을 항목별 점수와 함께 남깁니다.</p>
+        <div class="template-options" aria-label="작성 유형">
+          <label class="template-option">
+            <input type="radio" name="reviewType" value="review" checked />
+            <span class="type-badge review">리뷰</span>
+            <span class="template-name">간단 기록</span>
+            <span class="template-desc">별점과 코멘트만 빠르게 남깁니다.</span>
+          </label>
+          <label class="template-option">
+            <input type="radio" name="reviewType" value="critique" />
+            <span class="type-badge critique">평론</span>
+            <span class="template-name">세부 분석</span>
+            <span class="template-desc">게임성, 전략성, 최적화, 세계관까지 깊게 평가합니다.</span>
+          </label>
+        </div>
+
+        <div class="field">
+          <label for="reviewRating">종합 별점</label>
+          <div class="rating-picker">
+            <input id="reviewRating" type="range" min="0.5" max="5" step="0.5" value="4" />
+            <div class="rating-ticks" aria-hidden="true">
+              <span>0.5</span><span>1</span><span>1.5</span><span>2</span><span>2.5</span><span>3</span><span>3.5</span><span>4</span><span>4.5</span><span>5</span>
+            </div>
+            <div class="rating-readout">
+              <span id="reviewRatingText">4.0 / 5</span>
+              <span id="reviewStars"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="field" id="scoreField">
+          <span class="field-label">항목별 점수</span>
+          <p class="score-input-help">3점은 보통, 5점은 뚜렷한 강점 기준입니다.</p>
+          <div class="score-input-list" id="scoreInputList"></div>
+        </div>
+
+        <div class="field" id="recommendationField" hidden>
+          <label for="recommendationInput">추천 대상</label>
+          <input id="recommendationInput" type="text" maxlength="80" placeholder="예: 가족과 같이 하는 파티 게임을 찾는 사람" />
+        </div>
+
+        <div class="field">
+          <label for="reviewComment">코멘트</label>
+          <textarea id="reviewComment" maxlength="900" placeholder="플레이 경험을 남겨주세요."></textarea>
+        </div>
+
+        <button class="btn btn-primary btn-full" type="submit" id="reviewSubmitButton">글 등록</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="requestModal" role="dialog" aria-modal="true" aria-labelledby="requestModalTitle">
+    <div class="modal">
+      <div class="modal-head">
+        <h2 class="modal-title" id="requestModalTitle">게임 등록 신청</h2>
+        <button class="modal-close" type="button" data-close-modal="requestModal" aria-label="닫기">×</button>
+      </div>
+      <form class="modal-body form-grid" id="gameRequestForm">
+        <p class="modal-note">운영자가 신청 게임을 확인한 뒤 많이 요청된 게임부터 우선 검토합니다.</p>
+        <div class="field">
+          <label for="requestTitle">게임 제목</label>
+          <input id="requestTitle" type="text" maxlength="80" required />
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label for="requestPlatform">플랫폼</label>
+            <select id="requestPlatform" required>
+              <option value="Nintendo">Nintendo</option>
+              <option value="PlayStation">PlayStation</option>
+              <option value="Xbox">Xbox</option>
+              <option value="PC">PC</option>
+              <option value="Other">기타</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="requestYear">출시 연도</label>
+            <input id="requestYear" type="number" min="1980" max="2035" placeholder="2024" />
+          </div>
+        </div>
+        <div class="field">
+          <label for="requestReason">신청 이유</label>
+          <textarea id="requestReason" maxlength="500" required></textarea>
+        </div>
+        <button class="btn btn-primary btn-full" type="submit">신청하기</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    window.WEENAI_SERVER_MODE = true;
+  </script>
+
+  <script>
+    const STORAGE_KEYS = {
+      users: "weenai_users",
+      session: "weenai_session",
+      reviews: "weenai_reviews",
+      requests: "weenai_game_requests"
+    };
+
+    const COMMON_FIELDS = [
+      { key: "value", label: "가성비" },
+      { key: "graphics", label: "그래픽" },
+      { key: "ost", label: "OST" },
+      { key: "control", label: "조작 직관성" },
+      { key: "immersion", label: "몰입도" }
+    ];
+
+    const CRITIQUE_FIELDS = [
+      { key: "gameplay", label: "게임성" },
+      { key: "strategy", label: "전략성" },
+      { key: "optimization", label: "최적화/버그" },
+      { key: "story", label: "스토리/세계관" },
+      { key: "difficulty", label: "난이도" },
+      { key: "sfx", label: "효과음" }
+    ];
+
+    const REVIEW_FIELDS = [
+      { key: "fun", label: "재미" },
+      { key: "accessibility", label: "접근성" },
+      { key: "lowFatigue", label: "피로감 낮음" },
+      { key: "replayable", label: "안 질리는가" }
+    ];
+
+    const FIELD_LABELS = [...COMMON_FIELDS, ...CRITIQUE_FIELDS, ...REVIEW_FIELDS].reduce((map, field) => {
+      map[field.key] = field.label;
+      return map;
+    }, {});
+
+    const GAMES = [
+      { id: 1, icon: "🗡", title: "젤다의 전설: 야생의 숨결", maker: "닌텐도", year: 2017, genre: "어드벤처", cover: "linear-gradient(145deg,#1f6f52,#9ac36b)", summary: "탐험과 물리 상호작용을 중심으로 오픈월드 문법을 넓힌 대표작입니다." },
+      { id: 2, icon: "👑", title: "젤다의 전설: 왕국의 눈물", maker: "닌텐도", year: 2023, genre: "어드벤처", cover: "linear-gradient(145deg,#31595d,#d3c36b)", summary: "조립과 실험 중심의 시스템으로 전작의 자유도를 더 확장한 오픈월드 게임입니다." },
+      { id: 3, icon: "🎩", title: "슈퍼 마리오 오디세이", maker: "닌텐도", year: 2017, genre: "플랫포머", cover: "linear-gradient(145deg,#b51d2a,#f3a03d)", summary: "캡처 액션과 왕국 탐험을 결합한 3D 마리오 대표작입니다." },
+      { id: 4, icon: "🏝", title: "모여봐요 동물의 숲", maker: "닌텐도", year: 2020, genre: "시뮬레이션", cover: "linear-gradient(145deg,#2b9873,#f1cf76)", summary: "섬 생활, 수집, 꾸미기를 천천히 쌓아가는 생활형 게임입니다." },
+      { id: 5, icon: "🏎", title: "마리오 카트 8 디럭스", maker: "닌텐도", year: 2017, genre: "레이싱", cover: "linear-gradient(145deg,#1565c0,#4fc3f7)", summary: "누구나 쉽게 시작할 수 있는 파티 레이싱 게임입니다." },
+      { id: 6, icon: "🦑", title: "스플래툰 3", maker: "닌텐도", year: 2022, genre: "슈터", cover: "linear-gradient(145deg,#5d2ca3,#cddc39)", summary: "영역 싸움과 빠른 팀 전투를 잉크 액션으로 풀어낸 슈터입니다." },
+      { id: 7, icon: "👊", title: "슈퍼 스매시브라더스 얼티밋", maker: "닌텐도", year: 2018, genre: "격투", cover: "linear-gradient(145deg,#263238,#ff7043)", summary: "방대한 캐릭터와 파티성을 갖춘 플랫폼 격투 게임입니다." },
+      { id: 8, icon: "🚀", title: "메트로이드 드레드", maker: "닌텐도", year: 2021, genre: "액션", cover: "linear-gradient(145deg,#004d40,#26a69a)", summary: "긴장감 있는 추격과 정교한 맵 탐색을 결합한 2D 액션 게임입니다." },
+      { id: 9, icon: "⚔", title: "파이어 엠블렘: 풍화설월", maker: "닌텐도", year: 2019, genre: "SRPG", cover: "linear-gradient(145deg,#542b70,#d36a9f)", summary: "전술 전투와 학원 생활, 분기 서사가 결합된 전략 RPG입니다." },
+      { id: 10, icon: "🌿", title: "제노블레이드 크로니클스 3", maker: "닌텐도", year: 2022, genre: "RPG", cover: "linear-gradient(145deg,#1d3f75,#80cbc4)", summary: "대규모 필드와 파티 전투, 장편 서사를 갖춘 JRPG입니다." },
+      { id: 11, icon: "🌟", title: "별의 커비: 디스커버리", maker: "닌텐도", year: 2022, genre: "액션", cover: "linear-gradient(145deg,#ad3f72,#f8bbd0)", summary: "부드러운 난이도와 변신 액션이 강점인 3D 커비 게임입니다." },
+      { id: 12, icon: "🌱", title: "피크민 4", maker: "닌텐도", year: 2023, genre: "전략", cover: "linear-gradient(145deg,#33691e,#aed581)", summary: "작은 피크민 부대를 지휘해 수집과 전투를 진행하는 전략 어드벤처입니다." },
+      { id: 13, icon: "👻", title: "루이지의 맨션 3", maker: "닌텐도", year: 2019, genre: "어드벤처", cover: "linear-gradient(145deg,#1b5e20,#7e57c2)", summary: "호텔 탐험과 퍼즐, 유령 포획 액션을 결합한 어드벤처입니다." },
+      { id: 14, icon: "💪", title: "링 피트 어드벤처", maker: "닌텐도", year: 2019, genre: "피트니스", cover: "linear-gradient(145deg,#0d47a1,#66bb6a)", summary: "운동 동작을 RPG 진행과 연결한 체감형 피트니스 게임입니다." },
+      { id: 15, icon: "🎾", title: "닌텐도 스위치 스포츠", maker: "닌텐도", year: 2022, genre: "스포츠", cover: "linear-gradient(145deg,#006064,#ffca28)", summary: "모션 조작으로 여러 스포츠를 가볍게 즐기는 파티 게임입니다." },
+      { id: 16, icon: "⚡", title: "포켓몬스터 레전드: 아르세우스", maker: "포켓몬컴퍼니", year: 2022, genre: "RPG", cover: "linear-gradient(145deg,#455a64,#81c784)", summary: "포획과 탐험 흐름을 크게 바꾼 오픈 필드 포켓몬 RPG입니다." },
+      { id: 17, icon: "🔴", title: "포켓몬스터 스칼렛/바이올렛", maker: "포켓몬컴퍼니", year: 2022, genre: "RPG", cover: "linear-gradient(145deg,#8e1b2d,#7e57c2)", summary: "오픈월드 구조로 확장된 메인라인 포켓몬 게임입니다." },
+      { id: 18, icon: "🐱", title: "슈퍼 마리오 3D 월드+분노의 요새", maker: "닌텐도", year: 2021, genre: "플랫포머", cover: "linear-gradient(145deg,#c62828,#ffb74d)", summary: "협동 플레이와 짧은 스테이지 구성이 강한 3D 플랫포머입니다." },
+      { id: 19, icon: "🎉", title: "슈퍼 마리오 파티", maker: "닌텐도", year: 2018, genre: "파티", cover: "linear-gradient(145deg,#6a1b9a,#ffca28)", summary: "보드게임식 진행과 미니게임을 중심으로 한 로컬 파티 게임입니다." },
+      { id: 20, icon: "🔬", title: "피크민 3 디럭스", maker: "닌텐도", year: 2020, genre: "전략", cover: "linear-gradient(145deg,#2e7d32,#ff8a65)", summary: "자원 회수와 시간 관리가 핵심인 피크민 시리즈의 디럭스 버전입니다." }
+    ];
+
+    const SEED_REVIEWS = {
+      1: [
+        { id: "seed-1-1", gameId: 1, userId: "seed-critique", userName: "하이랄분석가", type: "critique", rating: 5, comment: "오픈월드에서 플레이어가 직접 문제를 해결하게 만드는 설계가 탁월합니다. 전투, 탐험, 퍼즐이 같은 규칙 위에서 움직여 오래 플레이해도 발견이 계속됩니다.", scores: { value: 5, graphics: 4, ost: 5, control: 5, immersion: 5, gameplay: 5, strategy: 4, optimization: 5, story: 4, difficulty: 3, sfx: 4 }, createdAt: "2026-04-25T10:20:00.000Z" },
+        { id: "seed-1-2", gameId: 1, userId: "seed-review", userName: "주말플레이어", type: "review", rating: 4.5, comment: "처음 언덕에서 내려다보는 장면이 아직도 기억납니다. 길 찾기가 자유로워서 천천히 돌아다니기만 해도 재미있었습니다.", scores: { value: 5, graphics: 4, ost: 4, control: 4, immersion: 5, fun: 5, accessibility: 4, lowFatigue: 4, replayable: 5, recommendation: "오픈월드를 처음 해보는 사람" }, createdAt: "2026-05-01T09:30:00.000Z" }
+      ],
+      2: [
+        { id: "seed-2-1", gameId: 2, userId: "seed-critique", userName: "시스템리뷰어", type: "critique", rating: 5, comment: "울트라핸드와 스크래빌드는 단순한 기능이 아니라 플레이 방식을 바꾸는 도구입니다. 실험이 보상으로 이어지는 구조가 매우 강합니다.", scores: { value: 5, graphics: 4, ost: 5, control: 4, immersion: 5, gameplay: 5, strategy: 5, optimization: 4, story: 4, difficulty: 4, sfx: 5 }, createdAt: "2026-05-03T12:00:00.000Z" }
+      ],
+      3: [
+        { id: "seed-3-1", gameId: 3, userId: "seed-review", userName: "마리오입문자", type: "review", rating: 4.5, comment: "조작이 경쾌하고 스테이지마다 분위기가 달라서 지루하지 않았어요. 수집 요소를 다 모으려면 꽤 오래 즐길 수 있습니다.", scores: { value: 4, graphics: 5, ost: 5, control: 5, immersion: 4, fun: 5, accessibility: 5, lowFatigue: 4, replayable: 4, recommendation: "가볍게 기분 전환할 게임을 찾는 사람" }, createdAt: "2026-04-22T15:10:00.000Z" }
+      ],
+      5: [
+        { id: "seed-5-1", gameId: 5, userId: "seed-party", userName: "파티게임러", type: "review", rating: 4.5, comment: "친구들이 모이면 바로 꺼내기 좋은 게임입니다. 초보자도 스마트 핸들을 켜면 같이 달릴 수 있어서 접근성이 좋습니다.", scores: { value: 5, graphics: 4, ost: 4, control: 5, immersion: 4, fun: 5, accessibility: 5, lowFatigue: 3, replayable: 5, recommendation: "여럿이 같이 할 게임이 필요한 사람" }, createdAt: "2026-04-28T18:45:00.000Z" },
+        { id: "seed-5-2", gameId: 5, userId: "seed-critique-2", userName: "레이싱체커", type: "critique", rating: 4, comment: "아이템 밸런스 때문에 순수 레이싱과는 다른 결이지만, 트랙 구성과 속도감은 여전히 훌륭합니다.", scores: { value: 5, graphics: 4, ost: 4, control: 5, immersion: 4, gameplay: 4, strategy: 3, optimization: 5, story: 1, difficulty: 3, sfx: 4 }, createdAt: "2026-04-29T11:15:00.000Z" }
+      ],
+      9: [
+        { id: "seed-9-1", gameId: 9, userId: "seed-srpg", userName: "전략파", type: "critique", rating: 4.5, comment: "전투와 육성, 루트별 서사가 서로 맞물리는 힘이 좋습니다. 후반 반복 전투는 부담이 있지만 캐릭터 구축은 강합니다.", scores: { value: 4, graphics: 4, ost: 5, control: 4, immersion: 5, gameplay: 5, strategy: 5, optimization: 4, story: 5, difficulty: 4, sfx: 4 }, createdAt: "2026-04-20T13:05:00.000Z" }
+      ],
+      12: [
+        { id: "seed-12-1", gameId: 12, userId: "seed-review-2", userName: "초보전략가", type: "review", rating: 4, comment: "전략 게임인데 분위기가 부드러워서 부담이 적었습니다. 하루 안에 뭘 할지 정하는 재미가 있어요.", scores: { value: 4, graphics: 4, ost: 4, control: 4, immersion: 4, fun: 4, accessibility: 4, lowFatigue: 4, replayable: 4, recommendation: "귀여운 분위기의 전략 게임을 찾는 사람" }, createdAt: "2026-05-02T08:40:00.000Z" }
+      ],
+      14: [
+        { id: "seed-14-1", gameId: 14, userId: "seed-fit", userName: "홈트게이머", type: "review", rating: 4, comment: "운동을 게임처럼 이어가게 만드는 점이 좋습니다. 피곤한 날에는 강도가 부담될 수 있지만 습관 만들기에는 강합니다.", scores: { value: 4, graphics: 3, ost: 3, control: 4, immersion: 4, fun: 4, accessibility: 4, lowFatigue: 2, replayable: 4, recommendation: "집에서 운동 습관을 만들고 싶은 사람" }, createdAt: "2026-04-18T21:00:00.000Z" }
+      ]
+    };
+
+    const state = {
+      currentUser: null,
+      currentGameId: null,
+      sort: "popular",
+      query: "",
+      reviewFilter: "all",
+      reviewSort: "popular"
+    };
+
+    const elements = {};
+
+    function cacheElements() {
+      [
+        "userPill", "loginButton", "signupButton", "logoutButton", "homeButton", "listView", "detailView",
+        "gameGrid", "gameCount", "reviewCount", "requestCount", "searchInput", "requestGameButton",
+        "detailRequestButton", "backButton", "detailRoot", "authModal", "authModalTitle", "loginForm",
+        "signupForm", "reviewModal", "reviewModalTitle", "reviewForm", "reviewRating", "reviewRatingText",
+        "reviewStars", "scoreInputList", "recommendationField", "recommendationInput", "reviewComment",
+        "reviewSubmitButton", "requestModal", "gameRequestForm", "toast"
+      ].forEach(id => {
+        elements[id] = document.getElementById(id);
+      });
+    }
+
+    function readJson(key, fallback) {
+      try {
+        const raw = localStorage.getItem(key);
+        return raw ? JSON.parse(raw) : fallback;
+      } catch {
+        return fallback;
+      }
+    }
+
+    function writeJson(key, value) {
+      localStorage.setItem(key, JSON.stringify(value));
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "").replace(/[&<>"']/g, char => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;"
+      }[char]));
+    }
+
+    function formatDate(isoString) {
+      const date = new Date(isoString);
+      if (Number.isNaN(date.getTime())) return "";
+      return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, "0")}.${String(date.getDate()).padStart(2, "0")}`;
+    }
+
+    function showToast(message) {
+      elements.toast.textContent = message;
+      elements.toast.classList.add("show");
+      clearTimeout(showToast.timer);
+      showToast.timer = setTimeout(() => elements.toast.classList.remove("show"), 2400);
+    }
+
+    function getUsers() {
+      return readJson(STORAGE_KEYS.users, []);
+    }
+
+    function saveUsers(users) {
+      writeJson(STORAGE_KEYS.users, users);
+    }
+
+    function getReviews() {
+      return readJson(STORAGE_KEYS.reviews, {});
+    }
+
+    function saveReviews(reviews) {
+      writeJson(STORAGE_KEYS.reviews, reviews);
+    }
+
+    function getRequests() {
+      return readJson(STORAGE_KEYS.requests, []);
+    }
+
+    function saveRequests(requests) {
+      writeJson(STORAGE_KEYS.requests, requests);
+    }
+
+    function getGame(gameId) {
+      return GAMES.find(game => game.id === Number(gameId));
+    }
+
+    function getGameReviews(gameId) {
+      return getReviews()[gameId] || [];
+    }
+
+    function getAllReviews() {
+      return Object.values(getReviews()).flat();
+    }
+
+    function getAverageRating(gameId) {
+      const reviews = getGameReviews(gameId);
+      if (!reviews.length) return null;
+      return reviews.reduce((sum, review) => sum + Number(review.rating || 0), 0) / reviews.length;
+    }
+
+    function getReviewCounts(gameId) {
+      const reviews = getGameReviews(gameId);
+      return {
+        total: reviews.length,
+        critique: reviews.filter(review => review.type === "critique").length,
+        review: reviews.filter(review => review.type === "review").length
+      };
+    }
+
+    function renderStars(rating, large = false) {
+      if (!rating) {
+        return `<span class="rating-sub">평가 없음</span>`;
+      }
+      const stars = Array.from({ length: 5 }, (_, index) => {
+        const starNumber = index + 1;
+        const fill = rating >= starNumber ? 100 : rating >= starNumber - 0.5 ? 50 : 0;
+        return `<span class="star">★<span class="star-fill" style="width:${fill}%">★</span></span>`;
+      }).join("");
+      return `<span class="stars ${large ? "star-lg" : ""}" aria-label="${rating.toFixed(1)}점">${stars}</span>`;
+    }
+
+    function ensureSeedReviews() {
+      if (localStorage.getItem(STORAGE_KEYS.reviews)) return;
+      writeJson(STORAGE_KEYS.reviews, SEED_REVIEWS);
+    }
+
+    function restoreSession() {
+      const session = readJson(STORAGE_KEYS.session, null);
+      if (!session) return;
+      const user = getUsers().find(item => item.id === session.userId);
+      if (user) {
+        state.currentUser = user;
+      } else {
+        localStorage.removeItem(STORAGE_KEYS.session);
+      }
+    }
+
+    function setSession(user) {
+      state.currentUser = user;
+      writeJson(STORAGE_KEYS.session, { userId: user.id });
+      renderHeader();
+    }
+
+    function clearSession() {
+      state.currentUser = null;
+      localStorage.removeItem(STORAGE_KEYS.session);
+      renderHeader();
+      renderDetailIfOpen();
+    }
+
+    function renderHeader() {
+      const isLoggedIn = Boolean(state.currentUser);
+      elements.userPill.style.display = isLoggedIn ? "inline-flex" : "none";
+      elements.loginButton.hidden = isLoggedIn;
+      elements.signupButton.hidden = isLoggedIn;
+      elements.logoutButton.hidden = !isLoggedIn;
+
+      if (isLoggedIn) {
+        const initial = escapeHtml(state.currentUser.nickname.charAt(0).toUpperCase());
+        elements.userPill.innerHTML = `<span class="avatar-dot">${initial}</span>${escapeHtml(state.currentUser.nickname)}`;
+      } else {
+        elements.userPill.innerHTML = "";
+      }
+    }
+
+    function renderStats() {
+      elements.gameCount.textContent = GAMES.length;
+      elements.reviewCount.textContent = getAllReviews().length;
+      elements.requestCount.textContent = getRequests().length;
+    }
+
+    function getSortedGames() {
+      const query = state.query.trim().toLowerCase();
+      const filtered = GAMES.filter(game => {
+        const haystack = `${game.title} ${game.genre} ${game.maker}`.toLowerCase();
+        return !query || haystack.includes(query);
+      });
+
+      return filtered.sort((a, b) => {
+        if (state.sort === "newest") {
+          return b.year - a.year || a.title.localeCompare(b.title, "ko");
+        }
+
+        const aReviews = getGameReviews(a.id);
+        const bReviews = getGameReviews(b.id);
+        const aAvg = getAverageRating(a.id) || 0;
+        const bAvg = getAverageRating(b.id) || 0;
+        return bReviews.length - aReviews.length || bAvg - aAvg || b.year - a.year;
+      });
+    }
+
+    function renderGameGrid() {
+      const games = getSortedGames();
+      if (!games.length) {
+        elements.gameGrid.innerHTML = `<div class="empty-state"><strong>검색 결과가 없습니다.</strong><span>다른 게임명이나 장르로 검색해보세요.</span></div>`;
+        return;
+      }
+
+      elements.gameGrid.innerHTML = games.map(game => {
+        const counts = getReviewCounts(game.id);
+        const avg = getAverageRating(game.id);
+        return `
+          <button class="game-card" type="button" data-game-id="${game.id}">
+            <span class="game-cover" style="background:${game.cover}">
+              <span class="platform-badge">Nintendo</span>
+              <span class="game-icon" aria-hidden="true">${game.icon}</span>
+              <span class="cover-title">${escapeHtml(game.title)}</span>
+            </span>
+            <span class="game-body">
+              <span>
+                <span class="game-title">${escapeHtml(game.title)}</span>
+                <span class="game-meta">${game.year} · ${escapeHtml(game.genre)} · ${escapeHtml(game.maker)}</span>
+              </span>
+              <span class="rating-line">
+                <span>
+                  <span class="rating-score">${avg ? avg.toFixed(1) : "—"}</span>
+                  <span class="rating-sub">글 ${counts.total}개</span>
+                </span>
+                ${renderStars(avg)}
+              </span>
+              <span class="type-counts">
+                <span class="mini-badge critique">평론 ${counts.critique}</span>
+                <span class="mini-badge review">리뷰 ${counts.review}</span>
+              </span>
+            </span>
+          </button>
+        `;
+      }).join("");
+    }
+
+    function showListView() {
+      state.currentGameId = null;
+      elements.detailView.classList.remove("active");
+      elements.listView.classList.add("active");
+      renderGameGrid();
+      window.scrollTo(0, 0);
+    }
+
+    function showDetailView(gameId) {
+      state.currentGameId = Number(gameId);
+      state.reviewFilter = "all";
+      state.reviewSort = "popular";
+      elements.listView.classList.remove("active");
+      elements.detailView.classList.add("active");
+      renderDetail();
+      window.scrollTo(0, 0);
+    }
+
+    function renderDetailIfOpen() {
+      if (state.currentGameId) renderDetail();
+    }
+
+    function getFilteredDetailReviews() {
+      let reviews = [...getGameReviews(state.currentGameId)];
+      if (state.reviewFilter !== "all") {
+        reviews = reviews.filter(review => review.type === state.reviewFilter);
+      }
+      if (state.reviewSort === "newest") {
+        reviews.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      } else {
+        reviews.sort((a, b) => Number(b.rating) - Number(a.rating) || new Date(b.createdAt) - new Date(a.createdAt));
+      }
+      return reviews;
+    }
+
+    function getScoreAverages(reviews) {
+      const buckets = {};
+      reviews.forEach(review => {
+        Object.entries(review.scores || {}).forEach(([key, value]) => {
+          if (typeof value !== "number") return;
+          if (!buckets[key]) buckets[key] = [];
+          buckets[key].push(value);
+        });
+      });
+
+      return Object.entries(buckets)
+        .map(([key, values]) => ({
+          key,
+          label: FIELD_LABELS[key] || key,
+          value: values.reduce((sum, value) => sum + value, 0) / values.length
+        }))
+        .sort((a, b) => b.value - a.value);
+    }
+
+    function renderDetail() {
+      const game = getGame(state.currentGameId);
+      if (!game) {
+        showListView();
+        return;
+      }
+
+      const allReviews = getGameReviews(game.id);
+      const counts = getReviewCounts(game.id);
+      const avg = getAverageRating(game.id);
+      const filteredReviews = getFilteredDetailReviews();
+      const averages = getScoreAverages(allReviews);
+      const existingReview = state.currentUser
+        ? allReviews.find(review => review.userId === state.currentUser.id)
+        : null;
+
+      elements.detailRoot.innerHTML = `
+        <section class="detail-hero">
+          <div class="detail-cover" style="background:${game.cover}" aria-hidden="true">${game.icon}</div>
+          <div class="detail-content">
+            <div class="detail-kicker">
+              <span class="mini-badge">Nintendo Switch</span>
+              <span class="mini-badge">${game.year}</span>
+              <span class="mini-badge">${escapeHtml(game.genre)}</span>
+            </div>
+            <h1 class="detail-title">${escapeHtml(game.title)}</h1>
+            <p class="detail-copy">${escapeHtml(game.summary)}</p>
+            <div class="score-panel">
+              <div class="score-large">${avg ? avg.toFixed(1) : "—"}</div>
+              <div>
+                ${renderStars(avg, true)}
+                <div class="review-meta">전체 ${counts.total}개 · 평론 ${counts.critique}개 · 리뷰 ${counts.review}개</div>
+              </div>
+            </div>
+            <div class="detail-actions">
+              <button class="btn btn-primary" type="button" id="writeReviewButton">${existingReview ? "내 글 수정" : "평론/리뷰 작성"}</button>
+              <span class="type-badge critique">평론</span>
+              <span class="type-badge review">리뷰</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="section-grid">
+          <div>
+            <div class="section-title-row">
+              <h2 class="section-title">평론/리뷰</h2>
+              <div class="review-controls">
+                <div class="segmented" aria-label="작성 유형 필터">
+                  <button type="button" class="${state.reviewFilter === "all" ? "active" : ""}" data-review-filter="all">전체</button>
+                  <button type="button" class="${state.reviewFilter === "critique" ? "active" : ""}" data-review-filter="critique">평론</button>
+                  <button type="button" class="${state.reviewFilter === "review" ? "active" : ""}" data-review-filter="review">리뷰</button>
+                </div>
+                <div class="segmented" aria-label="글 정렬">
+                  <button type="button" class="${state.reviewSort === "popular" ? "active" : ""}" data-review-sort="popular">평점순</button>
+                  <button type="button" class="${state.reviewSort === "newest" ? "active" : ""}" data-review-sort="newest">최신순</button>
+                </div>
+              </div>
+            </div>
+            <div class="review-list" id="detailReviewList">${renderReviewList(filteredReviews)}</div>
+          </div>
+          <aside class="side-panel">
+            <div class="panel">
+              <div class="panel-title">항목별 평균</div>
+              <div class="bar-list">${renderAverageBars(averages)}</div>
+            </div>
+            <div class="panel">
+              <div class="panel-title">작성 유형</div>
+              <div class="chip-row">
+                <span class="score-chip"><span>평론</span><strong>${counts.critique}</strong></span>
+                <span class="score-chip"><span>리뷰</span><strong>${counts.review}</strong></span>
+              </div>
+            </div>
+          </aside>
+        </section>
+      `;
+
+      document.getElementById("writeReviewButton").addEventListener("click", openReviewModal);
+      document.querySelectorAll("[data-review-filter]").forEach(button => {
+        button.addEventListener("click", () => {
+          state.reviewFilter = button.dataset.reviewFilter;
+          renderDetail();
+        });
+      });
+      document.querySelectorAll("[data-review-sort]").forEach(button => {
+        button.addEventListener("click", () => {
+          state.reviewSort = button.dataset.reviewSort;
+          renderDetail();
+        });
+      });
+    }
+
+    function renderReviewList(reviews) {
+      if (!reviews.length) {
+        return `<div class="empty-state"><strong>표시할 글이 없습니다.</strong><span>이 유형의 첫 글을 남겨보세요.</span></div>`;
+      }
+
+      return reviews.map(review => `
+        <article class="review-card">
+          <div class="review-card-header">
+            <div class="reviewer">
+              <span class="avatar-dot">${escapeHtml(review.userName.charAt(0).toUpperCase())}</span>
+              <div>
+                <div class="reviewer-name">
+                  ${escapeHtml(review.userName)}
+                  <span class="type-badge ${review.type}">${review.type === "critique" ? "평론" : "리뷰"}</span>
+                </div>
+                <div class="date-text">${formatDate(review.createdAt)}</div>
+              </div>
+            </div>
+            <div class="review-rating">
+              <strong>${Number(review.rating).toFixed(1)}</strong>
+              ${renderStars(Number(review.rating))}
+            </div>
+          </div>
+          ${review.comment ? `<p class="review-comment">${escapeHtml(review.comment)}</p>` : ""}
+          <div class="chip-row">${renderScoreChips(review.scores)}</div>
+        </article>
+      `).join("");
+    }
+
+    function renderScoreChips(scores = {}) {
+      const numericChips = Object.entries(scores)
+        .filter(([, value]) => typeof value === "number")
+        .map(([key, value]) => `<span class="score-chip"><span>${escapeHtml(FIELD_LABELS[key] || key)}</span><strong>${value}</strong></span>`);
+
+      if (scores.recommendation) {
+        numericChips.push(`<span class="score-chip"><span>추천 대상</span><strong>${escapeHtml(scores.recommendation)}</strong></span>`);
+      }
+
+      return numericChips.length ? numericChips.join("") : `<span class="rating-sub">항목별 점수 없음</span>`;
+    }
+
+    function renderAverageBars(averages) {
+      if (!averages.length) {
+        return `<div class="rating-sub">아직 항목별 평균이 없습니다.</div>`;
+      }
+      return averages.slice(0, 8).map(item => `
+        <div class="bar-row">
+          <span>${escapeHtml(item.label)}</span>
+          <span class="bar-track"><span class="bar-fill" style="width:${(item.value / 5) * 100}%"></span></span>
+          <span>${item.value.toFixed(1)}</span>
+        </div>
+      `).join("");
+    }
+
+    function openModal(id) {
+      document.getElementById(id).classList.add("open");
+      document.body.style.overflow = "hidden";
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.remove("open");
+      if (!document.querySelector(".modal-overlay.open")) {
+        document.body.style.overflow = "";
+      }
+    }
+
+    function openAuthModal(tab = "login") {
+      setAuthTab(tab);
+      openModal("authModal");
+    }
+
+    function setAuthTab(tab) {
+      document.querySelectorAll("[data-auth-tab]").forEach(button => {
+        button.classList.toggle("active", button.dataset.authTab === tab);
+      });
+      elements.loginForm.classList.toggle("active", tab === "login");
+      elements.signupForm.classList.toggle("active", tab === "signup");
+      elements.authModalTitle.textContent = tab === "login" ? "로그인" : "회원가입";
+    }
+
+    function requireLogin(message) {
+      if (state.currentUser) return true;
+      showToast(message);
+      openAuthModal("login");
+      return false;
+    }
+
+    function handleLogin(event) {
+      event.preventDefault();
+      const email = document.getElementById("loginEmail").value.trim().toLowerCase();
+      const password = document.getElementById("loginPassword").value;
+      const user = getUsers().find(item => item.email === email && item.password === password);
+      if (!user) {
+        showToast("이메일 또는 비밀번호가 올바르지 않습니다.");
+        return;
+      }
+      setSession(user);
+      closeModal("authModal");
+      elements.loginForm.reset();
+      showToast(`${user.nickname}님, 로그인되었습니다.`);
+      renderDetailIfOpen();
+    }
+
+    function handleSignup(event) {
+      event.preventDefault();
+      const nickname = document.getElementById("signupNickname").value.trim();
+      const email = document.getElementById("signupEmail").value.trim().toLowerCase();
+      const password = document.getElementById("signupPassword").value;
+      const users = getUsers();
+
+      if (nickname.length < 2) {
+        showToast("닉네임은 2자 이상 입력해주세요.");
+        return;
+      }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        showToast("올바른 이메일을 입력해주세요.");
+        return;
+      }
+      if (password.length < 4) {
+        showToast("비밀번호는 4자 이상 입력해주세요.");
+        return;
+      }
+      if (users.some(user => user.email === email)) {
+        showToast("이미 가입된 이메일입니다.");
+        return;
+      }
+      if (users.some(user => user.nickname === nickname)) {
+        showToast("이미 사용 중인 닉네임입니다.");
+        return;
+      }
+
+      const user = {
+        id: `user-${Date.now()}`,
+        nickname,
+        email,
+        password,
+        createdAt: new Date().toISOString()
+      };
+      saveUsers([...users, user]);
+      setSession(user);
+      closeModal("authModal");
+      elements.signupForm.reset();
+      showToast("회원가입이 완료되었습니다.");
+      renderDetailIfOpen();
+    }
+
+    function openReviewModal() {
+      if (!requireLogin("평론/리뷰 작성은 로그인 후 이용할 수 있습니다.")) return;
+
+      const game = getGame(state.currentGameId);
+      const existingReview = getGameReviews(state.currentGameId).find(review => review.userId === state.currentUser.id);
+      elements.reviewModalTitle.textContent = existingReview ? `${game.title} 글 수정` : `${game.title} 평론/리뷰 작성`;
+      elements.reviewSubmitButton.textContent = existingReview ? "글 수정" : "글 등록";
+      elements.reviewComment.value = existingReview?.comment || "";
+      elements.reviewRating.value = existingReview?.rating || 4;
+      document.querySelectorAll("input[name='reviewType']").forEach(input => {
+        input.checked = input.value === (existingReview?.type || "review");
+      });
+      renderRatingReadout();
+      renderScoreInputs(existingReview?.scores || {});
+      openModal("reviewModal");
+    }
+
+    function getSelectedReviewType() {
+      return document.querySelector("input[name='reviewType']:checked").value;
+    }
+
+    function getFieldsForType(type) {
+      return [...COMMON_FIELDS, ...(type === "critique" ? CRITIQUE_FIELDS : REVIEW_FIELDS)];
+    }
+
+    function renderScoreInputs(existingScores = {}) {
+      const type = getSelectedReviewType();
+      const fields = getFieldsForType(type);
+      elements.recommendationField.style.display = type === "review" ? "grid" : "none";
+      elements.recommendationInput.value = type === "review" ? (existingScores.recommendation || "") : "";
+
+      elements.scoreInputList.innerHTML = fields.map(field => {
+        const value = Number(existingScores[field.key] || 3);
+        return `
+          <label class="score-input">
+            <span class="score-input-head">
+              <span>${escapeHtml(field.label)}</span>
+              <output>${value}</output>
+            </span>
+            <input type="range" min="1" max="5" step="1" value="${value}" data-score-key="${field.key}" />
+          </label>
+        `;
+      }).join("");
+
+      elements.scoreInputList.querySelectorAll("input[type='range']").forEach(input => {
+        input.addEventListener("input", () => {
+          input.closest(".score-input").querySelector("output").textContent = input.value;
+        });
+      });
+    }
+
+    function renderRatingReadout() {
+      const rating = Number(elements.reviewRating.value);
+      elements.reviewRatingText.textContent = `${rating.toFixed(1)} / 5`;
+      elements.reviewStars.innerHTML = renderStars(rating);
+    }
+
+    function handleReviewSubmit(event) {
+      event.preventDefault();
+      if (!state.currentUser || !state.currentGameId) return;
+
+      const type = getSelectedReviewType();
+      const rating = Number(elements.reviewRating.value);
+      const comment = elements.reviewComment.value.trim();
+      const scores = {};
+      elements.scoreInputList.querySelectorAll("input[data-score-key]").forEach(input => {
+        scores[input.dataset.scoreKey] = Number(input.value);
+      });
+      if (type === "review") {
+        const recommendation = elements.recommendationInput.value.trim();
+        if (recommendation) scores.recommendation = recommendation;
+      }
+
+      const allReviews = getReviews();
+      const gameReviews = allReviews[state.currentGameId] ? [...allReviews[state.currentGameId]] : [];
+      const existingIndex = gameReviews.findIndex(review => review.userId === state.currentUser.id);
+      const existing = existingIndex >= 0 ? gameReviews[existingIndex] : null;
+      const review = {
+        id: existing?.id || `review-${Date.now()}`,
+        gameId: state.currentGameId,
+        userId: state.currentUser.id,
+        userName: state.currentUser.nickname,
+        type,
+        rating,
+        comment,
+        scores,
+        createdAt: new Date().toISOString()
+      };
+
+      if (existingIndex >= 0) {
+        gameReviews[existingIndex] = review;
+      } else {
+        gameReviews.unshift(review);
+      }
+
+      saveReviews({ ...allReviews, [state.currentGameId]: gameReviews });
+      closeModal("reviewModal");
+      renderStats();
+      renderGameGrid();
+      renderDetail();
+      showToast(existing ? "글이 수정되었습니다." : "글이 등록되었습니다.");
+    }
+
+    function openRequestModal() {
+      if (!requireLogin("게임 등록 신청은 로그인 후 이용할 수 있습니다.")) return;
+      elements.gameRequestForm.reset();
+      openModal("requestModal");
+    }
+
+    function handleGameRequestSubmit(event) {
+      event.preventDefault();
+      if (!state.currentUser) return;
+
+      const title = document.getElementById("requestTitle").value.trim();
+      const platform = document.getElementById("requestPlatform").value;
+      const yearValue = document.getElementById("requestYear").value;
+      const reason = document.getElementById("requestReason").value.trim();
+
+      if (!title || !reason) {
+        showToast("게임 제목과 신청 이유를 입력해주세요.");
+        return;
+      }
+
+      const request = {
+        id: `request-${Date.now()}`,
+        title,
+        platform,
+        year: yearValue ? Number(yearValue) : null,
+        reason,
+        userId: state.currentUser.id,
+        userName: state.currentUser.nickname,
+        createdAt: new Date().toISOString(),
+        status: "pending"
+      };
+
+      saveRequests([request, ...getRequests()]);
+      closeModal("requestModal");
+      renderStats();
+      showToast("게임 등록 신청이 저장되었습니다.");
+    }
+
+    function bindEvents() {
+      elements.homeButton.addEventListener("click", showListView);
+      elements.backButton.addEventListener("click", showListView);
+      elements.loginButton.addEventListener("click", () => openAuthModal("login"));
+      elements.signupButton.addEventListener("click", () => openAuthModal("signup"));
+      elements.logoutButton.addEventListener("click", () => {
+        clearSession();
+        showToast("로그아웃되었습니다.");
+      });
+      elements.requestGameButton.addEventListener("click", openRequestModal);
+      elements.detailRequestButton.addEventListener("click", openRequestModal);
+      elements.searchInput.addEventListener("input", event => {
+        state.query = event.target.value;
+        renderGameGrid();
+      });
+      document.querySelectorAll("[data-sort]").forEach(button => {
+        button.addEventListener("click", () => {
+          state.sort = button.dataset.sort;
+          document.querySelectorAll("[data-sort]").forEach(item => item.classList.toggle("active", item === button));
+          renderGameGrid();
+        });
+      });
+      elements.gameGrid.addEventListener("click", event => {
+        const card = event.target.closest("[data-game-id]");
+        if (card) showDetailView(card.dataset.gameId);
+      });
+      document.querySelectorAll("[data-close-modal]").forEach(button => {
+        button.addEventListener("click", () => closeModal(button.dataset.closeModal));
+      });
+      document.querySelectorAll(".modal-overlay").forEach(overlay => {
+        overlay.addEventListener("click", event => {
+          if (event.target === overlay) closeModal(overlay.id);
+        });
+      });
+      document.addEventListener("keydown", event => {
+        if (event.key === "Escape") {
+          document.querySelectorAll(".modal-overlay.open").forEach(modal => closeModal(modal.id));
+        }
+      });
+      document.querySelectorAll("[data-auth-tab]").forEach(button => {
+        button.addEventListener("click", () => setAuthTab(button.dataset.authTab));
+      });
+      elements.loginForm.addEventListener("submit", handleLogin);
+      elements.signupForm.addEventListener("submit", handleSignup);
+      document.querySelectorAll("input[name='reviewType']").forEach(input => {
+        input.addEventListener("change", () => renderScoreInputs({}));
+      });
+      elements.reviewRating.addEventListener("input", renderRatingReadout);
+      elements.reviewForm.addEventListener("submit", handleReviewSubmit);
+      elements.gameRequestForm.addEventListener("submit", handleGameRequestSubmit);
+    }
+
+    function init() {
+      cacheElements();
+      ensureSeedReviews();
+      restoreSession();
+      bindEvents();
+      renderHeader();
+      renderStats();
+      renderRatingReadout();
+      renderScoreInputs({});
+      renderGameGrid();
+    }
+
+    if (!window.WEENAI_SERVER_MODE) {
+      init();
+    }
+  </script>
+
+  <script>
+    (() => {
+      const API_BASE = window.location.protocol === "file:" ? "http://localhost:3000" : "";
+
+      const COMMON_FIELDS = [
+        { key: "value", label: "가성비" },
+        { key: "graphics", label: "그래픽" },
+        { key: "ost", label: "OST" },
+        { key: "control", label: "조작 직관성" },
+        { key: "immersion", label: "몰입도" }
+      ];
+      const CRITIQUE_FIELDS = [
+        { key: "gameplay", label: "게임성" },
+        { key: "strategy", label: "전략성" },
+        { key: "optimization", label: "최적화/버그" },
+        { key: "story", label: "스토리/세계관" },
+        { key: "difficulty", label: "난이도" },
+        { key: "sfx", label: "효과음" }
+      ];
+      const REVIEW_FIELDS = [
+        { key: "fun", label: "재미" },
+        { key: "accessibility", label: "접근성" },
+        { key: "lowFatigue", label: "피로감 낮음" },
+        { key: "replayable", label: "안 질리는가" }
+      ];
+      const FIELD_LABELS = [...COMMON_FIELDS, ...CRITIQUE_FIELDS, ...REVIEW_FIELDS].reduce((labels, field) => {
+        labels[field.key] = field.label;
+        return labels;
+      }, {});
+
+      const apiState = {
+        currentUser: null,
+        games: [],
+        stats: { gameCount: "-", reviewCount: "-", requestCount: "-", genres: [] },
+        currentGameId: null,
+        detail: null,
+        currentReviews: [],
+        sort: "popular",
+        query: "",
+        genre: "",
+        reviewType: "",
+        ratingMin: "",
+        detailReviewType: "all",
+        detailReviewSort: "popular"
+      };
+
+      const el = {};
+
+      function cache() {
+        [
+          "userPill", "loginButton", "signupButton", "logoutButton", "homeButton", "listView", "detailView",
+          "gameGrid", "gameCount", "reviewCount", "requestCount", "searchInput", "genreFilter", "reviewTypeFilter",
+          "ratingFilter", "requestGameButton", "detailRequestButton", "backButton", "detailRoot", "authModal",
+          "authModalTitle", "loginForm", "signupForm", "reviewModal", "reviewModalTitle", "reviewForm",
+          "reviewRating", "reviewRatingText", "reviewStars", "scoreField", "scoreInputList", "recommendationField",
+          "recommendationInput", "reviewComment", "reviewSubmitButton", "requestModal", "gameRequestForm", "toast"
+        ].forEach(id => {
+          el[id] = document.getElementById(id);
+        });
+      }
+
+      function escapeHtml(value) {
+        return String(value ?? "").replace(/[&<>"']/g, char => ({
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#039;"
+        }[char]));
+      }
+
+      function showToast(message) {
+        el.toast.textContent = message;
+        el.toast.classList.add("show");
+        clearTimeout(showToast.timer);
+        showToast.timer = setTimeout(() => el.toast.classList.remove("show"), 2600);
+      }
+
+      const STATUS_MESSAGES = {
+        400: "입력값을 확인해주세요.",
+        401: "로그인이 필요합니다.",
+        403: "권한이 없습니다.",
+        404: "요청한 대상을 찾을 수 없습니다.",
+        409: "이미 처리된 요청입니다.",
+        500: "서버 오류가 발생했습니다."
+      };
+
+      function firstIssueMessage(payload) {
+        return Array.isArray(payload?.issues)
+          ? payload.issues.find(issue => issue?.message)?.message
+          : "";
+      }
+
+      async function apiFetch(path, options = {}) {
+        const response = await fetch(`${API_BASE}${path}`, {
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+            ...(options.headers || {})
+          },
+          ...options
+        });
+        const text = await response.text();
+        let payload = {};
+        try {
+          payload = text ? JSON.parse(text) : {};
+        } catch {
+          payload = {};
+        }
+        if (!response.ok) {
+          const message = firstIssueMessage(payload) || payload.error || STATUS_MESSAGES[response.status] || "요청을 처리하지 못했습니다.";
+          const error = new Error(message);
+          error.status = response.status;
+          error.payload = payload;
+          throw error;
+        }
+        return payload;
+      }
+
+      function formatDate(isoString) {
+        const date = new Date(isoString);
+        if (Number.isNaN(date.getTime())) return "";
+        return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, "0")}.${String(date.getDate()).padStart(2, "0")}`;
+      }
+
+      function renderStars(rating, large = false) {
+        if (!rating) return `<span class="rating-sub">평가 없음</span>`;
+        const stars = Array.from({ length: 5 }, (_, index) => {
+          const starNumber = index + 1;
+          const fill = rating >= starNumber ? 100 : rating >= starNumber - 0.5 ? 50 : 0;
+          return `<span class="star">★<span class="star-fill" style="width:${fill}%">★</span></span>`;
+        }).join("");
+        return `<span class="stars ${large ? "star-lg" : ""}" aria-label="${rating.toFixed(1)}점">${stars}</span>`;
+      }
+
+      function setHeader() {
+        const isLoggedIn = Boolean(apiState.currentUser);
+        el.userPill.style.display = isLoggedIn ? "inline-flex" : "none";
+        el.loginButton.hidden = isLoggedIn;
+        el.signupButton.hidden = isLoggedIn;
+        el.logoutButton.hidden = !isLoggedIn;
+
+        if (isLoggedIn) {
+          const initial = escapeHtml(apiState.currentUser.nickname.charAt(0).toUpperCase());
+          el.userPill.innerHTML = `<span class="avatar-dot">${initial}</span>${escapeHtml(apiState.currentUser.nickname)}`;
+        } else {
+          el.userPill.innerHTML = "";
+        }
+      }
+
+      function renderStats() {
+        el.gameCount.textContent = apiState.stats.gameCount;
+        el.reviewCount.textContent = apiState.stats.reviewCount;
+        el.requestCount.textContent = apiState.stats.requestCount;
+      }
+
+      function renderGridStatus(title, body) {
+        el.gameGrid.innerHTML = `<div class="empty-state"><strong>${escapeHtml(title)}</strong><span>${escapeHtml(body)}</span></div>`;
+      }
+
+      function populateGenres() {
+        const selected = el.genreFilter.value;
+        el.genreFilter.innerHTML = `<option value="">전체 장르</option>${apiState.stats.genres.map(genre =>
+          `<option value="${escapeHtml(genre)}">${escapeHtml(genre)}</option>`
+        ).join("")}`;
+        el.genreFilter.value = apiState.stats.genres.includes(selected) ? selected : "";
+      }
+
+      async function loadMe() {
+        const { user } = await apiFetch("/api/auth/me");
+        apiState.currentUser = user;
+        setHeader();
+      }
+
+      async function loadGames() {
+        const params = new URLSearchParams();
+        if (apiState.query) params.set("query", apiState.query);
+        if (apiState.genre) params.set("genre", apiState.genre);
+        if (apiState.reviewType) params.set("reviewType", apiState.reviewType);
+        if (apiState.ratingMin) params.set("ratingMin", apiState.ratingMin);
+        params.set("sort", apiState.sort);
+
+        if (!apiState.games.length) {
+          renderGridStatus("게임 목록을 불러오는 중입니다.", "서버에서 최신 목록과 통계를 가져오고 있습니다.");
+        }
+
+        try {
+          const { games, stats } = await apiFetch(`/api/games?${params.toString()}`);
+          apiState.games = games;
+          apiState.stats = stats;
+          renderStats();
+          populateGenres();
+          renderGameGrid();
+        } catch (error) {
+          renderGridStatus("게임 목록을 불러오지 못했습니다.", error.message);
+          throw error;
+        }
+      }
+
+      function renderGameGrid() {
+        if (!apiState.games.length) {
+          el.gameGrid.innerHTML = `<div class="empty-state"><strong>표시할 게임이 없습니다.</strong><span>검색어나 필터를 조정해보세요.</span></div>`;
+          return;
+        }
+
+        el.gameGrid.innerHTML = apiState.games.map(game => `
+          <button class="game-card" type="button" data-game-id="${game.id}">
+            <span class="game-cover" style="background:${game.cover}">
+              <span class="platform-badge">Nintendo</span>
+              <span class="game-icon" aria-hidden="true">${game.icon}</span>
+              <span class="cover-title">${escapeHtml(game.title)}</span>
+            </span>
+            <span class="game-body">
+              <span>
+                <span class="game-title">${escapeHtml(game.title)}</span>
+                <span class="game-meta">${game.year} · ${escapeHtml(game.genre)} · ${escapeHtml(game.maker)}</span>
+              </span>
+              <span class="rating-line">
+                <span>
+                  <span class="rating-score">${game.averageRating ? game.averageRating.toFixed(1) : "—"}</span>
+                  <span class="rating-sub">글 ${game.reviewCount}개</span>
+                </span>
+                ${renderStars(game.averageRating)}
+              </span>
+              <span class="type-counts">
+                <span class="mini-badge critique">평론 ${game.critiqueCount}</span>
+                <span class="mini-badge review">리뷰 ${game.regularReviewCount}</span>
+              </span>
+            </span>
+          </button>
+        `).join("");
+      }
+
+      async function showListView() {
+        apiState.currentGameId = null;
+        apiState.detail = null;
+        el.detailView.classList.remove("active");
+        el.listView.classList.add("active");
+        await loadGames();
+        window.scrollTo(0, 0);
+      }
+
+      async function showDetailView(gameId) {
+        apiState.currentGameId = Number(gameId);
+        apiState.detailReviewType = "all";
+        apiState.detailReviewSort = "popular";
+        el.listView.classList.remove("active");
+        el.detailView.classList.add("active");
+        await loadDetail();
+        window.scrollTo(0, 0);
+      }
+
+      async function loadDetail() {
+        const [detail, reviews] = await Promise.all([
+          apiFetch(`/api/games/${apiState.currentGameId}`),
+          loadReviewsPayload()
+        ]);
+        apiState.detail = detail;
+        apiState.currentReviews = reviews.reviews;
+        renderDetail();
+      }
+
+      async function loadReviewsPayload() {
+        const params = new URLSearchParams();
+        params.set("type", apiState.detailReviewType);
+        params.set("sort", apiState.detailReviewSort);
+        return apiFetch(`/api/games/${apiState.currentGameId}/reviews?${params.toString()}`);
+      }
+
+      async function reloadReviews() {
+        const { reviews } = await loadReviewsPayload();
+        apiState.currentReviews = reviews;
+        renderDetail();
+      }
+
+      function renderDetail() {
+        const detail = apiState.detail;
+        if (!detail) return;
+        const { game, aggregates, myReview } = detail;
+        const counts = aggregates.counts;
+
+        el.detailRoot.innerHTML = `
+          <section class="detail-hero">
+            <div class="detail-cover" style="background:${game.cover}" aria-hidden="true">${game.icon}</div>
+            <div class="detail-content">
+              <div class="detail-kicker">
+                <span class="mini-badge">${escapeHtml(game.platform)}</span>
+                <span class="mini-badge">${game.year}</span>
+                <span class="mini-badge">${escapeHtml(game.genre)}</span>
+              </div>
+              <h1 class="detail-title">${escapeHtml(game.title)}</h1>
+              <p class="detail-copy">${escapeHtml(game.summary)}</p>
+              <div class="score-panel">
+                <div class="score-large">${aggregates.averageRating ? aggregates.averageRating.toFixed(1) : "—"}</div>
+                <div>
+                  ${renderStars(aggregates.averageRating, true)}
+                  <div class="review-meta">전체 ${counts.total}개 · 평론 ${counts.critique}개 · 리뷰 ${counts.review}개</div>
+                </div>
+              </div>
+              <div class="detail-actions">
+                <button class="btn btn-primary" type="button" id="writeReviewButton">${myReview ? "내 글 수정" : "평론/리뷰 작성"}</button>
+                <span class="type-badge critique">평론</span>
+                <span class="type-badge review">리뷰</span>
+              </div>
+            </div>
+          </section>
+
+          <section class="section-grid">
+            <div>
+              <div class="section-title-row">
+                <h2 class="section-title">평론/리뷰</h2>
+                <div class="review-controls">
+                  <div class="segmented" aria-label="작성 유형 필터">
+                    <button type="button" class="${apiState.detailReviewType === "all" ? "active" : ""}" data-review-filter="all">전체</button>
+                    <button type="button" class="${apiState.detailReviewType === "critique" ? "active" : ""}" data-review-filter="critique">평론</button>
+                    <button type="button" class="${apiState.detailReviewType === "review" ? "active" : ""}" data-review-filter="review">리뷰</button>
+                  </div>
+                  <div class="segmented" aria-label="글 정렬">
+                    <button type="button" class="${apiState.detailReviewSort === "popular" ? "active" : ""}" data-review-sort="popular">도움순</button>
+                    <button type="button" class="${apiState.detailReviewSort === "rating" ? "active" : ""}" data-review-sort="rating">평점순</button>
+                    <button type="button" class="${apiState.detailReviewSort === "newest" ? "active" : ""}" data-review-sort="newest">최신순</button>
+                  </div>
+                </div>
+              </div>
+              <div class="review-list">${renderReviewList(apiState.currentReviews)}</div>
+            </div>
+            <aside class="side-panel">
+              <div class="panel">
+                <div class="panel-title">평론 항목별 평균</div>
+                <div class="bar-list">${renderAverageBars(aggregates.scoreAverages)}</div>
+              </div>
+              <div class="panel">
+                <div class="panel-title">별점 분포</div>
+                <div class="bar-list">${renderRatingDistribution(aggregates.ratingDistribution, counts.total)}</div>
+              </div>
+            </aside>
+          </section>
+        `;
+
+        document.getElementById("writeReviewButton").addEventListener("click", openReviewModal);
+        document.querySelectorAll("[data-review-filter]").forEach(button => {
+          button.addEventListener("click", async () => {
+            apiState.detailReviewType = button.dataset.reviewFilter;
+            await reloadReviews();
+          });
+        });
+        document.querySelectorAll("[data-review-sort]").forEach(button => {
+          button.addEventListener("click", async () => {
+            apiState.detailReviewSort = button.dataset.reviewSort;
+            await reloadReviews();
+          });
+        });
+      }
+
+      function renderReviewList(reviews) {
+        if (!reviews.length) {
+          return `<div class="empty-state"><strong>표시할 글이 없습니다.</strong><span>이 유형의 첫 글을 남겨보세요.</span></div>`;
+        }
+
+        return reviews.map(review => `
+          <article class="review-card">
+            <div class="review-card-header">
+              <div class="reviewer">
+                <span class="avatar-dot">${escapeHtml(review.userName.charAt(0).toUpperCase())}</span>
+                <div>
+                  <div class="reviewer-name">
+                    ${escapeHtml(review.userName)}
+                    <span class="type-badge ${review.type}">${review.type === "critique" ? "평론" : "리뷰"}</span>
+                  </div>
+                  <div class="date-text">${formatDate(review.createdAt)} · ${review.playtimeHours}시간 · 도움 ${review.helpfulCount}</div>
+                </div>
+              </div>
+              <div class="review-rating">
+                <strong>${Number(review.rating).toFixed(1)}</strong>
+                ${renderStars(Number(review.rating))}
+              </div>
+            </div>
+            ${review.headline ? `<p class="review-comment"><strong>${escapeHtml(review.headline)}</strong></p>` : ""}
+            ${review.comment ? `<p class="review-comment">${escapeHtml(review.comment)}</p>` : ""}
+            ${renderReviewChips(review)}
+          </article>
+        `).join("");
+      }
+
+      function renderReviewChips(review) {
+        const chips = `${renderScoreChips(review.scores)}${renderTags(review.tags)}`;
+        return chips ? `<div class="chip-row">${chips}</div>` : "";
+      }
+
+      function renderTags(tags = []) {
+        return tags.map(tag => `<span class="score-chip"><span>#${escapeHtml(tag)}</span></span>`).join("");
+      }
+
+      function scoreTone(value) {
+        if (value >= 4) return "good";
+        if (value === 3) return "mid";
+        return "low";
+      }
+
+      function renderScoreChips(scores = {}) {
+        const chips = Object.entries(scores)
+          .filter(([, value]) => typeof value === "number")
+          .map(([key, value]) => `<span class="score-chip ${scoreTone(value)}"><span>${escapeHtml(FIELD_LABELS[key] || key)}</span><strong>${value}</strong></span>`);
+        if (scores.recommendation) {
+          chips.push(`<span class="score-chip"><span>추천 대상</span><strong>${escapeHtml(scores.recommendation)}</strong></span>`);
+        }
+        return chips.join("");
+      }
+
+      function renderAverageBars(averages = []) {
+        if (!averages.length) return `<div class="rating-sub">아직 평론 항목별 평균이 없습니다.</div>`;
+        return averages.slice(0, 8).map(item => `
+          <div class="bar-row">
+            <span>${escapeHtml(item.label)}</span>
+            <span class="bar-track"><span class="bar-fill" style="width:${(item.value / 5) * 100}%"></span></span>
+            <span>${item.value.toFixed(1)}</span>
+          </div>
+        `).join("");
+      }
+
+      function renderRatingDistribution(distribution = {}, total = 0) {
+        return [5, 4, 3, 2, 1].map(score => {
+          const count = distribution[String(score)] || 0;
+          const width = total ? (count / total) * 100 : 0;
+          return `
+            <div class="bar-row">
+              <span>${score}점대</span>
+              <span class="bar-track"><span class="bar-fill" style="width:${width}%"></span></span>
+              <span>${count}</span>
+            </div>
+          `;
+        }).join("");
+      }
+
+      function openModal(id) {
+        document.getElementById(id).classList.add("open");
+        document.body.style.overflow = "hidden";
+      }
+
+      function closeModal(id) {
+        document.getElementById(id).classList.remove("open");
+        if (!document.querySelector(".modal-overlay.open")) document.body.style.overflow = "";
+      }
+
+      function setAuthTab(tab) {
+        document.querySelectorAll("[data-auth-tab]").forEach(button => {
+          button.classList.toggle("active", button.dataset.authTab === tab);
+        });
+        el.loginForm.classList.toggle("active", tab === "login");
+        el.signupForm.classList.toggle("active", tab === "signup");
+        el.authModalTitle.textContent = tab === "login" ? "로그인" : "회원가입";
+      }
+
+      function openAuthModal(tab = "login") {
+        setAuthTab(tab);
+        openModal("authModal");
+      }
+
+      function requireLogin(message) {
+        if (apiState.currentUser) return true;
+        showToast(message);
+        openAuthModal("login");
+        return false;
+      }
+
+      async function handleLogin(event) {
+        event.preventDefault();
+        try {
+          const payload = await apiFetch("/api/auth/login", {
+            method: "POST",
+            body: JSON.stringify({
+              email: document.getElementById("loginEmail").value.trim(),
+              password: document.getElementById("loginPassword").value
+            })
+          });
+          apiState.currentUser = payload.user;
+          setHeader();
+          closeModal("authModal");
+          el.loginForm.reset();
+          showToast(`${payload.user.nickname}님, 로그인되었습니다.`);
+          if (apiState.currentGameId) await loadDetail();
+        } catch (error) {
+          showToast(error.message);
+        }
+      }
+
+      async function handleSignup(event) {
+        event.preventDefault();
+        try {
+          const payload = await apiFetch("/api/auth/signup", {
+            method: "POST",
+            body: JSON.stringify({
+              nickname: document.getElementById("signupNickname").value.trim(),
+              email: document.getElementById("signupEmail").value.trim(),
+              password: document.getElementById("signupPassword").value
+            })
+          });
+          apiState.currentUser = payload.user;
+          setHeader();
+          closeModal("authModal");
+          el.signupForm.reset();
+          showToast("회원가입이 완료되었습니다.");
+          if (apiState.currentGameId) await loadDetail();
+        } catch (error) {
+          showToast(error.message);
+        }
+      }
+
+      function fieldsForType(type) {
+        return [...COMMON_FIELDS, ...(type === "critique" ? CRITIQUE_FIELDS : REVIEW_FIELDS)];
+      }
+
+      function selectedReviewType() {
+        return document.querySelector("input[name='reviewType']:checked").value;
+      }
+
+      function renderRatingReadout() {
+        const rating = Number(el.reviewRating.value);
+        el.reviewRatingText.textContent = `${rating.toFixed(1)} / 5`;
+        el.reviewStars.innerHTML = renderStars(rating);
+      }
+
+      function renderScoreInputs(existingScores = {}) {
+        const type = selectedReviewType();
+        const fields = fieldsForType(type);
+        const usesScores = type === "critique";
+        el.scoreField.hidden = !usesScores;
+        el.recommendationField.hidden = true;
+        el.recommendationInput.value = "";
+        if (!usesScores) {
+          el.scoreInputList.innerHTML = "";
+          return;
+        }
+        el.scoreInputList.innerHTML = fields.map(field => {
+          const value = Number(existingScores[field.key] || 3);
+          return `
+            <label class="score-input">
+              <span class="score-input-head">
+                <span>${escapeHtml(field.label)}</span>
+                <output>${value}</output>
+              </span>
+              <span class="score-input-help">3 보통 · 5 강점</span>
+              <input type="range" min="1" max="5" step="1" value="${value}" data-score-key="${field.key}" />
+            </label>
+          `;
+        }).join("");
+        el.scoreInputList.querySelectorAll("input[type='range']").forEach(input => {
+          input.addEventListener("input", () => {
+            input.closest(".score-input").querySelector("output").textContent = input.value;
+          });
+        });
+      }
+
+      function openReviewModal() {
+        if (!requireLogin("평론/리뷰 작성은 로그인 후 이용할 수 있습니다.")) return;
+        const review = apiState.detail?.myReview;
+        const game = apiState.detail?.game;
+        el.reviewModalTitle.textContent = review ? `${game.title} 글 수정` : `${game.title} 평론/리뷰 작성`;
+        el.reviewSubmitButton.textContent = review ? "글 수정" : "글 등록";
+        el.reviewComment.value = review?.comment || "";
+        el.reviewRating.value = review?.rating || 4;
+        document.querySelectorAll("input[name='reviewType']").forEach(input => {
+          input.checked = input.value === (review?.type || "review");
+        });
+        renderRatingReadout();
+        renderScoreInputs(review?.scores || {});
+        openModal("reviewModal");
+      }
+
+      async function handleReviewSubmit(event) {
+        event.preventDefault();
+        if (!apiState.currentUser || !apiState.currentGameId) return;
+
+        const scores = {};
+        const type = selectedReviewType();
+        if (type === "critique") {
+          el.scoreInputList.querySelectorAll("input[data-score-key]").forEach(input => {
+            scores[input.dataset.scoreKey] = Number(input.value);
+          });
+        }
+        const body = {
+          type,
+          rating: Number(el.reviewRating.value),
+          comment: el.reviewComment.value.trim(),
+          scores
+        };
+        const myReview = apiState.detail?.myReview;
+        const path = myReview ? `/api/reviews/${myReview.id}` : `/api/games/${apiState.currentGameId}/reviews`;
+        const method = myReview ? "PUT" : "POST";
+
+        try {
+          await apiFetch(path, { method, body: JSON.stringify(body) });
+          closeModal("reviewModal");
+          await Promise.all([loadGames(), loadDetail()]);
+          showToast(myReview ? "글이 수정되었습니다." : "글이 등록되었습니다.");
+        } catch (error) {
+          showToast(error.message);
+        }
+      }
+
+      function openRequestModal() {
+        if (!requireLogin("게임 등록 신청은 로그인 후 이용할 수 있습니다.")) return;
+        el.gameRequestForm.reset();
+        openModal("requestModal");
+      }
+
+      async function handleGameRequestSubmit(event) {
+        event.preventDefault();
+        try {
+          await apiFetch("/api/game-requests", {
+            method: "POST",
+            body: JSON.stringify({
+              title: document.getElementById("requestTitle").value.trim(),
+              platform: document.getElementById("requestPlatform").value,
+              year: document.getElementById("requestYear").value ? Number(document.getElementById("requestYear").value) : null,
+              reason: document.getElementById("requestReason").value.trim()
+            })
+          });
+          closeModal("requestModal");
+          await loadGames();
+          showToast("게임 등록 신청이 저장되었습니다.");
+        } catch (error) {
+          showToast(error.message);
+        }
+      }
+
+      function bindEvents() {
+        el.homeButton.addEventListener("click", showListView);
+        el.backButton.addEventListener("click", showListView);
+        el.loginButton.addEventListener("click", () => openAuthModal("login"));
+        el.signupButton.addEventListener("click", () => openAuthModal("signup"));
+        el.logoutButton.addEventListener("click", async () => {
+          await apiFetch("/api/auth/logout", { method: "POST" });
+          apiState.currentUser = null;
+          setHeader();
+          if (apiState.currentGameId) await loadDetail();
+          showToast("로그아웃되었습니다.");
+        });
+        el.requestGameButton.addEventListener("click", openRequestModal);
+        el.detailRequestButton.addEventListener("click", openRequestModal);
+        el.searchInput.addEventListener("input", async event => {
+          apiState.query = event.target.value;
+          await loadGames();
+        });
+        el.genreFilter.addEventListener("change", async event => {
+          apiState.genre = event.target.value;
+          await loadGames();
+        });
+        el.reviewTypeFilter.addEventListener("change", async event => {
+          apiState.reviewType = event.target.value;
+          await loadGames();
+        });
+        el.ratingFilter.addEventListener("change", async event => {
+          apiState.ratingMin = event.target.value;
+          await loadGames();
+        });
+        document.querySelectorAll("[data-sort]").forEach(button => {
+          button.addEventListener("click", async () => {
+            apiState.sort = button.dataset.sort;
+            document.querySelectorAll("[data-sort]").forEach(item => item.classList.toggle("active", item === button));
+            await loadGames();
+          });
+        });
+        el.gameGrid.addEventListener("click", async event => {
+          const card = event.target.closest("[data-game-id]");
+          if (card) await showDetailView(card.dataset.gameId);
+        });
+        document.querySelectorAll("[data-close-modal]").forEach(button => {
+          button.addEventListener("click", () => closeModal(button.dataset.closeModal));
+        });
+        document.querySelectorAll(".modal-overlay").forEach(overlay => {
+          overlay.addEventListener("click", event => {
+            if (event.target === overlay) closeModal(overlay.id);
+          });
+        });
+        document.addEventListener("keydown", event => {
+          if (event.key === "Escape") {
+            document.querySelectorAll(".modal-overlay.open").forEach(modal => closeModal(modal.id));
+          }
+        });
+        document.querySelectorAll("[data-auth-tab]").forEach(button => {
+          button.addEventListener("click", () => setAuthTab(button.dataset.authTab));
+        });
+        document.querySelectorAll("input[name='reviewType']").forEach(input => {
+          input.addEventListener("change", () => renderScoreInputs({}));
+        });
+        el.reviewRating.addEventListener("input", renderRatingReadout);
+        el.loginForm.addEventListener("submit", handleLogin);
+        el.signupForm.addEventListener("submit", handleSignup);
+        el.reviewForm.addEventListener("submit", handleReviewSubmit);
+        el.gameRequestForm.addEventListener("submit", handleGameRequestSubmit);
+      }
+
+      async function initServerMode() {
+        cache();
+        bindEvents();
+        renderRatingReadout();
+        renderScoreInputs({});
+        try {
+          await loadMe();
+          await loadGames();
+        } catch (error) {
+          setHeader();
+          el.gameGrid.innerHTML = `<div class="empty-state"><strong>서버에 연결할 수 없습니다.</strong><span>서버를 실행한 뒤 http://localhost:3000 으로 접속하세요.</span></div>`;
+          showToast(error.message);
+        }
+      }
+
+      initServerMode();
+    })();
+  </script>
+</body>
+</html>

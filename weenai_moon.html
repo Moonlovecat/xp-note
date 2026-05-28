@@ -1,0 +1,1084 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GameScore</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #080813;
+      --bg2: #0e0e1f;
+      --bg3: #141428;
+      --card: #111124;
+      --card-h: #181830;
+      --purple: #7b61ff;
+      --cyan: #00d2ff;
+      --pink: #ff61a6;
+      --gold: #ffd700;
+      --text: #e2e2f0;
+      --text2: #8888aa;
+      --text3: #4a4a6a;
+      --border: rgba(255,255,255,0.07);
+      --border2: rgba(123,97,255,0.25);
+      --glow-p: 0 0 24px rgba(123,97,255,0.35);
+      --glow-c: 0 0 24px rgba(0,210,255,0.35);
+      --r: 14px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        linear-gradient(rgba(123,97,255,.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(123,97,255,.04) 1px, transparent 1px);
+      background-size: 64px 64px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── HEADER ── */
+    .header {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(8,8,19,.88);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+    .header-inner {
+      max-width: 1400px; margin: 0 auto;
+      padding: 0 2rem; height: 62px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .logo { display: flex; align-items: center; gap: .5rem; cursor: pointer; }
+    .logo-icon { font-size: 1.4rem; color: var(--purple); filter: drop-shadow(0 0 8px var(--purple)); }
+    .logo-text {
+      font-size: 1.25rem; font-weight: 800; letter-spacing: .04em;
+      background: linear-gradient(90deg, var(--purple), var(--cyan));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .nav { display: flex; gap: .5rem; }
+    .nav-btn {
+      background: transparent; border: 1px solid var(--border);
+      color: var(--text2); padding: .4rem 1rem; border-radius: 8px;
+      cursor: pointer; font-size: .875rem; transition: all .2s;
+    }
+    .nav-btn:hover { border-color: var(--purple); color: var(--purple); background: rgba(123,97,255,.08); }
+    .nav-btn.accent {
+      background: linear-gradient(135deg, var(--purple), var(--cyan));
+      color: white; border: none; font-weight: 600;
+    }
+    .nav-btn.accent:hover { opacity: .85; transform: translateY(-1px); }
+
+    /* ── VIEW ── */
+    .view { display: none; position: relative; z-index: 1; }
+    .view.active { display: block; }
+
+    /* ── HERO ── */
+    .hero {
+      max-width: 1400px; margin: 0 auto;
+      padding: 5rem 2rem 3rem;
+      text-align: center; position: relative;
+    }
+    .hero-bg-orb {
+      position: absolute; border-radius: 50%;
+      filter: blur(80px); pointer-events: none; z-index: -1;
+    }
+    .orb1 { width: 400px; height: 400px; background: rgba(123,97,255,.15); top: -80px; left: 10%; }
+    .orb2 { width: 300px; height: 300px; background: rgba(0,210,255,.1); top: 0; right: 15%; }
+    .hero-title {
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      font-weight: 900; line-height: 1.15; margin-bottom: 1rem; letter-spacing: -.02em;
+    }
+    .gradient-text {
+      background: linear-gradient(90deg, var(--purple), var(--cyan));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .hero-sub { color: var(--text2); font-size: 1.05rem; margin-bottom: 2rem; }
+    .hero-stats { display: flex; align-items: center; justify-content: center; gap: 2rem; }
+    .stat { display: flex; flex-direction: column; align-items: center; gap: .2rem; }
+    .stat-num { font-size: 1.5rem; font-weight: 800; color: var(--purple); }
+    .stat-label { font-size: .72rem; color: var(--text3); text-transform: uppercase; letter-spacing: .1em; }
+    .stat-divider { width: 1px; height: 30px; background: var(--border); }
+
+    /* ── CONTROLS ── */
+    .controls {
+      max-width: 1400px; margin: 0 auto;
+      padding: 0 2rem 1.5rem;
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;
+    }
+    .sort-pills { display: flex; gap: .4rem; background: var(--bg2); padding: 4px; border-radius: 12px; border: 1px solid var(--border); }
+    .sort-pill {
+      background: transparent; border: none; color: var(--text2);
+      padding: .4rem .9rem; border-radius: 9px; cursor: pointer;
+      font-size: .85rem; transition: all .2s;
+    }
+    .sort-pill.active { background: var(--purple); color: white; box-shadow: var(--glow-p); font-weight: 600; }
+    .sort-pill:not(.active):hover { color: var(--text); background: rgba(255,255,255,.05); }
+    .search-wrap { position: relative; }
+    .search-icon { position: absolute; left: .75rem; top: 50%; transform: translateY(-50%); font-size: .85rem; }
+    .search-input {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 10px; padding: .5rem .875rem .5rem 2.1rem;
+      color: var(--text); font-size: .875rem; width: 240px; outline: none; transition: all .2s;
+    }
+    .search-input:focus { border-color: var(--purple); box-shadow: 0 0 0 3px rgba(123,97,255,.12); }
+    .search-input::placeholder { color: var(--text3); }
+
+    /* ── GAME GRID ── */
+    .game-grid {
+      max-width: 1400px; margin: 0 auto;
+      padding: 0 2rem 5rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1.25rem;
+    }
+
+    /* ── GAME CARD ── */
+    .game-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--r); overflow: hidden; cursor: pointer;
+      transition: transform .3s ease, box-shadow .3s ease, border-color .3s ease;
+      position: relative;
+    }
+    .game-card:hover {
+      transform: translateY(-10px) scale(1.03);
+      border-color: var(--purple);
+      box-shadow: 0 24px 48px rgba(0,0,0,.6), var(--glow-p);
+    }
+    .game-card-cover {
+      width: 100%; aspect-ratio: 3/4;
+      display: flex; align-items: flex-end; justify-content: flex-start;
+      padding: .75rem; position: relative; overflow: hidden;
+    }
+    .game-card-cover .cover-inner {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 3.5rem;
+    }
+    .game-card-cover::after {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(to bottom, transparent 40%, rgba(0,0,0,.85) 100%);
+      z-index: 1;
+    }
+    .cover-title {
+      position: relative; z-index: 2;
+      font-size: .75rem; font-weight: 700; color: white;
+      text-shadow: 0 2px 8px rgba(0,0,0,.9); line-height: 1.25;
+    }
+    .card-badge {
+      position: absolute; top: .6rem; right: .6rem; z-index: 3;
+      font-size: .6rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+      padding: 2px 7px; border-radius: 20px;
+    }
+    .badge-hot { background: linear-gradient(135deg, #ff6b35, #ff0080); color: white; }
+    .badge-new { background: linear-gradient(135deg, var(--purple), var(--cyan)); color: white; }
+    .game-card-info { padding: .75rem; }
+    .card-title { font-size: .875rem; font-weight: 600; line-height: 1.3; margin-bottom: .45rem; }
+    .card-meta { display: flex; align-items: center; justify-content: space-between; gap: .3rem; flex-wrap: wrap; }
+    .card-genre {
+      font-size: .68rem; color: var(--text3);
+      background: rgba(123,97,255,.1); border: 1px solid rgba(123,97,255,.2);
+      padding: 2px 7px; border-radius: 20px;
+    }
+    .card-rating { display: flex; align-items: center; gap: .25rem; font-size: .85rem; font-weight: 800; color: var(--gold); }
+    .card-rating-star { font-size: .7rem; }
+    .card-review-count { font-size: .65rem; color: var(--text3); margin-top: .2rem; }
+
+    /* ── DETAIL VIEW ── */
+    .detail-back {
+      max-width: 1100px; margin: 1.5rem auto 0; padding: 0 2rem;
+      color: var(--text2); cursor: pointer; font-size: .875rem; transition: color .2s; display: block;
+    }
+    .detail-back:hover { color: var(--purple); }
+    .detail-view-inner { max-width: 1100px; margin: 0 auto; padding: 1.5rem 2rem 5rem; }
+
+    .detail-hero {
+      display: grid; grid-template-columns: 180px 1fr;
+      gap: 2rem; margin-bottom: 2.5rem; align-items: start;
+    }
+    .detail-cover {
+      width: 180px; aspect-ratio: 3/4; border-radius: var(--r); overflow: hidden;
+      box-shadow: 0 20px 40px rgba(0,0,0,.6);
+      display: flex; align-items: center; justify-content: center; font-size: 4rem;
+      flex-shrink: 0;
+    }
+    .detail-platform { font-size: .72rem; color: var(--cyan); letter-spacing: .12em; text-transform: uppercase; margin-bottom: .4rem; }
+    .detail-title { font-size: clamp(1.5rem, 4vw, 2.25rem); font-weight: 900; line-height: 1.15; letter-spacing: -.02em; margin-bottom: .5rem; }
+    .detail-sub { color: var(--text2); font-size: .875rem; margin-bottom: 1.5rem; }
+
+    .rating-showcase { display: flex; align-items: center; gap: 1.25rem; margin-bottom: 1.5rem; }
+    .big-score {
+      font-size: 4rem; font-weight: 900; color: var(--gold); line-height: 1;
+      text-shadow: 0 0 24px rgba(255,215,0,.4);
+    }
+    .score-aside { display: flex; flex-direction: column; gap: .3rem; }
+    .stars-row { display: flex; gap: 2px; font-size: 1.3rem; }
+    .review-tally { font-size: .75rem; color: var(--text3); }
+    .no-score { font-size: 1.1rem; color: var(--text3); font-style: italic; }
+
+    .write-btn {
+      display: inline-flex; align-items: center; gap: .5rem;
+      background: linear-gradient(135deg, var(--purple), var(--cyan));
+      color: white; border: none; padding: .65rem 1.4rem;
+      border-radius: 10px; cursor: pointer; font-size: .925rem; font-weight: 700;
+      transition: all .2s; box-shadow: var(--glow-p);
+    }
+    .write-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(123,97,255,.5); }
+
+    /* ── SCORE BARS ── */
+    .score-bars {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: var(--r); padding: 1.25rem; margin-bottom: 2rem;
+    }
+    .score-bars-title {
+      font-size: .7rem; font-weight: 700; color: var(--text3);
+      text-transform: uppercase; letter-spacing: .1em; margin-bottom: 1rem;
+    }
+    .bar-row { display: grid; grid-template-columns: 90px 1fr 36px; align-items: center; gap: .75rem; margin-bottom: .5rem; }
+    .bar-label { font-size: .78rem; color: var(--text2); text-align: right; }
+    .bar-track { height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--purple), var(--cyan)); transition: width .9s cubic-bezier(.4,0,.2,1); }
+    .bar-val { font-size: .78rem; font-weight: 700; color: var(--text); }
+
+    /* ── REVIEWS ── */
+    .reviews-header { display: flex; align-items: center; gap: .6rem; margin-bottom: 1.25rem; font-size: 1.1rem; font-weight: 700; }
+    .reviews-badge {
+      background: var(--bg3); border: 1px solid var(--border);
+      color: var(--text3); font-size: .7rem; padding: 2px 8px; border-radius: 20px;
+    }
+    .review-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--r); padding: 1.125rem; margin-bottom: .875rem;
+      transition: border-color .2s;
+    }
+    .review-card:hover { border-color: var(--border2); }
+    .rv-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: .75rem; flex-wrap: wrap; gap: .5rem; }
+    .rv-user { display: flex; align-items: center; gap: .65rem; }
+    .rv-avatar {
+      width: 34px; height: 34px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--purple), var(--cyan));
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: .85rem; color: white; flex-shrink: 0;
+    }
+    .rv-name { font-weight: 600; font-size: .875rem; }
+    .rv-type-tag { font-size: .6rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; padding: 2px 7px; border-radius: 20px; }
+    .tag-light { background: rgba(0,210,255,.12); color: var(--cyan); border: 1px solid rgba(0,210,255,.25); }
+    .tag-hard { background: rgba(255,97,166,.12); color: var(--pink); border: 1px solid rgba(255,97,166,.25); }
+    .rv-right { display: flex; align-items: center; gap: .75rem; }
+    .rv-stars { display: flex; gap: 1px; font-size: 1rem; }
+    .rv-date { font-size: .7rem; color: var(--text3); }
+    .rv-comment { color: var(--text2); font-size: .875rem; line-height: 1.65; margin-bottom: .75rem; }
+    .rv-scores { display: flex; flex-wrap: wrap; gap: .35rem; }
+    .rv-score-pill {
+      background: rgba(123,97,255,.08); border: 1px solid rgba(123,97,255,.15);
+      border-radius: 20px; padding: 2px 9px; font-size: .7rem; color: var(--text2);
+      display: flex; align-items: center; gap: .25rem;
+    }
+    .pill-stars { color: var(--gold); font-size: .65rem; }
+    .rv-recommended { margin-top: .5rem; font-size: .78rem; color: var(--text3); }
+    .rv-recommended strong { color: var(--cyan); }
+    .no-reviews { text-align: center; padding: 3rem; color: var(--text3); }
+    .no-reviews-icon { font-size: 3rem; margin-bottom: .75rem; display: block; }
+
+    /* ── MODAL ── */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,.75); backdrop-filter: blur(6px);
+      z-index: 200; align-items: center; justify-content: center; padding: 1rem;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 20px; width: 100%; max-width: 580px;
+      max-height: 90vh; overflow-y: auto;
+      animation: modalIn .28s cubic-bezier(.34,1.56,.64,1);
+    }
+    @keyframes modalIn {
+      from { opacity: 0; transform: scale(.92) translateY(12px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .modal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; background: var(--bg2); z-index: 10;
+    }
+    .modal-title { font-size: 1rem; font-weight: 700; }
+    .modal-close {
+      background: none; border: none; color: var(--text3); cursor: pointer;
+      font-size: 1rem; width: 30px; height: 30px; border-radius: 7px;
+      display: flex; align-items: center; justify-content: center; transition: all .2s;
+    }
+    .modal-close:hover { background: rgba(255,255,255,.08); color: var(--text); }
+    .modal-body { padding: 1.5rem; }
+
+    .step-hint { text-align: center; color: var(--text2); font-size: .9rem; margin-bottom: 1.25rem; }
+    .template-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .875rem; }
+    .template-card {
+      background: var(--card); border: 2px solid var(--border);
+      border-radius: 14px; padding: 1.5rem; cursor: pointer; text-align: center;
+      transition: all .25s;
+    }
+    .template-card:hover {
+      border-color: var(--purple); background: var(--card-h);
+      box-shadow: var(--glow-p); transform: translateY(-4px);
+    }
+    .template-emoji { font-size: 2.25rem; margin-bottom: .6rem; }
+    .template-card h3 { font-size: .95rem; font-weight: 700; margin-bottom: .4rem; }
+    .template-card p { font-size: .78rem; color: var(--text2); line-height: 1.5; margin-bottom: .75rem; }
+    .template-tags { display: flex; flex-wrap: wrap; gap: .3rem; justify-content: center; }
+    .template-tags span {
+      font-size: .65rem; background: rgba(123,97,255,.12); border: 1px solid rgba(123,97,255,.2);
+      color: var(--purple); padding: 1px 7px; border-radius: 20px;
+    }
+
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: .875rem; margin-bottom: .25rem; }
+    .form-group { margin-bottom: 1rem; }
+    .form-group label { display: block; font-size: .72rem; font-weight: 700; color: var(--text2); margin-bottom: .35rem; text-transform: uppercase; letter-spacing: .07em; }
+    .label-hint { color: var(--text3); text-transform: none; font-weight: 400; }
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%; background: var(--card); border: 1px solid var(--border);
+      border-radius: 9px; padding: .55rem .875rem;
+      color: var(--text); font-size: .875rem; outline: none; transition: border-color .2s;
+      font-family: inherit;
+    }
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus { border-color: var(--purple); box-shadow: 0 0 0 3px rgba(123,97,255,.1); }
+    .form-group textarea { resize: vertical; min-height: 80px; }
+    .form-group select { cursor: pointer; }
+
+    .scores-block { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1rem; margin-bottom: 1rem; }
+    .scores-block-label { font-size: .72rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--text3); margin-bottom: .75rem; }
+    .scores-grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: .625rem; }
+    .score-item { background: var(--bg2); border-radius: 9px; padding: .6rem .75rem; }
+    .score-item label { display: block; font-size: .68rem; font-weight: 600; color: var(--text3); margin-bottom: .3rem; text-transform: uppercase; letter-spacing: .05em; }
+
+    .star-input { display: flex; gap: 2px; }
+    .star-btn {
+      background: none; border: none; cursor: pointer;
+      font-size: 1.25rem; color: var(--text3); transition: all .15s; padding: 0 1px;
+      line-height: 1;
+    }
+    .star-btn.lit { color: var(--gold); filter: drop-shadow(0 0 4px rgba(255,215,0,.5)); }
+    .star-btn:hover { transform: scale(1.2); color: var(--gold); }
+    #rv-total-stars .star-btn { font-size: 1.5rem; }
+
+    .modal-actions { display: flex; gap: .625rem; justify-content: flex-end; margin-top: 1.25rem; }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--purple), var(--cyan));
+      color: white; border: none; padding: .6rem 1.4rem; border-radius: 9px;
+      cursor: pointer; font-size: .9rem; font-weight: 700; transition: all .2s;
+    }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(123,97,255,.4); }
+    .btn-ghost {
+      background: transparent; color: var(--text2);
+      border: 1px solid var(--border); padding: .6rem 1.1rem; border-radius: 9px;
+      cursor: pointer; font-size: .875rem; transition: all .2s;
+    }
+    .btn-ghost:hover { border-color: var(--purple); color: var(--purple); }
+
+    /* ── TOAST ── */
+    .toast {
+      position: fixed; bottom: 2rem; left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--bg2); border: 1px solid var(--purple);
+      border-radius: 12px; padding: .7rem 1.4rem; font-size: .875rem;
+      z-index: 500; transition: transform .3s ease; box-shadow: var(--glow-p);
+      white-space: nowrap; pointer-events: none;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    .empty-state { text-align: center; padding: 5rem 2rem; color: var(--text3); }
+    .empty-icon { font-size: 3.5rem; margin-bottom: .75rem; display: block; }
+
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--bg3); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--purple); }
+
+    @media (max-width: 768px) {
+      .detail-hero { grid-template-columns: 1fr; }
+      .detail-cover { width: 140px; margin: 0 auto; }
+      .scores-grid3 { grid-template-columns: 1fr 1fr; }
+      .template-grid { grid-template-columns: 1fr; }
+      .form-row { grid-template-columns: 1fr; }
+      .game-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: .875rem; }
+      .controls { flex-direction: column; align-items: stretch; }
+      .search-input { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-inner">
+    <div class="logo" onclick="showHome()">
+      <span class="logo-icon">◈</span>
+      <span class="logo-text">GameScore</span>
+    </div>
+    <nav class="nav">
+      <button class="nav-btn" onclick="showHome()">게임 목록</button>
+      <button class="nav-btn accent" onclick="openModal('request-modal')">게임 등록 신청</button>
+    </nav>
+  </div>
+</header>
+
+<!-- HOME VIEW -->
+<div id="home-view" class="view active">
+  <section class="hero">
+    <div class="hero-bg-orb orb1"></div>
+    <div class="hero-bg-orb orb2"></div>
+    <h1 class="hero-title">당신의 게임 경험을<br><span class="gradient-text">솔직하게 평가하세요</span></h1>
+    <p class="hero-sub">하드 리뷰어와 라이트 리뷰어, 모두를 위한 게임 평가 플랫폼</p>
+    <div class="hero-stats">
+      <div class="stat"><span id="stat-games" class="stat-num">20</span><span class="stat-label">게임</span></div>
+      <div class="stat-divider"></div>
+      <div class="stat"><span id="stat-reviews" class="stat-num">0</span><span class="stat-label">리뷰</span></div>
+      <div class="stat-divider"></div>
+      <div class="stat"><span class="stat-num">Nintendo</span><span class="stat-label">플랫폼</span></div>
+    </div>
+  </section>
+
+  <section class="controls">
+    <div class="sort-pills">
+      <button class="sort-pill active" onclick="setSort('popular', this)">🔥 인기순</button>
+      <button class="sort-pill" onclick="setSort('latest', this)">🕐 최신순</button>
+      <button class="sort-pill" onclick="setSort('rating', this)">⭐ 평점순</button>
+    </div>
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input class="search-input" type="text" placeholder="게임 검색..." oninput="filterGames(this.value)">
+    </div>
+  </section>
+
+  <div class="game-grid" id="game-grid"></div>
+</div>
+
+<!-- DETAIL VIEW -->
+<div id="detail-view" class="view">
+  <div class="detail-back" onclick="showHome()">← 목록으로</div>
+  <div id="detail-content" class="detail-view-inner"></div>
+</div>
+
+<!-- REVIEW MODAL -->
+<div class="modal-overlay" id="review-modal" onclick="closeModalOverlay(event, 'review-modal')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h2 class="modal-title" id="review-modal-title">리뷰 작성</h2>
+      <button class="modal-close" onclick="closeModal('review-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <div id="review-step-1">
+        <p class="step-hint">리뷰 유형을 선택하세요</p>
+        <div class="template-grid">
+          <div class="template-card" onclick="selectTemplate('light')">
+            <div class="template-emoji">☀️</div>
+            <h3>라이트 리뷰</h3>
+            <p>체감 중심의 간단한 평가<br>그래픽 · 가성비 · 몰입도</p>
+            <div class="template-tags">
+              <span>그래픽</span><span>가성비</span><span>몰입도</span>
+            </div>
+          </div>
+          <div class="template-card" onclick="selectTemplate('hard')">
+            <div class="template-emoji">⚔️</div>
+            <h3>하드 리뷰</h3>
+            <p>세부 요소를 깊게 평가<br>9가지 항목 + 추천 대상</p>
+            <div class="template-tags">
+              <span>OST</span><span>전략성</span><span>난이도</span><span>+6</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="review-step-2" style="display:none">
+        <form id="review-form" onsubmit="submitReview(event)">
+          <div class="form-row">
+            <div class="form-group">
+              <label>닉네임</label>
+              <input type="text" id="rv-username" required placeholder="닉네임 입력">
+            </div>
+            <div class="form-group">
+              <label>총점 <span class="label-hint">(5점 만점)</span></label>
+              <div class="star-input" id="rv-total-stars"></div>
+            </div>
+          </div>
+
+          <div class="scores-block" id="light-scores">
+            <div class="scores-block-label">☀️ 라이트 평가 항목</div>
+            <div class="scores-grid3">
+              <div class="score-item"><label>그래픽</label><div class="star-input" data-field="graphics"></div></div>
+              <div class="score-item"><label>가성비</label><div class="star-input" data-field="valueForMoney"></div></div>
+              <div class="score-item"><label>몰입도</label><div class="star-input" data-field="immersion"></div></div>
+            </div>
+          </div>
+
+          <div class="scores-block" id="hard-scores" style="display:none">
+            <div class="scores-block-label">⚔️ 하드 평가 항목</div>
+            <div class="scores-grid3">
+              <div class="score-item"><label>OST</label><div class="star-input" data-field="ost"></div></div>
+              <div class="score-item"><label>조작 직관성</label><div class="star-input" data-field="controls"></div></div>
+              <div class="score-item"><label>최적화/버그</label><div class="star-input" data-field="optimization"></div></div>
+              <div class="score-item"><label>전략성</label><div class="star-input" data-field="strategy"></div></div>
+              <div class="score-item"><label>난이도</label><div class="star-input" data-field="difficulty"></div></div>
+              <div class="score-item"><label>접근성</label><div class="star-input" data-field="accessibility"></div></div>
+              <div class="score-item"><label>안 질리는가</label><div class="star-input" data-field="replayability"></div></div>
+              <div class="score-item"><label>피로감 ↓</label><div class="star-input" data-field="fatigue"></div></div>
+            </div>
+            <div class="form-group" style="margin-top:.75rem">
+              <label>추천 대상</label>
+              <input type="text" id="rv-recommended" placeholder="어떤 게이머에게 추천하나요?">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>코멘트</label>
+            <textarea id="rv-comment" rows="3" placeholder="솔직한 한마디를 남겨주세요..."></textarea>
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" class="btn-ghost" onclick="goBackStep1()">← 이전</button>
+            <button type="submit" class="btn-primary">리뷰 등록</button>
+          </div>
+        </form>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- GAME REQUEST MODAL -->
+<div class="modal-overlay" id="request-modal" onclick="closeModalOverlay(event, 'request-modal')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h2 class="modal-title">게임 등록 신청</h2>
+      <button class="modal-close" onclick="closeModal('request-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <form onsubmit="submitGameRequest(event)">
+        <div class="form-group">
+          <label>게임 제목</label>
+          <input type="text" required placeholder="게임 제목을 입력하세요">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>플랫폼</label>
+            <select>
+              <option>Nintendo Switch</option>
+              <option>PlayStation 5</option>
+              <option>Xbox Series</option>
+              <option>PC</option>
+              <option>기타</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>출시 연도</label>
+            <input type="number" placeholder="2024" min="1980" max="2030">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>신청 이유</label>
+          <textarea rows="3" placeholder="이 게임을 추가해야 하는 이유를 알려주세요..."></textarea>
+        </div>
+        <div class="modal-actions">
+          <button type="submit" class="btn-primary">신청하기</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════
+//  GAME DATA
+// ═══════════════════════════════════════════
+const GAMES = [
+  { id: 1,  title: "슈퍼 마리오 갤럭시",           platform: "Nintendo Switch", genre: "플랫포머",      year: 2021, icon: "🌌", gradient: "linear-gradient(145deg,#1a237e,#7986cb)" },
+  { id: 2,  title: "메트로이드 프라임 비욘드",      platform: "Nintendo Switch", genre: "액션 어드벤처", year: 2025, icon: "🔵", gradient: "linear-gradient(145deg,#004d40,#26a69a)" },
+  { id: 3,  title: "메트로이드 드레드",             platform: "Nintendo Switch", genre: "액션",          year: 2021, icon: "⚡", gradient: "linear-gradient(145deg,#b71c1c,#e53935)" },
+  { id: 4,  title: "젤다의 전설: 야생의 숨결",      platform: "Nintendo Switch", genre: "오픈월드",      year: 2017, icon: "🌿", gradient: "linear-gradient(145deg,#1b5e20,#66bb6a)" },
+  { id: 5,  title: "슈퍼 마리오 오디세이",          platform: "Nintendo Switch", genre: "플랫포머",      year: 2017, icon: "🎩", gradient: "linear-gradient(145deg,#b71c1c,#ff7043)" },
+  { id: 6,  title: "동킹콩 바나나자",               platform: "Nintendo Switch", genre: "플랫포머",      year: 2025, icon: "🍌", gradient: "linear-gradient(145deg,#e65100,#ffa726)" },
+  { id: 7,  title: "별의 커비 디스커버리",          platform: "Nintendo Switch", genre: "액션",          year: 2022, icon: "🌸", gradient: "linear-gradient(145deg,#880e4f,#f48fb1)" },
+  { id: 8,  title: "스플래툰 3",                   platform: "Nintendo Switch", genre: "슈터",          year: 2022, icon: "🦑", gradient: "linear-gradient(145deg,#827717,#cddc39)" },
+  { id: 9,  title: "젤다의 전설: 왕국의 눈물",      platform: "Nintendo Switch", genre: "오픈월드",      year: 2023, icon: "👁️", gradient: "linear-gradient(145deg,#4a148c,#ce93d8)" },
+  { id: 10, title: "포켓몬 스칼렛/바이올렛",        platform: "Nintendo Switch", genre: "RPG",           year: 2022, icon: "⚔️", gradient: "linear-gradient(145deg,#880e4f,#f06292)" },
+  { id: 11, title: "닌텐도 스위치 스포츠",          platform: "Nintendo Switch", genre: "스포츠",        year: 2022, icon: "🏅", gradient: "linear-gradient(145deg,#006064,#4dd0e1)" },
+  { id: 12, title: "마리오 카트 8 디럭스",          platform: "Nintendo Switch", genre: "레이싱",        year: 2017, icon: "🏎️", gradient: "linear-gradient(145deg,#1565c0,#42a5f5)" },
+  { id: 13, title: "피크민 4",                     platform: "Nintendo Switch", genre: "전략",          year: 2023, icon: "🌱", gradient: "linear-gradient(145deg,#33691e,#aed581)" },
+  { id: 14, title: "파이어 엠블렘 인게이지",        platform: "Nintendo Switch", genre: "SRPG",          year: 2023, icon: "♟️", gradient: "linear-gradient(145deg,#880e4f,#e91e63)" },
+  { id: 15, title: "몬스터 헌터 라이즈",            platform: "Nintendo Switch", genre: "액션 RPG",      year: 2021, icon: "🐉", gradient: "linear-gradient(145deg,#3e2723,#8d6e63)" },
+  { id: 16, title: "제노블레이드 크로니클스 3",     platform: "Nintendo Switch", genre: "JRPG",          year: 2022, icon: "🗡️", gradient: "linear-gradient(145deg,#1a237e,#5c6bc0)" },
+  { id: 17, title: "스타듀 밸리",                  platform: "Nintendo Switch", genre: "시뮬레이션",    year: 2017, icon: "🌾", gradient: "linear-gradient(145deg,#2e7d32,#81c784)" },
+  { id: 18, title: "하데스",                       platform: "Nintendo Switch", genre: "로그라이크",    year: 2021, icon: "💀", gradient: "linear-gradient(145deg,#4a148c,#7b1fa2)" },
+  { id: 19, title: "링 피트 어드벤처",             platform: "Nintendo Switch", genre: "피트니스",      year: 2019, icon: "💪", gradient: "linear-gradient(145deg,#0d47a1,#42a5f5)" },
+  { id: 20, title: "루이지 맨션 3",                platform: "Nintendo Switch", genre: "어드벤처",      year: 2019, icon: "👻", gradient: "linear-gradient(145deg,#1b5e20,#388e3c)" },
+];
+
+const SEED_REVIEWS = {
+  4: [
+    { type: 'hard', username: '프로게이머K', starRating: 5, comment: "오픈월드의 혁명. 탐험 하나하나가 보상처럼 느껴졌다. 지금까지 해본 게임 중 가장 자유로운 경험이었다.", ost: 5, controls: 4, optimization: 5, strategy: 3, difficulty: 3, accessibility: 4, replayability: 5, fatigue: 2, recommendedFor: "오픈월드 입문자부터 하드코어 팬까지 모두", graphics: null, valueForMoney: null, immersion: null, date: "2025-03-12" },
+    { type: 'light', username: '닌텐도초보', starRating: 5, comment: "처음 게임 켰을 때 펼쳐지는 하이랄 평원 보고 진짜 소름 돋음. 200시간 했는데도 아직도 갈 곳이 있음.", graphics: 5, valueForMoney: 5, immersion: 5, ost: null, controls: null, optimization: null, strategy: null, difficulty: null, accessibility: null, replayability: null, fatigue: null, recommendedFor: null, date: "2025-04-01" },
+  ],
+  9: [
+    { type: 'hard', username: 'ZeldaFan99', starRating: 5, comment: "야숨을 뛰어넘을 수 없을 것 같았는데 뛰어넘었다. 지하 세계와 하늘 섬의 설계가 정말 대단하다. 빌드 시스템은 최고.", ost: 5, controls: 5, optimization: 4, strategy: 5, difficulty: 4, accessibility: 3, replayability: 5, fatigue: 3, recommendedFor: "야숨 좋아했던 사람, 샌드박스 마니아", graphics: null, valueForMoney: null, immersion: null, date: "2025-02-20" },
+  ],
+  5: [
+    { type: 'light', username: '마리오러버', starRating: 5, comment: "마리오 게임 중 역대급. 여행하는 느낌이 너무 좋았고 각 나라마다 분위기가 완전히 달라서 질리지 않았어요.", graphics: 5, valueForMoney: 4, immersion: 5, ost: null, controls: null, optimization: null, strategy: null, difficulty: null, accessibility: null, replayability: null, fatigue: null, recommendedFor: null, date: "2025-01-15" },
+    { type: 'hard', username: '플랫포머장인', starRating: 4, comment: "조작감이 너무 좋고 Moon 수집 욕구가 강하게 생긴다. 다만 전체적인 난이도가 낮아서 아쉬움.", ost: 5, controls: 5, optimization: 5, strategy: 2, difficulty: 2, accessibility: 5, replayability: 3, fatigue: 1, recommendedFor: "캐주얼 게이머, 패밀리 게이밍", graphics: null, valueForMoney: null, immersion: null, date: "2025-03-05" },
+  ],
+  18: [
+    { type: 'hard', username: '로그라이크매니아', starRating: 5, comment: "죽을수록 더 강해지는 메커니즘을 이렇게 재미있게 풀어낸 게임이 있을까. 내러티브와 게임플레이의 완벽한 융합.", ost: 5, controls: 5, optimization: 5, strategy: 5, difficulty: 4, accessibility: 3, replayability: 5, fatigue: 3, recommendedFor: "도전을 즐기는 게이머, 스토리 좋아하는 사람", graphics: null, valueForMoney: null, immersion: null, date: "2025-04-10" },
+  ],
+  15: [
+    { type: 'hard', username: '헌터MasterG', starRating: 4, comment: "솔로도 멀티도 재밌다. 와이어버그 이동이 너무 자유로워서 맵 탐색 자체가 즐겁다. 다만 엔드게임 콘텐츠가 아쉬움.", ost: 4, controls: 5, optimization: 4, strategy: 4, difficulty: 4, accessibility: 3, replayability: 4, fatigue: 3, recommendedFor: "액션 RPG 좋아하는 게이머, 멀티 선호자", graphics: null, valueForMoney: null, immersion: null, date: "2025-02-01" },
+  ],
+  12: [
+    { type: 'light', username: '레이싱초보', starRating: 5, comment: "친구들과 파티 게임으로 최고. 밸런스 잘 잡혀있고 트랙 수가 엄청 많아서 질리질 않아요.", graphics: 4, valueForMoney: 5, immersion: 4, ost: null, controls: null, optimization: null, strategy: null, difficulty: null, accessibility: null, replayability: null, fatigue: null, recommendedFor: null, date: "2025-03-22" },
+  ],
+};
+
+// ═══════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════
+let sort = 'popular';
+let query = '';
+let currentGameId = null;
+let currentTemplate = null;
+const starValues = {};
+
+function loadReviews() {
+  const stored = JSON.parse(localStorage.getItem('gs_reviews') || '{}');
+  const merged = {};
+  GAMES.forEach(g => {
+    const seed = SEED_REVIEWS[g.id] || [];
+    const user = stored[g.id] || [];
+    merged[g.id] = [...seed, ...user];
+  });
+  return merged;
+}
+function saveReviews(reviews) {
+  const toSave = {};
+  GAMES.forEach(g => {
+    const seed = SEED_REVIEWS[g.id] || [];
+    const all  = reviews[g.id] || [];
+    toSave[g.id] = all.slice(seed.length);
+  });
+  localStorage.setItem('gs_reviews', JSON.stringify(toSave));
+}
+
+let reviews = loadReviews();
+
+// ═══════════════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════════════
+function avgRating(list) {
+  if (!list.length) return null;
+  const sum = list.reduce((a, r) => a + r.starRating, 0);
+  return (sum / list.length).toFixed(1);
+}
+
+function starsHtml(rating, size = '1rem') {
+  const full = Math.floor(rating);
+  const half = rating - full >= 0.5;
+  let h = '';
+  for (let i = 0; i < 5; i++) {
+    if (i < full) h += `<span style="font-size:${size};color:var(--gold)">★</span>`;
+    else if (i === full && half) h += `<span style="font-size:${size};color:var(--gold)">⯨</span>`;
+    else h += `<span style="font-size:${size};color:var(--text3)">★</span>`;
+  }
+  return h;
+}
+
+function scoreLabel(field) {
+  const map = {
+    graphics: '그래픽', valueForMoney: '가성비', immersion: '몰입도',
+    ost: 'OST', controls: '조작 직관성', optimization: '최적화/버그',
+    strategy: '전략성', difficulty: '난이도', accessibility: '접근성',
+    replayability: '안 질리는가', fatigue: '피로감',
+  };
+  return map[field] || field;
+}
+
+function avgField(reviewList, field) {
+  const vals = reviewList.map(r => r[field]).filter(v => v != null && v > 0);
+  if (!vals.length) return null;
+  return vals.reduce((a, b) => a + b, 0) / vals.length;
+}
+
+function formatDate(dateStr) {
+  const d = new Date(dateStr);
+  return `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function today() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function updateStatBadge() {
+  const total = Object.values(reviews).reduce((a, r) => a + r.length, 0);
+  document.getElementById('stat-reviews').textContent = total;
+}
+
+// ═══════════════════════════════════════════
+//  SORT & FILTER
+// ═══════════════════════════════════════════
+function setSort(type, btn) {
+  sort = type;
+  document.querySelectorAll('.sort-pill').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderGrid();
+}
+
+function filterGames(val) {
+  query = val.toLowerCase();
+  renderGrid();
+}
+
+function sortedGames() {
+  let list = GAMES.filter(g =>
+    !query || g.title.toLowerCase().includes(query) || g.genre.toLowerCase().includes(query)
+  );
+  if (sort === 'popular') {
+    list.sort((a, b) => (reviews[b.id]?.length || 0) - (reviews[a.id]?.length || 0));
+  } else if (sort === 'rating') {
+    list.sort((a, b) => {
+      const ra = parseFloat(avgRating(reviews[a.id] || [])) || 0;
+      const rb = parseFloat(avgRating(reviews[b.id] || [])) || 0;
+      return rb - ra;
+    });
+  } else {
+    list.sort((a, b) => {
+      const la = reviews[a.id]?.at(-1)?.date || '0';
+      const lb = reviews[b.id]?.at(-1)?.date || '0';
+      return lb.localeCompare(la);
+    });
+  }
+  return list;
+}
+
+// ═══════════════════════════════════════════
+//  RENDER GRID
+// ═══════════════════════════════════════════
+function renderGrid() {
+  const grid = document.getElementById('game-grid');
+  const list = sortedGames();
+
+  if (!list.length) {
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><span class="empty-icon">🔍</span><p>검색 결과가 없습니다</p></div>`;
+    return;
+  }
+
+  const maxReviews = Math.max(...GAMES.map(g => reviews[g.id]?.length || 0));
+  const maxYear = Math.max(...GAMES.map(g => g.year));
+
+  grid.innerHTML = list.map(g => {
+    const rvList = reviews[g.id] || [];
+    const avg = avgRating(rvList);
+    const isHot = rvList.length === maxReviews && rvList.length > 0;
+    const isNew = g.year === maxYear;
+    const badge = isHot
+      ? `<span class="card-badge badge-hot">HOT</span>`
+      : isNew ? `<span class="card-badge badge-new">NEW</span>` : '';
+
+    return `
+      <div class="game-card" onclick="showDetail(${g.id})">
+        ${badge}
+        <div class="game-card-cover" style="background:${g.gradient}">
+          <div class="cover-inner">${g.icon}</div>
+          <span class="cover-title">${g.title}</span>
+        </div>
+        <div class="game-card-info">
+          <div class="card-title">${g.title}</div>
+          <div class="card-meta">
+            <span class="card-genre">${g.genre}</span>
+            ${avg ? `<span class="card-rating"><span class="card-rating-star">★</span>${avg}</span>` : '<span class="card-rating" style="color:var(--text3);font-size:.75rem">미평가</span>'}
+          </div>
+          <div class="card-review-count">${rvList.length > 0 ? `리뷰 ${rvList.length}개` : '첫 리뷰를 남겨보세요'}</div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════
+//  DETAIL VIEW
+// ═══════════════════════════════════════════
+function showDetail(id) {
+  currentGameId = id;
+  const g = GAMES.find(x => x.id === id);
+  const rvList = reviews[id] || [];
+  const avg = avgRating(rvList);
+
+  document.getElementById('home-view').classList.remove('active');
+  document.getElementById('detail-view').classList.add('active');
+  document.getElementById('detail-view').style.display = 'block';
+
+  const allFields = ['graphics','valueForMoney','immersion','ost','controls','optimization','strategy','difficulty','accessibility','replayability','fatigue'];
+  const barRows = allFields.map(f => {
+    const a = avgField(rvList, f);
+    if (a === null) return '';
+    const pct = (a / 5) * 100;
+    return `<div class="bar-row">
+      <span class="bar-label">${scoreLabel(f)}</span>
+      <div class="bar-track"><div class="bar-fill" style="width:0%" data-target="${pct.toFixed(1)}"></div></div>
+      <span class="bar-val">${a.toFixed(1)}</span>
+    </div>`;
+  }).join('');
+
+  const reviewCards = rvList.length ? rvList.map(r => renderReviewCard(r)).join('') :
+    `<div class="no-reviews"><span class="no-reviews-icon">💬</span><p>아직 리뷰가 없습니다.<br>첫 리뷰어가 되어보세요!</p></div>`;
+
+  document.getElementById('detail-content').innerHTML = `
+    <div class="detail-hero">
+      <div class="detail-cover" style="background:${g.gradient}">${g.icon}</div>
+      <div>
+        <div class="detail-platform">${g.platform} · ${g.year}</div>
+        <h1 class="detail-title">${g.title}</h1>
+        <div class="detail-sub">${g.genre} · ${g.year}년 출시</div>
+        <div class="rating-showcase">
+          ${avg
+            ? `<span class="big-score">${avg}</span>
+               <div class="score-aside">
+                 <div class="stars-row">${starsHtml(parseFloat(avg), '1.2rem')}</div>
+                 <div class="review-tally">리뷰 ${rvList.length}개 기준</div>
+               </div>`
+            : `<span class="no-score">아직 평가 없음</span>`
+          }
+        </div>
+        <button class="write-btn" onclick="openReviewModal(${id})">✏️ 리뷰 작성하기</button>
+      </div>
+    </div>
+
+    ${barRows ? `<div class="score-bars">
+      <div class="score-bars-title">📊 평가 항목별 평균</div>
+      ${barRows}
+    </div>` : ''}
+
+    <div class="reviews-section">
+      <div class="reviews-header">
+        리뷰 <span class="reviews-badge">${rvList.length}</span>
+      </div>
+      ${reviewCards}
+    </div>`;
+
+  requestAnimationFrame(() => {
+    document.querySelectorAll('.bar-fill[data-target]').forEach(el => {
+      setTimeout(() => { el.style.width = el.dataset.target + '%'; }, 100);
+    });
+  });
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function renderReviewCard(r) {
+  const typeLabel = r.type === 'light' ? '☀️ 라이트' : '⚔️ 하드';
+  const typeClass = r.type === 'light' ? 'tag-light' : 'tag-hard';
+
+  const lightFields = ['graphics','valueForMoney','immersion'];
+  const hardFields  = ['ost','controls','optimization','strategy','difficulty','accessibility','replayability','fatigue'];
+  const fields = r.type === 'light' ? lightFields : hardFields;
+
+  const pills = fields
+    .filter(f => r[f] != null && r[f] > 0)
+    .map(f => `<span class="rv-score-pill">${scoreLabel(f)} <span class="pill-stars">${'★'.repeat(r[f])}${'☆'.repeat(5-r[f])}</span></span>`)
+    .join('');
+
+  const recommended = r.recommendedFor
+    ? `<div class="rv-recommended">추천 대상: <strong>${r.recommendedFor}</strong></div>` : '';
+
+  return `<div class="review-card">
+    <div class="rv-header">
+      <div class="rv-user">
+        <div class="rv-avatar">${r.username[0]}</div>
+        <div>
+          <div class="rv-name">${r.username}</div>
+          <span class="rv-type-tag ${typeClass}">${typeLabel}</span>
+        </div>
+      </div>
+      <div class="rv-right">
+        <div class="rv-stars">${starsHtml(r.starRating)}</div>
+        <span class="rv-date">${formatDate(r.date)}</span>
+      </div>
+    </div>
+    ${r.comment ? `<div class="rv-comment">${r.comment}</div>` : ''}
+    ${pills ? `<div class="rv-scores">${pills}</div>` : ''}
+    ${recommended}
+  </div>`;
+}
+
+// ═══════════════════════════════════════════
+//  NAVIGATION
+// ═══════════════════════════════════════════
+function showHome() {
+  document.getElementById('home-view').classList.add('active');
+  document.getElementById('detail-view').classList.remove('active');
+  document.getElementById('detail-view').style.display = 'none';
+  renderGrid();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ═══════════════════════════════════════════
+//  MODAL
+// ═══════════════════════════════════════════
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+  document.body.style.overflow = '';
+}
+function closeModalOverlay(e, id) {
+  if (e.target === document.getElementById(id)) closeModal(id);
+}
+
+function openReviewModal(gameId) {
+  currentGameId = gameId;
+  currentTemplate = null;
+  Object.keys(starValues).forEach(k => delete starValues[k]);
+
+  document.getElementById('review-step-1').style.display = '';
+  document.getElementById('review-step-2').style.display = 'none';
+  document.getElementById('review-form').reset();
+
+  const g = GAMES.find(x => x.id === gameId);
+  document.getElementById('review-modal-title').textContent = `리뷰 작성 — ${g.title}`;
+  openModal('review-modal');
+}
+
+function selectTemplate(type) {
+  currentTemplate = type;
+  document.getElementById('review-step-1').style.display = 'none';
+  document.getElementById('review-step-2').style.display = '';
+
+  document.getElementById('light-scores').style.display = type === 'light' ? '' : 'none';
+  document.getElementById('hard-scores').style.display  = type === 'hard'  ? '' : 'none';
+
+  initAllStarInputs();
+}
+
+function goBackStep1() {
+  document.getElementById('review-step-1').style.display = '';
+  document.getElementById('review-step-2').style.display = 'none';
+}
+
+// ─── STAR INPUTS ───────────────────────────
+function initAllStarInputs() {
+  buildStarInput(document.getElementById('rv-total-stars'), 'total');
+  document.querySelectorAll('.star-input[data-field]').forEach(el => {
+    buildStarInput(el, el.dataset.field);
+  });
+}
+
+function buildStarInput(container, field) {
+  starValues[field] = 0;
+  container.innerHTML = '';
+  for (let i = 1; i <= 5; i++) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'star-btn';
+    btn.textContent = '★';
+    btn.dataset.val = i;
+    btn.addEventListener('click', () => setStarVal(container, field, i));
+    btn.addEventListener('mouseenter', () => highlightStars(container, i));
+    btn.addEventListener('mouseleave', () => highlightStars(container, starValues[field]));
+    container.appendChild(btn);
+  }
+}
+
+function setStarVal(container, field, val) {
+  starValues[field] = val;
+  highlightStars(container, val);
+}
+
+function highlightStars(container, val) {
+  container.querySelectorAll('.star-btn').forEach(btn => {
+    btn.classList.toggle('lit', parseInt(btn.dataset.val) <= val);
+  });
+}
+
+// ─── SUBMIT REVIEW ─────────────────────────
+function submitReview(e) {
+  e.preventDefault();
+  const username = document.getElementById('rv-username').value.trim();
+  if (!username) return showToast('닉네임을 입력해주세요');
+  if (!starValues.total) return showToast('총점을 선택해주세요');
+
+  const review = {
+    type: currentTemplate,
+    username,
+    starRating: starValues.total,
+    comment: document.getElementById('rv-comment').value.trim(),
+    date: today(),
+  };
+
+  const lightFields = ['graphics','valueForMoney','immersion'];
+  const hardFields  = ['ost','controls','optimization','strategy','difficulty','accessibility','replayability','fatigue'];
+
+  if (currentTemplate === 'light') {
+    lightFields.forEach(f => { review[f] = starValues[f] || 0; });
+    hardFields.forEach(f  => { review[f] = null; });
+    review.recommendedFor = null;
+  } else {
+    hardFields.forEach(f  => { review[f] = starValues[f] || 0; });
+    lightFields.forEach(f => { review[f] = null; });
+    review.recommendedFor = document.getElementById('rv-recommended').value.trim() || null;
+  }
+
+  reviews[currentGameId] = reviews[currentGameId] || [];
+  reviews[currentGameId].push(review);
+  saveReviews(reviews);
+
+  closeModal('review-modal');
+  showToast('✅ 리뷰가 등록되었습니다!');
+  updateStatBadge();
+
+  if (document.getElementById('detail-view').classList.contains('active')) {
+    showDetail(currentGameId);
+  }
+}
+
+function submitGameRequest(e) {
+  e.preventDefault();
+  closeModal('request-modal');
+  showToast('📨 등록 신청이 접수되었습니다!');
+  e.target.reset();
+}
+
+// ═══════════════════════════════════════════
+//  TOAST
+// ═══════════════════════════════════════════
+let toastTimer;
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
+}
+
+// ═══════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════
+renderGrid();
+updateStatBadge();
+</script>
+</body>
+</html>

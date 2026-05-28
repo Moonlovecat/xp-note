@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GameLog — 게임 리뷰 플랫폼</title>
+<style>
+:root {
+  --primary: #1DCD9F;
+  --secondary: #169976;
+  --accent: #4EE0AD;
+  --bg: #1A1A1A;
+  --bg2: #222222;
+  --bg3: #2A2A2A;
+  --bg4: #333333;
+  --text: #F5F5F5;
+  --muted: #ABABAB;
+  --border: #383838;
+  --danger: #FF5A5A;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans KR', sans-serif;
+  background: var(--bg); color: var(--text); min-height: 100vh;
+}
+
+/* NAVBAR */
+.navbar {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(26,26,26,0.96); backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border);
+  height: 60px; display: flex; align-items: center;
+  justify-content: space-between; padding: 0 24px;
+}
+.logo { font-size: 20px; font-weight: 900; color: var(--primary); cursor: pointer; letter-spacing: -0.5px; }
+.logo span { color: var(--text); font-weight: 300; }
+.nav-right { display: flex; align-items: center; gap: 10px; }
+
+/* BUTTONS */
+.btn {
+  padding: 8px 18px; border-radius: 8px; border: none;
+  cursor: pointer; font-size: 13px; font-weight: 600;
+  transition: all 0.15s; font-family: inherit;
+}
+.btn-primary { background: var(--primary); color: #111; }
+.btn-primary:hover { background: var(--secondary); color: #fff; }
+.btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+.btn-ghost:hover { border-color: var(--primary); color: var(--primary); }
+.btn-sm { padding: 6px 12px; font-size: 12px; }
+
+/* PAGES */
+.page { display: none; }
+.page.active { display: block; }
+
+/* HOME */
+.home-hero {
+  background: linear-gradient(180deg, var(--bg3) 0%, var(--bg) 100%);
+  padding: 52px 24px; text-align: center;
+  border-bottom: 1px solid var(--border);
+}
+.home-hero h1 { font-size: 38px; font-weight: 900; margin-bottom: 10px; line-height: 1.2; }
+.home-hero h1 em { color: var(--primary); font-style: normal; }
+.home-hero p { font-size: 15px; color: var(--muted); }
+
+.container { max-width: 1200px; margin: 0 auto; padding: 32px 24px; }
+.toolbar {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 24px; flex-wrap: wrap; gap: 12px;
+}
+.sort-btn {
+  padding: 7px 16px; border-radius: 20px; border: 1px solid var(--border);
+  background: transparent; color: var(--muted); cursor: pointer;
+  font-size: 13px; font-weight: 500; transition: all 0.15s; font-family: inherit;
+}
+.sort-btn.active { background: var(--primary); color: #111; border-color: var(--primary); font-weight: 700; }
+.sort-btn + .sort-btn { margin-left: 6px; }
+
+.game-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 18px;
+}
+.game-card {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 14px; overflow: hidden; cursor: pointer; transition: all 0.2s;
+}
+.game-card:hover { transform: translateY(-4px); border-color: var(--primary); box-shadow: 0 8px 24px rgba(29,205,159,0.12); }
+.game-thumb {
+  aspect-ratio: 1; background: var(--bg3);
+  display: flex; align-items: center; justify-content: center; font-size: 52px;
+}
+.game-body { padding: 14px; }
+.game-name { font-size: 13px; font-weight: 700; line-height: 1.4; margin-bottom: 4px; }
+.game-sub { font-size: 11px; color: var(--muted); margin-bottom: 10px; }
+.game-rating { display: flex; align-items: center; justify-content: space-between; }
+.stars { display: flex; gap: 1px; }
+.s { font-size: 13px; }
+.s-on { color: var(--primary); }
+.s-off { color: var(--bg4); }
+.score-val { font-size: 14px; font-weight: 800; color: var(--primary); }
+.rcnt { font-size: 11px; color: var(--muted); }
+
+/* DETAIL */
+.detail-hero { background: var(--bg2); border-bottom: 1px solid var(--border); }
+.detail-hero-inner { max-width: 900px; margin: 0 auto; padding: 36px 24px; }
+.back-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: none; border: none; color: var(--muted);
+  cursor: pointer; font-size: 13px; padding: 0; margin-bottom: 20px;
+  transition: color 0.15s; font-family: inherit;
+}
+.back-btn:hover { color: var(--primary); }
+.detail-main { display: flex; gap: 24px; align-items: flex-start; }
+.cover-lg {
+  width: 160px; height: 160px; border-radius: 14px;
+  background: var(--bg3); display: flex; align-items: center;
+  justify-content: center; font-size: 70px; flex-shrink: 0;
+  border: 1px solid var(--border);
+}
+.detail-info { flex: 1; min-width: 0; }
+.platform-tag {
+  display: inline-block; background: var(--secondary); color: #fff;
+  font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px;
+  margin-bottom: 10px;
+}
+.detail-title { font-size: 26px; font-weight: 900; margin-bottom: 6px; line-height: 1.2; }
+.detail-dev { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
+.rating-big { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; }
+.score-big { font-size: 48px; font-weight: 900; color: var(--primary); line-height: 1; }
+.rating-big-right { display: flex; flex-direction: column; gap: 5px; }
+.stars-lg .s { font-size: 20px; }
+.rating-meta { font-size: 12px; color: var(--muted); }
+
+.detail-body { max-width: 900px; margin: 0 auto; padding: 32px 24px; }
+.section-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.section-title { font-size: 18px; font-weight: 800; }
+
+/* REVIEW CARDS */
+.review-card {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 12px; padding: 20px; margin-bottom: 14px;
+}
+.review-top { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.avatar {
+  width: 38px; height: 38px; border-radius: 50%;
+  background: var(--primary); color: #111;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 14px; flex-shrink: 0;
+}
+.reviewer-name { font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+.type-badge { font-size: 10px; padding: 2px 7px; border-radius: 10px; font-weight: 700; }
+.hard-badge { background: rgba(29,205,159,0.15); color: var(--primary); border: 1px solid rgba(29,205,159,0.4); }
+.light-badge { background: rgba(78,224,173,0.1); color: var(--accent); border: 1px solid rgba(78,224,173,0.3); }
+.review-date { font-size: 11px; color: var(--muted); }
+.review-score-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.review-score-num { font-size: 20px; font-weight: 900; color: var(--primary); }
+.review-comment { font-size: 13px; line-height: 1.7; color: var(--muted); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+.chip {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 7px; padding: 5px 10px; font-size: 11px;
+  display: flex; align-items: center; gap: 5px;
+}
+.chip-l { color: var(--muted); }
+.chip-v { color: var(--primary); font-weight: 700; }
+.chip-yes { color: #4EE0AD; font-weight: 700; }
+.chip-no { color: var(--danger); font-weight: 700; }
+.no-review {
+  text-align: center; padding: 48px 20px; color: var(--muted);
+  background: var(--bg2); border-radius: 12px; border: 1px dashed var(--border);
+}
+
+/* MODAL */
+.overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.75); z-index: 500;
+  align-items: flex-start; justify-content: center;
+  padding: 40px 20px; overflow-y: auto;
+}
+.overlay.open { display: flex; }
+.modal {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 16px; width: 100%; max-width: 460px;
+  padding: 28px; position: relative; margin: auto; flex-shrink: 0;
+}
+.modal-lg { max-width: 540px; }
+.modal-x {
+  position: absolute; top: 14px; right: 14px;
+  background: none; border: none; color: var(--muted);
+  cursor: pointer; font-size: 18px; line-height: 1; transition: color 0.15s;
+}
+.modal-x:hover { color: var(--text); }
+.modal-title { font-size: 19px; font-weight: 800; margin-bottom: 20px; }
+
+/* AUTH TABS */
+.auth-tabs { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 22px; }
+.auth-tab {
+  padding: 9px 18px; border: none; background: none; color: var(--muted);
+  cursor: pointer; font-size: 14px; font-weight: 600;
+  border-bottom: 2px solid transparent; margin-bottom: -1px;
+  transition: all 0.15s; font-family: inherit;
+}
+.auth-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+.auth-form { display: none; }
+.auth-form.active { display: block; }
+
+/* FORM */
+.fg { margin-bottom: 16px; }
+.fl {
+  display: block; font-size: 11px; font-weight: 700;
+  color: var(--muted); margin-bottom: 7px;
+  letter-spacing: 0.4px; text-transform: uppercase;
+}
+.fi {
+  width: 100%; background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 8px; padding: 10px 13px; color: var(--text);
+  font-size: 14px; outline: none; transition: border-color 0.15s; font-family: inherit;
+}
+.fi:focus { border-color: var(--primary); }
+.fi-ta { resize: vertical; min-height: 88px; }
+
+/* CRITERIA STAR PICKER (1-5, CSS-only) */
+.sp { display: flex; gap: 4px; flex-direction: row-reverse; justify-content: flex-end; }
+.sp input { display: none; }
+.sp label { font-size: 22px; cursor: pointer; color: var(--bg4); transition: color 0.1s; line-height: 1; }
+.sp input:checked ~ label,
+.sp label:hover,
+.sp label:hover ~ label { color: var(--primary); }
+
+/* HALF-STAR PICKER (main score, 0.5-10, JS-driven) */
+.hsp-wrap { display: flex; align-items: center; gap: 3px; }
+.hsp-star { position: relative; width: 30px; height: 30px; cursor: pointer; flex-shrink: 0; }
+.hsp-bg { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 26px; color: var(--bg4); line-height: 1; pointer-events: none; user-select: none; }
+.hsp-fg { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 26px; color: var(--primary); overflow: hidden; white-space: nowrap; width: 0; line-height: 1; pointer-events: none; user-select: none; transition: width 0.05s; }
+.hsp-zone-l { position: absolute; left: 0; top: 0; width: 50%; height: 100%; z-index: 1; }
+.hsp-zone-r { position: absolute; right: 0; top: 0; width: 50%; height: 100%; z-index: 1; }
+.hsp-lbl { margin-left: 10px; font-size: 17px; font-weight: 800; color: var(--primary); white-space: nowrap; min-width: 80px; }
+
+/* REVIEW TYPE */
+.type-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+.type-opt {
+  background: var(--bg3); border: 2px solid var(--border);
+  border-radius: 12px; padding: 16px 12px; cursor: pointer;
+  transition: all 0.2s; text-align: center;
+}
+.type-opt:hover { border-color: var(--accent); }
+.type-opt.sel { border-color: var(--primary); background: rgba(29,205,159,0.07); }
+.type-opt-icon { font-size: 24px; margin-bottom: 6px; }
+.type-opt-name { font-size: 14px; font-weight: 700; margin-bottom: 3px; }
+.type-opt-desc { font-size: 11px; color: var(--muted); line-height: 1.4; }
+
+/* CRITERIA */
+.criteria-list { display: flex; flex-direction: column; gap: 7px; margin-top: 16px; }
+.ci {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 10px; padding: 12px 14px; transition: all 0.2s;
+}
+.ci.on { border-color: rgba(29,205,159,0.4); background: rgba(29,205,159,0.04); }
+.ci-row { display: flex; align-items: center; justify-content: space-between; }
+.ci-label { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; }
+.ci-icon { font-size: 15px; }
+.tg {
+  width: 40px; height: 22px; background: var(--bg4);
+  border-radius: 11px; cursor: pointer; position: relative;
+  transition: background 0.2s; flex-shrink: 0;
+}
+.tg.on { background: var(--primary); }
+.tg::after {
+  content: ''; width: 16px; height: 16px; background: #fff;
+  border-radius: 50%; position: absolute; top: 3px; left: 3px; transition: left 0.2s;
+}
+.tg.on::after { left: 21px; }
+.ci-input { display: none; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
+.ci.on .ci-input { display: block; }
+
+/* YES/NO */
+.yn { display: flex; gap: 8px; }
+.yn-btn {
+  padding: 6px 16px; border-radius: 7px; border: 1px solid var(--border);
+  background: none; color: var(--muted); cursor: pointer; font-size: 13px;
+  font-weight: 600; transition: all 0.15s; font-family: inherit;
+}
+.yn-btn.yn-y.sel { background: rgba(29,205,159,0.12); border-color: var(--primary); color: var(--primary); }
+.yn-btn.yn-n.sel { background: rgba(255,90,90,0.1); border-color: var(--danger); color: var(--danger); }
+
+/* TOAST */
+.toast {
+  position: fixed; bottom: 24px; right: 24px; z-index: 9999;
+  background: var(--bg2); border: 1px solid var(--primary);
+  border-radius: 10px; padding: 12px 18px; font-size: 13px;
+  font-weight: 600; color: var(--primary);
+  transform: translateY(80px); opacity: 0; transition: all 0.25s;
+  pointer-events: none;
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+
+.divider { height: 1px; background: var(--border); margin: 22px 0; }
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--bg4); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--primary); }
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <div class="logo" onclick="nav('home')">Game<span>Log</span></div>
+  <div class="nav-right" id="navRight">
+    <button class="btn btn-ghost" onclick="openAuth('login')">로그인</button>
+    <button class="btn btn-primary" onclick="openAuth('register')">회원가입</button>
+  </div>
+</nav>
+
+<div class="toast" id="toast"></div>
+
+<!-- PAGE: HOME -->
+<div id="pg-home" class="page active">
+  <div class="home-hero">
+    <h1>게임을 <em>기록</em>하세요</h1>
+    <p>가볍게 별점만, 혹은 세세하게 — 나만의 방식으로 리뷰를 남겨보세요</p>
+  </div>
+  <div class="container">
+    <div class="toolbar">
+      <div>
+        <button class="sort-btn active" id="sBtn-popular" onclick="setSort('popular')">🔥 인기순</button>
+        <button class="sort-btn" id="sBtn-newest" onclick="setSort('newest')">🕐 최신순</button>
+      </div>
+      <span style="font-size:13px;color:var(--muted)">Nintendo Switch · 20 타이틀</span>
+    </div>
+    <div class="game-grid" id="gameGrid"></div>
+  </div>
+</div>
+
+<!-- PAGE: DETAIL -->
+<div id="pg-detail" class="page">
+  <div class="detail-hero">
+    <div class="detail-hero-inner">
+      <button class="back-btn" onclick="nav('home')">← 목록으로</button>
+      <div class="detail-main">
+        <div class="cover-lg" id="dCover"></div>
+        <div class="detail-info">
+          <div class="platform-tag">Nintendo Switch</div>
+          <div class="detail-title" id="dTitle"></div>
+          <div class="detail-dev" id="dDev"></div>
+          <div class="rating-big">
+            <div class="score-big" id="dScore">—</div>
+            <div class="rating-big-right">
+              <div class="stars stars-lg" id="dStars"></div>
+              <div class="rating-meta" id="dMeta">아직 리뷰가 없습니다</div>
+            </div>
+          </div>
+          <button class="btn btn-primary" id="writeBtn" onclick="openReview()">리뷰 작성하기</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="detail-body">
+    <div class="section-top">
+      <div class="section-title">리뷰 <span style="color:var(--primary);font-weight:500;font-size:15px" id="rCntBadge"></span></div>
+      <div>
+        <button class="sort-btn active" id="dsBtn-popular" onclick="setDetailSort('popular')">인기순</button>
+        <button class="sort-btn" id="dsBtn-newest" onclick="setDetailSort('newest')">최신순</button>
+      </div>
+    </div>
+    <div id="reviewList"></div>
+  </div>
+</div>
+
+<!-- MODAL: AUTH -->
+<div id="authOverlay" class="overlay" onclick="bgClose(event,'authOverlay')">
+  <div class="modal">
+    <button class="modal-x" onclick="closeOverlay('authOverlay')">✕</button>
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="atab-login" onclick="switchAuth('login')">로그인</button>
+      <button class="auth-tab" id="atab-register" onclick="switchAuth('register')">회원가입</button>
+    </div>
+    <div class="auth-form active" id="af-login">
+      <div class="fg"><label class="fl">이메일</label><input class="fi" type="email" id="liEmail" placeholder="example@email.com"></div>
+      <div class="fg"><label class="fl">비밀번호</label><input class="fi" type="password" id="liPw" placeholder="비밀번호 입력" onkeydown="if(event.key==='Enter')doLogin()"></div>
+      <button class="btn btn-primary" style="width:100%;padding:12px" onclick="doLogin()">로그인</button>
+    </div>
+    <div class="auth-form" id="af-register">
+      <div class="fg"><label class="fl">닉네임</label><input class="fi" type="text" id="rgName" placeholder="닉네임 입력"></div>
+      <div class="fg"><label class="fl">이메일</label><input class="fi" type="email" id="rgEmail" placeholder="example@email.com"></div>
+      <div class="fg"><label class="fl">비밀번호</label><input class="fi" type="password" id="rgPw" placeholder="4자 이상"></div>
+      <button class="btn btn-primary" style="width:100%;padding:12px" onclick="doRegister()">가입하기</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: REVIEW -->
+<div id="rvOverlay" class="overlay" onclick="bgClose(event,'rvOverlay')">
+  <div class="modal modal-lg">
+    <button class="modal-x" onclick="closeOverlay('rvOverlay')">✕</button>
+    <div class="modal-title" id="rvTitle">리뷰 작성</div>
+
+    <!-- Type Select -->
+    <div class="type-row">
+      <div class="type-opt sel" id="to-light" onclick="selectType('light')">
+        <div class="type-opt-icon">⭐</div>
+        <div class="type-opt-name">라이트 리뷰</div>
+        <div class="type-opt-desc">별점 + 짧은 코멘트<br>빠르고 간편하게</div>
+      </div>
+      <div class="type-opt" id="to-hard" onclick="selectType('hard')">
+        <div class="type-opt-icon">🎯</div>
+        <div class="type-opt-name">하드 리뷰</div>
+        <div class="type-opt-desc">세부 항목별 상세 평가<br>깊이 있는 리뷰</div>
+      </div>
+    </div>
+
+    <!-- Main Score -->
+    <div class="fg">
+      <label class="fl">종합 평점 <span style="color:var(--danger)">*</span> <span style="color:var(--muted);font-weight:400;text-transform:none;font-size:11px">1~5점 · 0.5점 단위</span></label>
+      <div id="mainStarPicker"></div>
+    </div>
+
+    <!-- Comment -->
+    <div class="fg">
+      <label class="fl">코멘트 <span style="color:var(--muted);font-weight:400">선택</span></label>
+      <textarea class="fi fi-ta" id="rvComment" placeholder="이 게임에 대한 생각을 자유롭게 작성하세요..."></textarea>
+    </div>
+
+    <!-- Criteria -->
+    <div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px">
+        <label class="fl" style="margin:0">세부 평가 항목 <span style="color:var(--primary);font-size:10px;text-transform:none;font-weight:400">(선택 항목을 켜서 평가하세요)</span></label>
+        <button style="font-size:11px;background:none;border:none;color:var(--primary);cursor:pointer;font-family:inherit;padding:0" onclick="toggleAll()">전체 토글</button>
+      </div>
+      <div class="criteria-list" id="criteriaList"></div>
+    </div>
+
+    <div class="divider"></div>
+    <button class="btn btn-primary" style="width:100%;padding:12px;font-size:15px" onclick="submitReview()">리뷰 등록</button>
+  </div>
+</div>
+
+<script>
+// ── DATA ──────────────────────────────────────────────
+const GAMES = [
+  {id:1,  e:'🗡️', t:'젤다의 전설: 야생의 숨결',       d:'닌텐도',       y:2017, g:'어드벤처'},
+  {id:2,  e:'👑', t:'젤다의 전설: 왕국의 눈물',       d:'닌텐도',       y:2023, g:'어드벤처'},
+  {id:3,  e:'🎩', t:'슈퍼 마리오 오디세이',           d:'닌텐도',       y:2017, g:'플랫포머'},
+  {id:4,  e:'🏝️', t:'모여봐요 동물의 숲',             d:'닌텐도',       y:2020, g:'시뮬레이션'},
+  {id:5,  e:'🏎️', t:'마리오 카트 8 디럭스',           d:'닌텐도',       y:2017, g:'레이싱'},
+  {id:6,  e:'🦑', t:'스플래툰 3',                    d:'닌텐도',       y:2022, g:'슈터'},
+  {id:7,  e:'👊', t:'슈퍼 스매시브라더스 얼티밋',      d:'닌텐도',       y:2018, g:'격투'},
+  {id:8,  e:'🚀', t:'메트로이드 드레드',              d:'닌텐도',       y:2021, g:'액션'},
+  {id:9,  e:'⚔️', t:'파이어 엠블렘: 풍화설월',        d:'닌텐도',       y:2019, g:'SRPG'},
+  {id:10, e:'🌿', t:'제노블레이드 크로니클스 3',       d:'닌텐도',       y:2022, g:'RPG'},
+  {id:11, e:'🌟', t:'별의 커비: 디스커버리',          d:'닌텐도',       y:2022, g:'액션'},
+  {id:12, e:'🌱', t:'피크민 4',                      d:'닌텐도',       y:2023, g:'전략'},
+  {id:13, e:'👻', t:'루이지의 맨션 3',                d:'닌텐도',       y:2019, g:'어드벤처'},
+  {id:14, e:'💪', t:'링 피트 어드벤처',              d:'닌텐도',       y:2019, g:'피트니스'},
+  {id:15, e:'🎾', t:'닌텐도 스위치 스포츠',           d:'닌텐도',       y:2022, g:'스포츠'},
+  {id:16, e:'⚡', t:'포켓몬스터 레전드: 아르세우스',  d:'포켓몬컴퍼니', y:2022, g:'RPG'},
+  {id:17, e:'🔴', t:'포켓몬스터 스칼렛/바이올렛',     d:'포켓몬컴퍼니', y:2022, g:'RPG'},
+  {id:18, e:'🐱', t:'슈퍼 마리오 3D 월드+분노의 요새',d:'닌텐도',       y:2021, g:'플랫포머'},
+  {id:19, e:'🎉', t:'슈퍼 마리오 파티',              d:'닌텐도',       y:2018, g:'파티'},
+  {id:20, e:'🔬', t:'피크민 3 디럭스',               d:'닌텐도',       y:2020, g:'전략'},
+];
+
+const CRITERIA = [
+  {k:'graphics',   l:'그래픽',         i:'🎨', type:'star'},
+  {k:'ost',        l:'OST',            i:'🎵', type:'star'},
+  {k:'sfx',        l:'효과음',         i:'🔊', type:'star'},
+  {k:'control',    l:'조작 직관성',    i:'🕹️', type:'star'},
+  {k:'immersion',  l:'몰입도',         i:'🧠', type:'star'},
+  {k:'story',      l:'스토리/세계관',  i:'📖', type:'star'},
+  {k:'difficulty', l:'난이도',         i:'⚡', type:'star'},
+  {k:'access',     l:'접근성',         i:'🚪', type:'star'},
+  {k:'strategy',   l:'전략성',         i:'♟️', type:'star'},
+  {k:'value',      l:'가성비',         i:'💰', type:'yn'},
+  {k:'replayable', l:'안 질리는가',    i:'🔄', type:'yn'},
+  {k:'optimize',   l:'최적화/버그 없음',i:'⚙️', type:'yn'},
+];
+
+// ── STATE ─────────────────────────────────────────────
+let CU = null;           // current user
+let CG = null;           // current game id
+let RV_TYPE = 'light';
+let SORT = 'popular';
+let DSORT = 'popular';
+let CE = {};             // criteria enabled map
+let YNV = {};            // yes/no values map
+let MSV = 0;             // main score value (0.5–10.0, 0 = unset)
+
+// ── STORAGE ───────────────────────────────────────────
+const LS = {
+  users: () => JSON.parse(localStorage.getItem('gl_u') || '[]'),
+  saveUsers: v => localStorage.setItem('gl_u', JSON.stringify(v)),
+  reviews: () => JSON.parse(localStorage.getItem('gl_r') || '{}'),
+  saveReviews: v => localStorage.setItem('gl_r', JSON.stringify(v)),
+  session: () => JSON.parse(localStorage.getItem('gl_s') || 'null'),
+  saveSession: v => localStorage.setItem('gl_s', JSON.stringify(v)),
+  clearSession: () => localStorage.removeItem('gl_s'),
+};
+
+function gameReviews(gid) { return LS.reviews()[gid] || []; }
+function avgRating(gid) {
+  const rv = gameReviews(gid);
+  if (!rv.length) return null;
+  return rv.reduce((s,r) => s + r.score, 0) / rv.length;
+}
+
+// ── INIT ──────────────────────────────────────────────
+function init() {
+  const s = LS.session();
+  if (s) { const u = LS.users().find(u => u.id === s.id); if (u) { CU = u; } }
+  renderNav();
+  seedDemo();
+  renderGrid();
+}
+
+function seedDemo() {
+  if (Object.keys(LS.reviews()).length) return;
+  const rv = {
+    1:[
+      {id:'d1',uid:'demo1',un:'게임마니아',score:5.0,type:'hard',comment:'역대 최고의 오픈월드. 자유도가 압도적입니다.',criteria:{graphics:{v:5},ost:{v:4},control:{v:5},immersion:{v:5},story:{v:4},value:{v:'yes'},replayable:{v:'yes'},optimize:{v:'yes'}},date:'2024-03-15'},
+      {id:'d2',uid:'demo2',un:'캐주얼플레이어',score:4.5,type:'light',comment:'시간 가는 줄 모르고 했어요! 강추입니다.',criteria:{},date:'2024-04-01'},
+      {id:'d3',uid:'demo3',un:'닌텐도러버',score:4.0,type:'light',comment:'좋긴 한데 보스 전투가 조금 아쉬웠어요',criteria:{},date:'2024-04-10'},
+    ],
+    2:[
+      {id:'d4',uid:'demo1',un:'게임마니아',score:5.0,type:'hard',comment:'전작을 뛰어넘는 걸작. 울트라핸드 메카닉이 천재적입니다.',criteria:{graphics:{v:5},ost:{v:5},control:{v:5},immersion:{v:5},story:{v:5},strategy:{v:4},value:{v:'yes'},replayable:{v:'yes'},optimize:{v:'yes'}},date:'2023-07-10'},
+      {id:'d5',uid:'demo4',un:'하드코어게이머',score:5.0,type:'light',comment:'완벽한 게임이란 이런 것',criteria:{},date:'2023-07-12'},
+    ],
+    3:[
+      {id:'d6',uid:'demo2',un:'캐주얼플레이어',score:5.0,type:'light',comment:'마리오 시리즈 중 단연 최고!',criteria:{},date:'2024-02-10'},
+      {id:'d7',uid:'demo5',un:'플랫포머킹',score:4.5,type:'hard',comment:'창의적인 무브셋, 다양한 왕국 탐험이 즐거웠어요',criteria:{graphics:{v:4},ost:{v:5},control:{v:5},access:{v:5},immersion:{v:4},value:{v:'yes'}},date:'2024-02-15'},
+    ],
+    5:[
+      {id:'d8',uid:'demo3',un:'닌텐도러버',score:4.0,type:'light',comment:'파티용으로 최고. 친구들이랑 하면 정말 재밌어요.',criteria:{},date:'2024-01-05'},
+      {id:'d9',uid:'demo1',un:'게임마니아',score:4.5,type:'hard',comment:'레이싱 게임의 완성형',criteria:{graphics:{v:4},ost:{v:4},control:{v:5},access:{v:5},replayable:{v:'yes'},value:{v:'yes'}},date:'2024-01-10'},
+    ],
+    9:[
+      {id:'d10',uid:'demo5',un:'플랫포머킹',score:5.0,type:'hard',comment:'스위치 최고의 SRPG. 스토리가 특히 훌륭합니다.',criteria:{graphics:{v:4},ost:{v:5},strategy:{v:5},story:{v:5},immersion:{v:5},difficulty:{v:4},value:{v:'yes'}},date:'2024-02-28'},
+    ],
+    7:[
+      {id:'d11',uid:'demo2',un:'캐주얼플레이어',score:4.0,type:'light',comment:'친구들이랑 해야 제맛',criteria:{},date:'2024-03-01'},
+    ],
+  };
+  LS.saveReviews(rv);
+}
+
+// ── NAVIGATION ────────────────────────────────────────
+function nav(page, gid) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  if (page === 'home') {
+    document.getElementById('pg-home').classList.add('active');
+    renderGrid();
+  } else {
+    CG = gid;
+    document.getElementById('pg-detail').classList.add('active');
+    renderDetail(gid);
+  }
+  window.scrollTo(0, 0);
+}
+
+// ── NAVBAR ────────────────────────────────────────────
+function renderNav() {
+  const el = document.getElementById('navRight');
+  if (CU) {
+    el.innerHTML = `
+      <div style="width:32px;height:32px;border-radius:50%;background:var(--primary);color:#111;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px">${CU.un[0].toUpperCase()}</div>
+      <span style="font-size:13px;font-weight:600">${CU.un}</span>
+      <button class="btn btn-ghost btn-sm" onclick="doLogout()" style="color:var(--danger)">로그아웃</button>
+    `;
+  } else {
+    el.innerHTML = `
+      <button class="btn btn-ghost" onclick="openAuth('login')">로그인</button>
+      <button class="btn btn-primary" onclick="openAuth('register')">회원가입</button>
+    `;
+  }
+}
+
+// ── STARS HTML (5점 반 칸 지원) ───────────────────────
+function starsHTML(score, lg=false) {
+  if (score === null) return '<span style="font-size:12px;color:var(--muted)">평가없음</span>';
+  const fs = lg ? '20px' : '13px';
+  const gap = lg ? '3px' : '2px';
+  let html = `<div style="display:flex;gap:${gap}">`;
+  for (let i = 1; i <= 5; i++) {
+    const pct = score >= i ? 100 : score >= i - 0.5 ? 50 : 0;
+    html += `<span style="position:relative;display:inline-block;font-size:${fs};line-height:1;color:var(--bg4)">★<span style="position:absolute;top:0;left:0;overflow:hidden;color:var(--primary);white-space:nowrap;width:${pct}%">★</span></span>`;
+  }
+  html += '</div>';
+  return html;
+}
+
+// ── GAME GRID ─────────────────────────────────────────
+function renderGrid() {
+  const grid = document.getElementById('gameGrid');
+  let games = [...GAMES];
+  const rv = LS.reviews();
+  if (SORT === 'popular') {
+    games.sort((a,b) => (rv[b.id]?.length||0) - (rv[a.id]?.length||0));
+  } else {
+    games.sort((a,b) => b.y - a.y);
+  }
+  grid.innerHTML = games.map(g => {
+    const avg = avgRating(g.id);
+    const cnt = gameReviews(g.id).length;
+    return `
+      <div class="game-card" onclick="nav('detail',${g.id})">
+        <div class="game-thumb">${g.e}</div>
+        <div class="game-body">
+          <div class="game-name">${g.t}</div>
+          <div class="game-sub">${g.y} · ${g.g}</div>
+          <div class="game-rating">
+            ${starsHTML(avg)}
+            <div style="text-align:right">
+              <div class="score-val">${avg ? avg.toFixed(1) : '—'}</div>
+              <div class="rcnt">${cnt}개 리뷰</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function setSort(m) {
+  SORT = m;
+  ['popular','newest'].forEach(k => document.getElementById(`sBtn-${k}`).classList.toggle('active', k===m));
+  renderGrid();
+}
+
+// ── DETAIL ────────────────────────────────────────────
+function renderDetail(gid) {
+  const g = GAMES.find(x => x.id === gid);
+  if (!g) return;
+  document.getElementById('dCover').textContent = g.e;
+  document.getElementById('dTitle').textContent = g.t;
+  document.getElementById('dDev').textContent = `${g.d} · ${g.y} · ${g.g}`;
+  updateDetailRating(gid);
+  renderReviews(gid);
+}
+
+function updateDetailRating(gid) {
+  const avg = avgRating(gid);
+  const cnt = gameReviews(gid).length;
+  document.getElementById('dScore').textContent = avg ? avg.toFixed(1) : '—';
+  document.getElementById('dStars').innerHTML = avg ? starsHTML(avg, true) : '';
+  document.getElementById('dMeta').textContent = cnt ? `${cnt}개의 리뷰 · /5점` : '아직 리뷰가 없습니다';
+  document.getElementById('rCntBadge').textContent = cnt ? `(${cnt})` : '';
+
+  if (CU) {
+    const myReview = gameReviews(gid).find(r => r.uid === CU.id);
+    document.getElementById('writeBtn').textContent = myReview ? '리뷰 수정하기' : '리뷰 작성하기';
+  }
+}
+
+function setDetailSort(m) {
+  DSORT = m;
+  ['popular','newest'].forEach(k => document.getElementById(`dsBtn-${k}`).classList.toggle('active', k===m));
+  renderReviews(CG);
+}
+
+function renderReviews(gid) {
+  const container = document.getElementById('reviewList');
+  let rv = [...gameReviews(gid)];
+  if (DSORT === 'newest') rv.sort((a,b) => new Date(b.date) - new Date(a.date));
+
+  if (!rv.length) {
+    container.innerHTML = `<div class="no-review"><div style="font-size:40px;margin-bottom:12px">📝</div><div style="font-size:15px;font-weight:700;margin-bottom:6px">아직 리뷰가 없어요</div><div style="font-size:13px">첫 번째 리뷰를 남겨보세요!</div></div>`;
+    return;
+  }
+
+  container.innerHTML = rv.map(r => {
+    const chips = Object.entries(r.criteria||{}).map(([k, obj]) => {
+      const def = CRITERIA.find(c => c.k === k);
+      if (!def) return '';
+      if (def.type === 'star') {
+        const s = '★'.repeat(obj.v) + '☆'.repeat(5-obj.v);
+        return `<div class="chip"><span class="chip-l">${def.i} ${def.l}</span><span class="chip-v">${s}</span></div>`;
+      }
+      const yes = obj.v === 'yes';
+      return `<div class="chip"><span class="chip-l">${def.i} ${def.l}</span><span class="${yes?'chip-yes':'chip-no'}">${yes?'✓ Yes':'✗ No'}</span></div>`;
+    }).join('');
+
+    return `
+      <div class="review-card">
+        <div class="review-top">
+          <div class="avatar">${r.un[0].toUpperCase()}</div>
+          <div style="flex:1">
+            <div class="reviewer-name">
+              ${r.un}
+              <span class="type-badge ${r.type==='hard'?'hard-badge':'light-badge'}">${r.type==='hard'?'🎯 하드':'⭐ 라이트'}</span>
+            </div>
+            <div class="review-date">${r.date}</div>
+          </div>
+        </div>
+        <div class="review-score-row">
+          <span class="review-score-num">${r.score.toFixed(1)}<span style="font-size:13px;font-weight:500;color:var(--muted)">/5</span></span>
+          ${starsHTML(r.score)}
+        </div>
+        ${r.comment ? `<div class="review-comment">${r.comment}</div>` : ''}
+        ${chips ? `<div class="chips">${chips}</div>` : ''}
+      </div>
+    `;
+  }).join('');
+}
+
+// ── AUTH ──────────────────────────────────────────────
+function openAuth(tab) { openOverlay('authOverlay'); switchAuth(tab); }
+function switchAuth(tab) {
+  ['login','register'].forEach(t => {
+    document.getElementById(`atab-${t}`).classList.toggle('active', t===tab);
+    document.getElementById(`af-${t}`).classList.toggle('active', t===tab);
+  });
+}
+
+function doLogin() {
+  const email = document.getElementById('liEmail').value.trim();
+  const pw = document.getElementById('liPw').value;
+  if (!email || !pw) { toast('이메일과 비밀번호를 입력하세요'); return; }
+  const user = LS.users().find(u => u.email === email && u.pw === pw);
+  if (!user) { toast('이메일 또는 비밀번호가 올바르지 않습니다'); return; }
+  CU = user; LS.saveSession({id: user.id});
+  renderNav(); closeOverlay('authOverlay');
+  toast(`${user.un}님, 환영합니다!`);
+  if (CG) updateDetailRating(CG);
+}
+
+function doRegister() {
+  const un = document.getElementById('rgName').value.trim();
+  const email = document.getElementById('rgEmail').value.trim();
+  const pw = document.getElementById('rgPw').value;
+  if (!un || !email || !pw) { toast('모든 항목을 입력하세요'); return; }
+  if (pw.length < 4) { toast('비밀번호는 4자 이상이어야 합니다'); return; }
+  const users = LS.users();
+  if (users.find(u => u.email === email)) { toast('이미 사용 중인 이메일입니다'); return; }
+  const user = {id: 'u_'+Date.now(), un, email, pw};
+  users.push(user); LS.saveUsers(users);
+  CU = user; LS.saveSession({id: user.id});
+  renderNav(); closeOverlay('authOverlay');
+  toast(`${user.un}님, 가입을 환영합니다! 🎉`);
+}
+
+function doLogout() {
+  CU = null; LS.clearSession(); renderNav();
+  toast('로그아웃되었습니다');
+  if (CG) { document.getElementById('writeBtn').textContent = '리뷰 작성하기'; }
+}
+
+// ── HALF-STAR PICKER (main score) ─────────────────────
+function renderHSP() {
+  const c = document.getElementById('mainStarPicker');
+  let html = '<div class="hsp-wrap" onmouseleave="hspLeave()">';
+  for (let i = 1; i <= 5; i++) {
+    html += `
+      <div class="hsp-star">
+        <span class="hsp-bg">★</span>
+        <span class="hsp-fg" id="hsfg${i}">★</span>
+        <div class="hsp-zone-l" onmouseenter="hspHov(${i-0.5})" onclick="hspSet(${i-0.5})"></div>
+        <div class="hsp-zone-r" onmouseenter="hspHov(${i})" onclick="hspSet(${i})"></div>
+      </div>`;
+  }
+  html += '<span class="hsp-lbl" id="hspLbl">선택하세요</span></div>';
+  c.innerHTML = html;
+  if (MSV > 0) hspDraw(MSV);
+}
+function hspHov(v) { hspDraw(v); }
+function hspLeave() { hspDraw(MSV); }
+function hspSet(v) { MSV = v; hspDraw(v); }
+function hspDraw(v) {
+  for (let i = 1; i <= 5; i++) {
+    const fg = document.getElementById(`hsfg${i}`);
+    if (!fg) continue;
+    fg.style.width = (v >= i ? 100 : v >= i - 0.5 ? 50 : 0) + '%';
+  }
+  const lbl = document.getElementById('hspLbl');
+  if (lbl) lbl.textContent = v > 0 ? `${v.toFixed(1)} / 5` : '선택하세요';
+}
+
+// ── REVIEW MODAL ──────────────────────────────────────
+function openReview() {
+  if (!CU) { toast('리뷰 작성을 위해 로그인이 필요합니다'); openAuth('login'); return; }
+  const g = GAMES.find(x => x.id === CG);
+  document.getElementById('rvTitle').textContent = `${g.e} ${g.t}`;
+
+  // Reset
+  MSV = 0;
+  document.getElementById('rvComment').value = '';
+  YNV = {};
+  buildCriteria();
+
+  const existing = gameReviews(CG).find(r => r.uid === CU.id);
+  selectType(existing ? existing.type : 'light', true);
+  renderHSP();
+
+  if (existing) {
+    MSV = existing.score;
+    hspDraw(MSV);
+    document.getElementById('rvComment').value = existing.comment || '';
+    Object.entries(existing.criteria || {}).forEach(([k, obj]) => {
+      CE[k] = true;
+      document.getElementById(`ci-${k}`)?.classList.add('on');
+      document.getElementById(`tg-${k}`)?.classList.add('on');
+      const def = CRITERIA.find(c => c.k === k);
+      if (def?.type === 'star') {
+        const r = document.querySelector(`input[name="cr-${k}"][value="${obj.v}"]`);
+        if (r) r.checked = true;
+      } else if (def?.type === 'yn') {
+        setYN(k, obj.v);
+      }
+    });
+  }
+
+  document.getElementById('rvOverlay').classList.add('open');
+}
+
+// resetCriteria=true: 클릭으로 직접 변경 시 전체 ON/OFF
+// resetCriteria=false: 토글 자동감지로 배지만 변경
+function selectType(type, resetCriteria = true) {
+  RV_TYPE = type;
+  document.getElementById('to-light').classList.toggle('sel', type === 'light');
+  document.getElementById('to-hard').classList.toggle('sel', type === 'hard');
+
+  if (!resetCriteria) return;
+  CRITERIA.forEach(c => {
+    CE[c.k] = type === 'hard';
+    document.getElementById(`ci-${c.k}`)?.classList.toggle('on', type === 'hard');
+    document.getElementById(`tg-${c.k}`)?.classList.toggle('on', type === 'hard');
+  });
+}
+
+function autoDetectType() {
+  const anyOn = CRITERIA.some(c => CE[c.k]);
+  selectType(anyOn ? 'hard' : 'light', false);
+}
+
+function buildCriteria() {
+  CE = {};
+  YNV = {};
+  const list = document.getElementById('criteriaList');
+  list.innerHTML = CRITERIA.map(c => {
+    const inputHTML = c.type === 'star' ? `
+      <div class="sp sp-sm" id="sp-${c.k}">
+        <input type="radio" name="cr-${c.k}" id="cr${c.k}5" value="5"><label for="cr${c.k}5">★</label>
+        <input type="radio" name="cr-${c.k}" id="cr${c.k}4" value="4"><label for="cr${c.k}4">★</label>
+        <input type="radio" name="cr-${c.k}" id="cr${c.k}3" value="3"><label for="cr${c.k}3">★</label>
+        <input type="radio" name="cr-${c.k}" id="cr${c.k}2" value="2"><label for="cr${c.k}2">★</label>
+        <input type="radio" name="cr-${c.k}" id="cr${c.k}1" value="1"><label for="cr${c.k}1">★</label>
+      </div>
+    ` : `
+      <div class="yn" id="yn-${c.k}">
+        <button class="yn-btn yn-y" onclick="setYN('${c.k}','yes')">✓ Yes</button>
+        <button class="yn-btn yn-n" onclick="setYN('${c.k}','no')">✗ No</button>
+      </div>
+    `;
+    return `
+      <div class="ci" id="ci-${c.k}">
+        <div class="ci-row">
+          <div class="ci-label"><span class="ci-icon">${c.i}</span>${c.l}</div>
+          <div class="tg" id="tg-${c.k}" onclick="toggleCriteria('${c.k}')"></div>
+        </div>
+        <div class="ci-input">${inputHTML}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function toggleCriteria(k) {
+  CE[k] = !CE[k];
+  document.getElementById(`ci-${k}`).classList.toggle('on', CE[k]);
+  document.getElementById(`tg-${k}`).classList.toggle('on', CE[k]);
+  autoDetectType();
+}
+
+function toggleAll() {
+  const anyOn = Object.values(CE).some(v => v);
+  CRITERIA.forEach(c => {
+    CE[c.k] = !anyOn;
+    document.getElementById(`ci-${c.k}`)?.classList.toggle('on', !anyOn);
+    document.getElementById(`tg-${c.k}`)?.classList.toggle('on', !anyOn);
+  });
+  autoDetectType();
+}
+
+function setYN(k, val) {
+  YNV[k] = val;
+  const wrap = document.getElementById(`yn-${k}`);
+  if (!wrap) return;
+  wrap.querySelectorAll('.yn-btn').forEach(b => b.classList.remove('sel'));
+  wrap.querySelector(`.yn-${val==='yes'?'y':'n'}`)?.classList.add('sel');
+}
+
+function submitReview() {
+  if (!MSV) { toast('종합 평점을 선택해주세요 ⭐'); return; }
+  const score = MSV;
+  const comment = document.getElementById('rvComment').value.trim();
+
+  const criteria = {};
+  CRITERIA.forEach(c => {
+    if (!CE[c.k]) return;
+    if (c.type === 'star') {
+      const v = document.querySelector(`input[name="cr-${c.k}"]:checked`);
+      if (v) criteria[c.k] = {v: parseInt(v.value)};
+    } else {
+      if (YNV[c.k]) criteria[c.k] = {v: YNV[c.k]};
+    }
+  });
+
+  const review = {
+    id: 'r_'+Date.now(),
+    uid: CU.id,
+    un: CU.un,
+    score, type: RV_TYPE, comment, criteria,
+    date: new Date().toISOString().split('T')[0],
+  };
+
+  const all = LS.reviews();
+  if (!all[CG]) all[CG] = [];
+  const idx = all[CG].findIndex(r => r.uid === CU.id);
+  if (idx >= 0) { all[CG][idx] = review; toast('리뷰가 수정되었습니다'); }
+  else { all[CG].unshift(review); toast('리뷰가 등록되었습니다! 🎉'); }
+  LS.saveReviews(all);
+
+  closeOverlay('rvOverlay');
+  updateDetailRating(CG);
+  renderReviews(CG);
+}
+
+// ── OVERLAY HELPERS ───────────────────────────────────
+function openOverlay(id) {
+  document.getElementById(id).classList.add('open');
+}
+function closeOverlay(id) { document.getElementById(id).classList.remove('open'); }
+function bgClose(e, id) { if (e.target.id === id) closeOverlay(id); }
+
+// ── TOAST ─────────────────────────────────────────────
+let toastT;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(toastT);
+  toastT = setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+// ── START ─────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>

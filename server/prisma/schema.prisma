@@ -1,0 +1,77 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String        @id @default(cuid())
+  email        String        @unique
+  nickname     String        @unique
+  passwordHash String
+  createdAt    DateTime      @default(now())
+  reviews      Review[]
+  gameRequests GameRequest[]
+}
+
+model Game {
+  id       Int      @id
+  title    String
+  platform String
+  maker    String
+  year     Int
+  genre    String
+  summary  String
+  cover    String
+  icon     String
+  reviews  Review[]
+}
+
+model Review {
+  id            String        @id @default(cuid())
+  userId        String
+  gameId        Int
+  type          String
+  rating        Float
+  headline      String?
+  comment       String
+  tags          Json          @default("[]")
+  playtimeHours Int           @default(0)
+  helpfulCount  Int           @default(0)
+  createdAt     DateTime      @default(now())
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  game          Game          @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  scores        ReviewScore[]
+
+  @@unique([userId, gameId])
+  @@index([gameId, type])
+  @@index([createdAt])
+}
+
+model ReviewScore {
+  id             String @id @default(cuid())
+  reviewId       String
+  criterionKey   String
+  criterionLabel String
+  value          Int
+  review         Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+
+  @@unique([reviewId, criterionKey])
+}
+
+model GameRequest {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  platform  String
+  year      Int?
+  reason    String
+  status    String   @default("pending")
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}

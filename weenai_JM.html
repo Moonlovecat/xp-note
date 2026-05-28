@@ -1,0 +1,3159 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>겜평 — 내 게임 기록의 모든 것</title>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --bg-soft: #fafafa;
+      --surface: #ffffff;
+      --surface2: #f5f5f7;
+      --surface3: #ececef;
+      --border: #e8e8eb;
+      --border-strong: #d4d4d8;
+      --accent: #0d9488;
+      --accent-soft: #ccfbf1;
+      --accent-ink: #0f766e;
+      --text: #18181b;
+      --text-muted: #71717a;
+      --text-faint: #a1a1aa;
+      --star: #ffc83d;
+      --pos: #16a34a;
+      --neg: #ef4444;
+      --radius: 14px;
+      --radius-sm: 8px;
+      --shadow-sm: 0 1px 2px rgba(15,23,42,.04);
+      --shadow-md: 0 4px 14px rgba(15,23,42,.07);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Pretendard', 'Apple SD Gothic Neo', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+      letter-spacing: -0.2px;
+    }
+
+    /* DEMO TABS */
+    .demo-nav {
+      display: flex;
+      gap: 6px;
+      justify-content: center;
+      padding: 12px 16px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+      position: sticky;
+      top: 0;
+      z-index: 200;
+    }
+    .tab-btn {
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-muted);
+      transition: all .15s;
+      font-family: inherit;
+    }
+    .tab-btn.active, .tab-btn:hover {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* NAV */
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 40px;
+      height: 64px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo {
+      font-size: 22px;
+      font-weight: 900;
+      letter-spacing: -1px;
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .logo-dot {
+      width: 8px; height: 8px;
+      background: var(--accent);
+      border-radius: 50%;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 28px;
+      list-style: none;
+      font-size: 14px;
+    }
+    .nav-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-weight: 500;
+      transition: color .15s;
+      cursor: pointer;
+    }
+    .nav-links a:hover { color: var(--text); }
+
+    .nav-actions { display: flex; gap: 8px; align-items: center; }
+
+    .search-mini {
+      background: var(--surface2);
+      border: 1px solid transparent;
+      border-radius: 999px;
+      padding: 7px 14px 7px 34px;
+      font-size: 13px;
+      width: 200px;
+      outline: none;
+      color: var(--text);
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' fill='%2371717a' viewBox='0 0 16 16'><path d='M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0'/></svg>");
+      background-repeat: no-repeat;
+      background-position: 12px center;
+      font-family: inherit;
+    }
+    .search-mini:focus { border-color: var(--accent); background-color: var(--surface); }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 9px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all .15s;
+      font-family: inherit;
+    }
+    .btn-ghost {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-ghost:hover { background: var(--surface2); }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: var(--accent-ink); }
+    .btn-full { width: 100%; justify-content: center; padding: 13px; font-size: 14px; }
+    .btn-lg { padding: 12px 22px; font-size: 14px; }
+
+    /* HERO */
+    .hero {
+      padding: 90px 40px 70px;
+      text-align: center;
+      background: linear-gradient(180deg, var(--accent-soft) 0%, transparent 100%);
+      border-bottom: 1px solid var(--border);
+    }
+    .hero h1 {
+      font-size: 52px;
+      font-weight: 900;
+      letter-spacing: -2px;
+      line-height: 1.1;
+      margin-bottom: 18px;
+    }
+    .hero h1 em { font-style: normal; color: var(--accent); }
+    .hero p {
+      font-size: 17px;
+      color: var(--text-muted);
+      max-width: 540px;
+      margin: 0 auto 36px;
+      line-height: 1.7;
+    }
+    .hero-actions { display: flex; gap: 10px; justify-content: center; }
+
+    /* KPI BAR */
+    .kpi-bar {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      max-width: 880px;
+      margin: 0 auto;
+      padding: 32px 40px 0;
+      gap: 20px;
+    }
+    .kpi {
+      text-align: center;
+      padding: 16px 0;
+    }
+    .kpi-num {
+      font-size: 26px;
+      font-weight: 900;
+      color: var(--accent);
+      letter-spacing: -1px;
+      line-height: 1;
+    }
+    .kpi-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 6px;
+      letter-spacing: .3px;
+      font-weight: 500;
+    }
+
+    /* SECTIONS */
+    section { padding: 56px 40px; max-width: 1200px; margin: 0 auto; }
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 26px;
+      gap: 12px;
+    }
+    .section-eyebrow {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    .section-title {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -.6px;
+    }
+    .section-more {
+      font-size: 13px;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .section-more:hover { color: var(--accent); }
+
+    .sort-tabs { display: flex; gap: 4px; }
+    .sort-btn {
+      padding: 7px 14px;
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--text-muted);
+      font-family: inherit;
+    }
+    .sort-btn.active {
+      background: var(--surface2);
+      color: var(--text);
+    }
+
+    /* WATCHA-STYLE GAME GRID */
+    .poster-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+      gap: 18px;
+    }
+    .poster-grid.compact {
+      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+      gap: 14px;
+    }
+    .poster {
+      position: relative;
+      cursor: pointer;
+      transition: transform .15s;
+    }
+    .poster:hover { transform: translateY(-3px); }
+    .poster-img {
+      width: 100%;
+      aspect-ratio: 3/4;
+      background: var(--surface2);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 56px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    .poster.compact .poster-img { font-size: 40px; }
+    .poster-rating {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: rgba(24,24,27,.85);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 800;
+      padding: 4px 8px;
+      border-radius: 999px;
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+    .poster-rating.mine {
+      background: var(--accent);
+    }
+    .poster-rating::before {
+      content: '★';
+      color: var(--star);
+      font-size: 10px;
+    }
+    .poster-rating.mine::before {
+      color: #fff;
+    }
+    .poster-meta {
+      margin-top: 10px;
+    }
+    .poster-title {
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 1.35;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-bottom: 3px;
+    }
+    .poster-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    /* HORIZONTAL SCROLL ROW */
+    .h-scroll {
+      display: flex;
+      gap: 14px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+      scrollbar-width: thin;
+    }
+    .h-scroll::-webkit-scrollbar { height: 6px; }
+    .h-scroll::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
+    .h-scroll .poster {
+      flex: 0 0 160px;
+    }
+
+    /* RATING DISTRIBUTION HISTOGRAM */
+    .histogram {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+    }
+    .histo-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
+    .histo-title {
+      font-size: 16px;
+      font-weight: 800;
+    }
+    .histo-avg {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    .histo-avg b {
+      color: var(--accent);
+      font-size: 22px;
+      font-weight: 900;
+      letter-spacing: -.5px;
+      margin-right: 4px;
+    }
+    .histo-bars {
+      display: flex;
+      align-items: flex-end;
+      gap: 6px;
+      height: 130px;
+      padding: 0 4px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 8px;
+    }
+    .histo-col {
+      flex: 1;
+      background: var(--surface2);
+      border-radius: 4px 4px 0 0;
+      position: relative;
+      transition: background .15s;
+      cursor: pointer;
+      min-height: 4px;
+    }
+    .histo-col.has-data { background: var(--accent); }
+    .histo-col.has-data:hover { background: var(--accent-ink); }
+    .histo-col.peak { background: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
+    .histo-col-count {
+      position: absolute;
+      top: -22px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      opacity: 0;
+      transition: opacity .15s;
+    }
+    .histo-col:hover .histo-col-count { opacity: 1; }
+    .histo-axis {
+      display: flex;
+      gap: 6px;
+      font-size: 10px;
+      color: var(--text-faint);
+      padding: 0 4px;
+    }
+    .histo-axis div { flex: 1; text-align: center; font-weight: 600; }
+
+    /* GAMING TYPE PERSONA CARD */
+    .persona {
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-ink) 100%);
+      color: #fff;
+      border-radius: var(--radius);
+      padding: 32px;
+      position: relative;
+      overflow: hidden;
+    }
+    .persona::after {
+      content: '';
+      position: absolute;
+      right: -40px;
+      top: -40px;
+      width: 200px;
+      height: 200px;
+      background: rgba(255,255,255,.08);
+      border-radius: 50%;
+    }
+    .persona::before {
+      content: '';
+      position: absolute;
+      right: 60px;
+      bottom: -20px;
+      width: 100px;
+      height: 100px;
+      background: rgba(255,255,255,.05);
+      border-radius: 50%;
+    }
+    .persona-eyebrow {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      opacity: .85;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+    .persona-emoji {
+      font-size: 56px;
+      margin-bottom: 14px;
+      position: relative;
+      z-index: 1;
+    }
+    .persona-name {
+      font-size: 26px;
+      font-weight: 900;
+      letter-spacing: -.8px;
+      margin-bottom: 8px;
+      position: relative;
+      z-index: 1;
+    }
+    .persona-desc {
+      font-size: 14px;
+      line-height: 1.6;
+      opacity: .92;
+      max-width: 480px;
+      position: relative;
+      z-index: 1;
+      margin-bottom: 20px;
+    }
+    .persona-traits {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      position: relative;
+      z-index: 1;
+    }
+    .persona-trait {
+      background: rgba(255,255,255,.18);
+      backdrop-filter: blur(8px);
+      padding: 5px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    /* GENRE BARS */
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+    }
+    .panel-title {
+      font-size: 16px;
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+    .panel-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 22px;
+    }
+    .genre-row {
+      display: grid;
+      grid-template-columns: 80px 1fr 60px;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 12px;
+    }
+    .genre-label {
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .genre-bar-wrap {
+      height: 8px;
+      background: var(--surface2);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .genre-bar {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 4px;
+      transition: width .4s;
+    }
+    .genre-val {
+      font-size: 12px;
+      color: var(--text-muted);
+      text-align: right;
+      font-weight: 600;
+    }
+    .genre-val .num {
+      color: var(--text);
+      font-weight: 800;
+    }
+
+    /* PIE / DONUT (platform breakdown) */
+    .donut-wrap {
+      display: flex;
+      align-items: center;
+      gap: 28px;
+    }
+    .donut {
+      width: 130px;
+      height: 130px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      position: relative;
+    }
+    .donut::after {
+      content: '';
+      position: absolute;
+      inset: 22px;
+      background: var(--surface);
+      border-radius: 50%;
+    }
+    .donut-center {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 2;
+    }
+    .donut-num {
+      font-size: 22px;
+      font-weight: 900;
+      letter-spacing: -.5px;
+    }
+    .donut-label {
+      font-size: 10px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+    .legend { flex: 1; }
+    .legend-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      margin-bottom: 10px;
+    }
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 3px;
+      flex-shrink: 0;
+    }
+    .legend-name { flex: 1; font-weight: 600; }
+    .legend-pct { color: var(--text-muted); font-weight: 600; }
+
+    /* ACTIVITY TIMELINE */
+    .timeline {
+      position: relative;
+    }
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 11px;
+      top: 12px;
+      bottom: 0;
+      width: 2px;
+      background: var(--border);
+    }
+    .tl-item {
+      display: flex;
+      gap: 18px;
+      margin-bottom: 22px;
+      position: relative;
+    }
+    .tl-dot {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--accent-soft);
+      border: 3px solid var(--surface);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      flex-shrink: 0;
+      z-index: 2;
+      box-shadow: 0 0 0 2px var(--border);
+    }
+    .tl-content {
+      flex: 1;
+      padding-top: 0;
+    }
+    .tl-date {
+      font-size: 11px;
+      color: var(--text-faint);
+      font-weight: 600;
+      margin-bottom: 4px;
+      letter-spacing: .3px;
+    }
+    .tl-text {
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    .tl-text b { font-weight: 700; }
+    .tl-text .star-inline {
+      color: var(--star);
+      font-weight: 700;
+      letter-spacing: .5px;
+    }
+
+    /* GAME DETAIL */
+    .game-detail { max-width: 1100px; margin: 0 auto; padding: 56px 40px; }
+    .game-detail-header {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 40px;
+      margin-bottom: 36px;
+    }
+    .detail-thumb {
+      width: 100%;
+      aspect-ratio: 3/4;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 100px;
+    }
+    .detail-info { padding-top: 4px; }
+    .detail-platform {
+      display: inline-block;
+      background: var(--accent-soft);
+      color: var(--accent-ink);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 4px;
+      margin-bottom: 14px;
+      letter-spacing: .3px;
+    }
+    .detail-title {
+      font-size: 36px;
+      font-weight: 900;
+      margin-bottom: 8px;
+      letter-spacing: -1.5px;
+    }
+    .detail-sub {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: 24px;
+    }
+    .rating-block {
+      display: flex;
+      gap: 32px;
+      align-items: center;
+      padding: 20px 24px;
+      background: var(--surface2);
+      border-radius: var(--radius);
+      margin-bottom: 22px;
+    }
+    .rating-avg {
+      text-align: center;
+    }
+    .rating-avg-num {
+      font-size: 36px;
+      font-weight: 900;
+      letter-spacing: -1px;
+      line-height: 1;
+    }
+    .rating-avg-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 4px;
+      font-weight: 600;
+    }
+    .rating-stars-big {
+      font-size: 28px;
+      color: var(--star);
+      letter-spacing: 3px;
+    }
+    .rating-divider {
+      width: 1px;
+      align-self: stretch;
+      background: var(--border-strong);
+    }
+    .my-rating-prompt {
+      flex: 1;
+    }
+    .my-rating-prompt-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+    .my-rating-stars {
+      display: flex;
+      gap: 3px;
+      font-size: 26px;
+      cursor: pointer;
+      color: var(--border-strong);
+    }
+    .my-rating-stars span {
+      transition: color .1s, transform .1s;
+    }
+    .my-rating-stars span.active { color: var(--star); }
+    .my-rating-stars span:hover { transform: scale(1.1); }
+
+    .detail-actions {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+    .action-pill {
+      padding: 9px 16px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all .15s;
+    }
+    .action-pill:hover { border-color: var(--accent); color: var(--accent); }
+    .action-pill.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+
+    .detail-body {
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.7;
+      margin-bottom: 24px;
+    }
+
+    /* META INFO ROW */
+    .meta-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 0;
+    }
+    .meta-cell {
+      text-align: center;
+      padding: 0 12px;
+      border-right: 1px solid var(--border);
+    }
+    .meta-cell:last-child { border-right: none; }
+    .meta-num {
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: -.3px;
+    }
+    .meta-cell .meta-num.accent { color: var(--accent); }
+    .meta-cell .meta-num.star { color: var(--star); }
+    .meta-cell-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 600;
+      margin-top: 2px;
+    }
+
+    /* TAG CLOUD */
+    .tag-cloud-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 36px;
+    }
+    .tag-cloud-col h4 {
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .5px;
+      margin-bottom: 14px;
+      text-transform: uppercase;
+    }
+    .tag-cloud-col.pros h4 { color: var(--pos); }
+    .tag-cloud-col.cons h4 { color: var(--neg); }
+    .tag-bubbles {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .tag-bubble {
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+      background: var(--surface2);
+      color: var(--text);
+    }
+    .tag-bubble.pros-bub { background: #dcfce7; color: var(--pos); }
+    .tag-bubble.cons-bub { background: #fee2e2; color: var(--neg); }
+    .tag-bubble.lg { font-size: 16px; padding: 8px 16px; }
+    .tag-bubble.md { font-size: 14px; padding: 7px 14px; }
+    .tag-count { margin-left: 6px; opacity: .6; font-size: .85em; }
+
+    /* REVIEW CARD */
+    .review-card {
+      padding: 22px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .review-card:last-child { border-bottom: none; }
+    .review-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+    .avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--surface2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+      border: 1px solid var(--border);
+    }
+    .reviewer-name { font-size: 14px; font-weight: 700; }
+    .reviewer-stat { font-size: 12px; color: var(--text-muted); }
+    .review-stars {
+      color: var(--star);
+      font-size: 14px;
+      letter-spacing: 1.5px;
+      margin-left: auto;
+    }
+    .review-rating-num {
+      font-size: 14px;
+      font-weight: 800;
+      margin-left: 8px;
+    }
+    .review-headline {
+      font-size: 16px;
+      font-weight: 800;
+      margin-bottom: 10px;
+      line-height: 1.4;
+    }
+    .review-text {
+      font-size: 14px;
+      line-height: 1.7;
+      color: var(--text);
+      margin-bottom: 12px;
+    }
+    .review-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+    .review-tag {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: var(--surface2);
+      color: var(--text-muted);
+    }
+    .review-actions {
+      display: flex;
+      gap: 14px;
+      margin-top: 12px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .react-btn {
+      cursor: pointer;
+      background: none;
+      border: none;
+      font-family: inherit;
+      color: inherit;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .react-btn:hover { color: var(--accent); }
+
+    /* PROFILE HEADER (WATCHA-LIKE) */
+    .profile-cover {
+      height: 160px;
+      background: linear-gradient(135deg, var(--accent-soft) 0%, #fef3c7 100%);
+      position: relative;
+    }
+    .profile-wrap { max-width: 1200px; margin: 0 auto; padding: 0 40px; }
+    .profile-top {
+      display: flex;
+      gap: 24px;
+      align-items: flex-end;
+      margin-top: -54px;
+      margin-bottom: 32px;
+      position: relative;
+    }
+    .profile-avatar {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: var(--surface);
+      border: 4px solid var(--surface);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 56px;
+      flex-shrink: 0;
+      box-shadow: var(--shadow-md);
+    }
+    .profile-info { flex: 1; padding-bottom: 16px; }
+    .profile-name {
+      font-size: 26px;
+      font-weight: 900;
+      letter-spacing: -.8px;
+      margin-bottom: 4px;
+    }
+    .profile-handle {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+    .profile-bio {
+      font-size: 14px;
+      color: var(--text);
+      line-height: 1.5;
+    }
+    .profile-actions { padding-bottom: 16px; }
+
+    .profile-stats-bar {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 0;
+      margin-bottom: 36px;
+    }
+    .pstat {
+      text-align: center;
+      padding: 0 16px;
+      border-right: 1px solid var(--border);
+      cursor: pointer;
+      transition: opacity .15s;
+    }
+    .pstat:hover { opacity: .7; }
+    .pstat:last-child { border-right: none; }
+    .pstat-num {
+      font-size: 26px;
+      font-weight: 900;
+      letter-spacing: -.5px;
+      line-height: 1;
+    }
+    .pstat-num.accent { color: var(--accent); }
+    .pstat-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 6px;
+      font-weight: 600;
+      letter-spacing: .3px;
+    }
+
+    /* PROFILE TABS */
+    .profile-tabs {
+      display: flex;
+      gap: 0;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 32px;
+    }
+    .ptab {
+      padding: 14px 22px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      margin-bottom: -1px;
+      border-bottom: 2px solid transparent;
+      font-family: inherit;
+    }
+    .ptab.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .ptab:hover:not(.active) { color: var(--text); }
+
+    /* TWO COLUMN ANALYSIS LAYOUT */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 22px;
+      margin-bottom: 22px;
+    }
+    .grid-2-3 {
+      display: grid;
+      grid-template-columns: 2fr 3fr;
+      gap: 22px;
+      margin-bottom: 22px;
+    }
+
+    /* RATING FILTER STRIP (마이페이지 평가한 게임) */
+    .rating-filter {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+      padding: 14px;
+      background: var(--surface2);
+      border-radius: var(--radius);
+      align-items: center;
+    }
+    .rf-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      margin-right: 6px;
+      padding-left: 6px;
+    }
+    .rf-chip {
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      border: 1px solid transparent;
+      background: var(--surface);
+      color: var(--text-muted);
+      cursor: pointer;
+      font-family: inherit;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: all .15s;
+    }
+    .rf-chip:hover { border-color: var(--border-strong); color: var(--text); }
+    .rf-chip.active {
+      background: var(--accent);
+      color: #fff;
+    }
+    .rf-chip .star { color: var(--star); }
+    .rf-chip.active .star { color: #fff; }
+    .rf-chip .count {
+      opacity: .6;
+      font-weight: 600;
+    }
+
+    /* RATING BAND HEADER */
+    .band-head {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      margin: 32px 0 18px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .band-stars {
+      font-size: 18px;
+      color: var(--star);
+      letter-spacing: 2px;
+    }
+    .band-num {
+      font-size: 22px;
+      font-weight: 900;
+      letter-spacing: -.5px;
+    }
+    .band-count {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-left: auto;
+    }
+
+    /* WRAPPED SUMMARY */
+    .wrapped {
+      background: linear-gradient(135deg, #0f766e 0%, #134e4a 100%);
+      color: #fff;
+      border-radius: 20px;
+      padding: 40px;
+      margin-bottom: 22px;
+      position: relative;
+      overflow: hidden;
+    }
+    .wrapped::before {
+      content: '';
+      position: absolute;
+      top: -100px; right: -100px;
+      width: 320px; height: 320px;
+      background: radial-gradient(circle, rgba(255,255,255,.12), transparent 70%);
+      border-radius: 50%;
+    }
+    .wrapped-eyebrow {
+      font-size: 11px;
+      letter-spacing: 2px;
+      opacity: .8;
+      font-weight: 700;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+    }
+    .wrapped-title {
+      font-size: 32px;
+      font-weight: 900;
+      letter-spacing: -1px;
+      margin-bottom: 6px;
+      position: relative;
+      z-index: 1;
+    }
+    .wrapped-sub {
+      font-size: 14px;
+      opacity: .85;
+      margin-bottom: 28px;
+      position: relative;
+      z-index: 1;
+    }
+    .wrapped-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      position: relative;
+      z-index: 1;
+    }
+    .wrapped-stat {
+      background: rgba(255,255,255,.1);
+      backdrop-filter: blur(10px);
+      border-radius: 14px;
+      padding: 18px;
+    }
+    .wrapped-stat-label {
+      font-size: 11px;
+      opacity: .8;
+      font-weight: 600;
+      letter-spacing: .3px;
+      margin-bottom: 6px;
+    }
+    .wrapped-stat-num {
+      font-size: 26px;
+      font-weight: 900;
+      letter-spacing: -.8px;
+      line-height: 1.1;
+    }
+    .wrapped-stat-sub {
+      font-size: 12px;
+      opacity: .75;
+      margin-top: 4px;
+    }
+
+    /* HEATMAP (활동 캘린더) */
+    .heatmap {
+      display: grid;
+      grid-template-columns: repeat(53, 1fr);
+      gap: 3px;
+      margin: 18px 0 12px;
+    }
+    .heat-cell {
+      aspect-ratio: 1;
+      background: var(--surface2);
+      border-radius: 2px;
+      transition: transform .1s;
+      cursor: pointer;
+    }
+    .heat-cell:hover { transform: scale(1.5); z-index: 2; position: relative; }
+    .heat-cell.l1 { background: #ccfbf1; }
+    .heat-cell.l2 { background: #5eead4; }
+    .heat-cell.l3 { background: #14b8a6; }
+    .heat-cell.l4 { background: var(--accent); }
+    .heat-cell.l5 { background: var(--accent-ink); }
+    .heat-legend {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+    .heat-legend-cell {
+      width: 11px;
+      height: 11px;
+      border-radius: 2px;
+    }
+    .heat-months {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      color: var(--text-faint);
+      padding: 0 2px;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+
+    /* DECADE BARS */
+    .decade-row {
+      display: grid;
+      grid-template-columns: 60px 1fr 80px;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+    .decade-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+    .decade-bar-wrap {
+      height: 24px;
+      background: var(--surface2);
+      border-radius: 6px;
+      overflow: hidden;
+      position: relative;
+    }
+    .decade-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--accent-ink));
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      padding-left: 10px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #fff;
+    }
+    .decade-val {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 600;
+      text-align: right;
+    }
+    .decade-val .num { color: var(--text); font-weight: 800; }
+
+    /* BEST/WORST CARDS */
+    .best-worst-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 22px;
+    }
+    .bw-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+    }
+    .bw-card.best { border-top: 3px solid var(--star); }
+    .bw-card.worst { border-top: 3px solid var(--neg); }
+    .bw-head {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    .bw-emoji { font-size: 22px; }
+    .bw-title {
+      font-size: 15px;
+      font-weight: 800;
+    }
+    .bw-list-item {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .bw-list-item:last-child { border-bottom: none; }
+    .bw-rank {
+      font-size: 14px;
+      font-weight: 900;
+      color: var(--text-muted);
+      width: 18px;
+      flex-shrink: 0;
+    }
+    .bw-thumb {
+      width: 38px;
+      height: 50px;
+      border-radius: 4px;
+      background: var(--surface2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+    .bw-info { flex: 1; min-width: 0; }
+    .bw-game-title {
+      font-size: 13px;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-bottom: 2px;
+    }
+    .bw-game-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+    .bw-score {
+      font-size: 14px;
+      font-weight: 900;
+      color: var(--star);
+      letter-spacing: -.3px;
+    }
+    .bw-card.worst .bw-score { color: var(--neg); }
+
+    /* TAG WORD CLOUD (내가 자주 쓴 태그) */
+    .word-cloud {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 12px;
+    }
+    .wc-tag {
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform .15s;
+    }
+    .wc-tag:hover { transform: scale(1.08); }
+    .wc-tag.s5 { font-size: 24px; background: var(--accent); color: #fff; padding: 10px 22px; }
+    .wc-tag.s4 { font-size: 19px; background: var(--accent-soft); color: var(--accent-ink); padding: 8px 18px; }
+    .wc-tag.s3 { font-size: 16px; background: #f0fdfa; color: var(--accent-ink); }
+    .wc-tag.s2 { font-size: 14px; background: var(--surface2); color: var(--text); }
+    .wc-tag.s1 { font-size: 12px; background: var(--surface2); color: var(--text-muted); }
+
+    /* DISPARITY (평균과 가장 다른 평가) */
+    .disparity-row {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 14px;
+      align-items: center;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .disparity-row:last-child { border-bottom: none; }
+    .disp-game {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      min-width: 0;
+    }
+    .disp-thumb {
+      width: 36px; height: 48px;
+      border-radius: 4px;
+      background: var(--surface2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+    .disp-info { min-width: 0; }
+    .disp-title { font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .disp-sub { font-size: 11px; color: var(--text-muted); }
+    .disp-scores {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .disp-score {
+      text-align: center;
+      min-width: 52px;
+    }
+    .disp-score-num {
+      font-size: 16px;
+      font-weight: 900;
+      letter-spacing: -.3px;
+    }
+    .disp-score-num.mine { color: var(--accent); }
+    .disp-score-num.high { color: var(--pos); }
+    .disp-score-num.low { color: var(--neg); }
+    .disp-score-label {
+      font-size: 10px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+    .disp-arrow {
+      font-size: 14px;
+      color: var(--text-faint);
+    }
+    .disp-gap {
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--neg);
+      min-width: 50px;
+      text-align: right;
+    }
+    .disp-gap.up { color: var(--pos); }
+
+    /* RATING TREND LINE */
+    .trend-chart {
+      position: relative;
+      height: 160px;
+      margin: 18px 0 8px;
+      border-bottom: 1px solid var(--border);
+      border-left: 1px solid var(--border);
+    }
+    .trend-svg {
+      width: 100%;
+      height: 100%;
+    }
+    .trend-x {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      color: var(--text-faint);
+      font-weight: 600;
+      padding-top: 4px;
+    }
+    .trend-y-label {
+      position: absolute;
+      left: -24px;
+      font-size: 10px;
+      color: var(--text-faint);
+      font-weight: 600;
+    }
+
+    /* WRITE REVIEW */
+    .write-review { max-width: 720px; margin: 0 auto; padding: 56px 40px; }
+    .write-review h2 {
+      font-size: 28px;
+      font-weight: 900;
+      margin-bottom: 6px;
+      letter-spacing: -1px;
+    }
+    .write-review > p.write-sub {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: 36px;
+    }
+    .form-section { margin-bottom: 32px; }
+    .form-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+    .form-help {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+    .star-input {
+      display: flex;
+      gap: 4px;
+      font-size: 38px;
+      cursor: pointer;
+    }
+    .star-input span {
+      color: var(--border-strong);
+      transition: color .1s, transform .1s;
+    }
+    .star-input span.active { color: var(--star); }
+    .star-input span:hover { transform: scale(1.1); }
+    .star-input-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .star-label {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+    .pros-cons-input {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    .pc-input-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+    }
+    .pc-input-card.pros { border-left: 3px solid var(--pos); }
+    .pc-input-card.cons { border-left: 3px solid var(--neg); }
+    .pc-input-head {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: 800;
+      margin-bottom: 10px;
+    }
+    .pc-input-card.pros .pc-input-head { color: var(--pos); }
+    .pc-input-card.cons .pc-input-head { color: var(--neg); }
+    .pc-input-card textarea { min-height: 110px; font-size: 13px; }
+    textarea, input[type=text] {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 13px 14px;
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.6;
+      resize: vertical;
+      outline: none;
+      font-family: inherit;
+      transition: border-color .15s;
+    }
+    textarea:focus, input[type=text]:focus { border-color: var(--accent); }
+    .tag-selector {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .tag-option {
+      padding: 7px 14px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text-muted);
+      cursor: pointer;
+      font-family: inherit;
+      transition: all .15s;
+    }
+    .tag-option:hover { border-color: var(--text-muted); color: var(--text); }
+    .tag-option.selected { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+    /* AUTH */
+    .auth-wrap { max-width: 440px; margin: 80px auto; padding: 0 24px; }
+    .auth-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 40px 36px;
+      box-shadow: var(--shadow-md);
+    }
+    .auth-logo { text-align: center; margin-bottom: 28px; }
+    .auth-logo .logo { font-size: 32px; justify-content: center; }
+    .auth-title {
+      font-size: 24px;
+      font-weight: 900;
+      text-align: center;
+      margin-bottom: 6px;
+      letter-spacing: -.8px;
+    }
+    .auth-sub {
+      font-size: 14px;
+      color: var(--text-muted);
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    .field { margin-bottom: 18px; }
+    .field label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+    .field input {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+      color: var(--text);
+      font-size: 14px;
+      outline: none;
+      font-family: inherit;
+    }
+    .field input:focus { border-color: var(--accent); }
+    .auth-divider {
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-muted);
+      margin: 22px 0;
+      position: relative;
+    }
+    .auth-divider::before, .auth-divider::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      width: calc(50% - 28px);
+      height: 1px;
+      background: var(--border);
+    }
+    .auth-divider::before { left: 0; }
+    .auth-divider::after { right: 0; }
+    .auth-footer {
+      text-align: center;
+      margin-top: 22px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    .auth-footer a { color: var(--accent); text-decoration: none; font-weight: 600; }
+
+    footer {
+      text-align: center;
+      padding: 48px 32px;
+      border-top: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 13px;
+      margin-top: 80px;
+      background: var(--surface);
+    }
+    footer .footer-logo {
+      font-size: 18px;
+      font-weight: 900;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+    footer p { line-height: 1.7; }
+
+    @media (max-width: 768px) {
+      nav { padding: 0 20px; }
+      .nav-links, .search-mini { display: none; }
+      .hero { padding: 60px 24px 40px; }
+      .hero h1 { font-size: 36px; }
+      section { padding: 40px 24px; }
+      .game-detail { padding: 40px 24px; }
+      .write-review { padding: 40px 24px; }
+      .profile-wrap { padding: 0 24px; }
+      .game-detail-header { grid-template-columns: 1fr; }
+      .grid-2, .grid-2-3, .pros-cons-input, .tag-cloud-grid { grid-template-columns: 1fr; }
+      .kpi-bar { grid-template-columns: repeat(2, 1fr); padding: 24px 24px 0; }
+      .profile-stats-bar { grid-template-columns: repeat(2, 1fr); }
+      .pstat { border-bottom: 1px solid var(--border); padding: 12px; }
+      .pstat:nth-child(odd) { border-right: 1px solid var(--border); }
+      .pstat:nth-child(n+3) { border-bottom: none; }
+      .meta-row { grid-template-columns: repeat(2, 1fr); }
+      .meta-cell:nth-child(2) { border-right: none; }
+      .meta-cell:nth-child(-n+2) { border-bottom: 1px solid var(--border); padding-bottom: 12px; }
+      .meta-cell:nth-child(n+3) { padding-top: 12px; }
+      .donut-wrap { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- 페이지 전환 데모 탭 -->
+<div class="demo-nav">
+  <button class="tab-btn active" onclick="showPage('home')">홈</button>
+  <button class="tab-btn" onclick="showPage('games')">게임 둘러보기</button>
+  <button class="tab-btn" onclick="showPage('detail')">게임 상세</button>
+  <button class="tab-btn" onclick="showPage('write')">리뷰 작성</button>
+  <button class="tab-btn" onclick="showPage('profile')">마이 게임</button>
+  <button class="tab-btn" onclick="showPage('analysis')">취향 분석</button>
+  <button class="tab-btn" onclick="showPage('login')">로그인</button>
+  <button class="tab-btn" onclick="showPage('signup')">회원가입</button>
+</div>
+
+<nav>
+  <div class="logo"><span class="logo-dot"></span>겜평</div>
+  <ul class="nav-links">
+    <li><a onclick="showPage('games')">게임</a></li>
+    <li><a onclick="showPage('profile')">마이 게임</a></li>
+    <li><a onclick="showPage('analysis')">취향 분석</a></li>
+    <li><a>피드</a></li>
+  </ul>
+  <div class="nav-actions">
+    <input class="search-mini" type="text" placeholder="게임 검색..." />
+    <button class="btn btn-ghost" onclick="showPage('login')">로그인</button>
+    <button class="btn btn-primary" onclick="showPage('signup')">시작하기</button>
+  </div>
+</nav>
+
+<!-- ── HOME ── -->
+<div id="page-home" class="page active">
+
+  <div class="hero">
+    <h1>내가 한 게임,<br /><em>내가 남긴 평가</em></h1>
+    <p>플레이한 게임을 별점으로 기록하고, 한 줄 한 줄 쌓이는 내 게임 인생을 한눈에. 내 평가가 많아질수록 겜평이 나를 더 잘 이해합니다.</p>
+    <div class="hero-actions">
+      <button class="btn btn-primary btn-lg" onclick="showPage('profile')">내 게임 보러가기</button>
+      <button class="btn btn-ghost btn-lg" onclick="showPage('analysis')">취향 분석 보기</button>
+    </div>
+  </div>
+
+  <div class="kpi-bar">
+    <div class="kpi"><div class="kpi-num">428만</div><div class="kpi-label">기록된 별점</div></div>
+    <div class="kpi"><div class="kpi-num">12,840</div><div class="kpi-label">등록된 게임</div></div>
+    <div class="kpi"><div class="kpi-num">87,210</div><div class="kpi-label">활동 유저</div></div>
+    <div class="kpi"><div class="kpi-num">3.7<span style="font-size:14px;">/5</span></div><div class="kpi-label">평균 별점</div></div>
+  </div>
+
+  <section>
+    <div class="section-header">
+      <div>
+        <div class="section-eyebrow">For you</div>
+        <div class="section-title">취향 저격 추천</div>
+      </div>
+      <div class="section-more">더 보기 →</div>
+    </div>
+    <div class="h-scroll">
+      <div class="poster" onclick="showPage('detail')">
+        <div class="poster-img">⚔️<div class="poster-rating">4.8</div></div>
+        <div class="poster-meta">
+          <div class="poster-title">엘든 링: 황금나무의 그림자</div>
+          <div class="poster-sub">FromSoftware · 2024</div>
+        </div>
+      </div>
+      <div class="poster" onclick="showPage('detail')">
+        <div class="poster-img">🩸<div class="poster-rating">4.9</div></div>
+        <div class="poster-meta">
+          <div class="poster-title">블러드본</div>
+          <div class="poster-sub">FromSoftware · 2015</div>
+        </div>
+      </div>
+      <div class="poster" onclick="showPage('detail')">
+        <div class="poster-img">🦌<div class="poster-rating">4.7</div></div>
+        <div class="poster-meta">
+          <div class="poster-title">세키로</div>
+          <div class="poster-sub">FromSoftware · 2019</div>
+        </div>
+      </div>
+      <div class="poster" onclick="showPage('detail')">
+        <div class="poster-img">🥷<div class="poster-rating">4.2</div></div>
+        <div class="poster-meta">
+          <div class="poster-title">니오 2</div>
+          <div class="poster-sub">Team Ninja · 2020</div>
+        </div>
+      </div>
+      <div class="poster" onclick="showPage('detail')">
+        <div class="poster-img">🌌<div class="poster-rating">3.2</div></div>
+        <div class="poster-meta">
+          <div class="poster-title">스타필드</div>
+          <div class="poster-sub">Bethesda · 2023</div>
+        </div>
+      </div>
+      <div class="poster" onclick="showPage('detail')">
+        <div class="poster-img">🧙<div class="poster-rating">4.7</div></div>
+        <div class="poster-meta">
+          <div class="poster-title">발더스 게이트 3</div>
+          <div class="poster-sub">Larian · 2023</div>
+        </div>
+      </div>
+      <div class="poster" onclick="showPage('detail')">
+        <div class="poster-img">🎵<div class="poster-rating">4.6</div></div>
+        <div class="poster-meta">
+          <div class="poster-title">하이파이 러시</div>
+          <div class="poster-sub">Tango Gameworks · 2023</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-header">
+      <div>
+        <div class="section-eyebrow">This week</div>
+        <div class="section-title">이번 주 인기 게임</div>
+      </div>
+      <div class="sort-tabs">
+        <button class="sort-btn active" onclick="activateSort(this)">주간</button>
+        <button class="sort-btn" onclick="activateSort(this)">월간</button>
+      </div>
+    </div>
+    <div class="poster-grid">
+      <div class="poster" onclick="showPage('detail')">
+        <div class="poster-img">⚔️<div class="poster-rating">4.8</div></div>
+        <div class="poster-meta">
+          <div class="poster-title">엘든 링: DLC</div>
+          <div class="poster-sub">평가 312명 참여</div>
+        </div>
+      </div>
+      <div class="poster" onclick="showPage('detail')">
+        <div class="poster-img">🧙<div class="poster-rating">4.7</div></div>
+        <div class="poster-meta">
+          <div class="poster-title">발더스 게이트 3</div>
+          <div class="poster-sub">평가 287명 참여</div>
+        </div>
+      </div>
+      <div class="poster" onclick="showPage('detail')">
+        <div class="poster-img">🌌<div class="poster-rating">3.2</div></div>
+        <div class="poster-meta">
+          <div class="poster-title">스타필드</div>
+          <div class="poster-sub">평가 198명 참여</div>
+        </div>
+      </div>
+      <div class="poster" onclick="showPage('detail')">
+        <div class="poster-img">🔫<div class="poster-rating">4.3</div></div>
+        <div class="poster-meta">
+          <div class="poster-title">헬다이버즈 2</div>
+          <div class="poster-sub">평가 154명 참여</div>
+        </div>
+      </div>
+      <div class="poster" onclick="showPage('detail')">
+        <div class="poster-img">🐉<div class="poster-rating">4.1</div></div>
+        <div class="poster-meta">
+          <div class="poster-title">드래곤즈 도그마 2</div>
+          <div class="poster-sub">평가 132명 참여</div>
+        </div>
+      </div>
+      <div class="poster" onclick="showPage('detail')">
+        <div class="poster-img">🏎️<div class="poster-rating">3.5</div></div>
+        <div class="poster-meta">
+          <div class="poster-title">포르자 모터스포츠</div>
+          <div class="poster-sub">평가 89명 참여</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-header">
+      <div>
+        <div class="section-eyebrow">Recent</div>
+        <div class="section-title">최근 솔직 리뷰</div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="review-card">
+        <div class="review-header">
+          <div class="avatar">⚔️</div>
+          <div>
+            <div class="reviewer-name">소울즈_장인 <span style="color:var(--text-muted); font-weight:500; font-size:12px;">· 엘든 링: DLC</span></div>
+            <div class="reviewer-stat">평가 42개 · 평균 ★ 3.8</div>
+          </div>
+          <div class="review-stars">★★★★★</div>
+          <span class="review-rating-num">5.0</span>
+        </div>
+        <div class="review-headline">DLC가 본편을 능가한다는 게 가능한 일인가</div>
+        <p class="review-text">프롬소프트는 진짜 ‘게임 만드는 법’이 뭔지 다시 보여줬다. 본편 클리어했다고 들어왔는데 보스마다 새 빌드 짜야 함. 그게 짜증나는 게 아니라 재밌다는 게 핵심.</p>
+        <div class="review-tags">
+          <span class="review-tag">#소울라이크</span>
+          <span class="review-tag">#대작</span>
+          <span class="review-tag">#오픈월드</span>
+        </div>
+      </div>
+      <div class="review-card">
+        <div class="review-header">
+          <div class="avatar">🎮</div>
+          <div>
+            <div class="reviewer-name">중년게이머김씨 <span style="color:var(--text-muted); font-weight:500; font-size:12px;">· 스타필드</span></div>
+            <div class="reviewer-stat">평가 138개 · 평균 ★ 3.4</div>
+          </div>
+          <div class="review-stars">★★★☆☆</div>
+          <span class="review-rating-num">3.0</span>
+        </div>
+        <div class="review-headline">광활한 우주에서 길을 잃은 베데스다</div>
+        <p class="review-text">기대치를 90으로 잡았다면 50점, 50으로 잡았다면 70점. 베데스다는 자기들이 잘하던 걸 잊은 것 같다. 1000개 행성? 99% 복붙이라는 게 함정.</p>
+        <div class="review-tags">
+          <span class="review-tag">#할인_시_추천</span>
+          <span class="review-tag">#실망감</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<!-- ── GAMES (둘러보기) ── -->
+<div id="page-games" class="page">
+  <section>
+    <div class="section-header">
+      <div>
+        <div class="section-eyebrow">Browse</div>
+        <div class="section-title">게임 둘러보기</div>
+      </div>
+      <div class="sort-tabs">
+        <button class="sort-btn active" onclick="activateSort(this)">평점순</button>
+        <button class="sort-btn" onclick="activateSort(this)">평가 많은 순</button>
+        <button class="sort-btn" onclick="activateSort(this)">최신순</button>
+      </div>
+    </div>
+
+    <div class="rating-filter" style="background: var(--surface); border: 1px solid var(--border);">
+      <span class="rf-label">플랫폼</span>
+      <button class="rf-chip active">전체</button>
+      <button class="rf-chip">PC</button>
+      <button class="rf-chip">PS5</button>
+      <button class="rf-chip">Xbox</button>
+      <button class="rf-chip">Switch</button>
+      <span class="rf-label" style="margin-left:12px;">장르</span>
+      <button class="rf-chip">RPG</button>
+      <button class="rf-chip">FPS</button>
+      <button class="rf-chip">인디</button>
+      <button class="rf-chip">시뮬레이션</button>
+      <button class="rf-chip">소울라이크</button>
+    </div>
+
+    <div class="poster-grid">
+      <div class="poster" onclick="showPage('detail')">
+        <div class="poster-img">⚔️<div class="poster-rating">4.8</div></div>
+        <div class="poster-meta">
+          <div class="poster-title">엘든 링: 황금나무의 그림자</div>
+          <div class="poster-sub">소울라이크 · PC/PS5</div>
+        </div>
+      </div>
+      <div class="poster" onclick="showPage('detail')">
+        <div class="poster-img">🌿<div class="poster-rating">4.9</div></div>
+        <div class="poster-meta">
+          <div class="poster-title">젤다: 왕국의 눈물</div>
+          <div class="poster-sub">오픈월드 · Switch</div>
+        </div>
+      </div>
+      <div class="poster" onclick="showPage('detail')">
+        <div class="poster-img">🩸<div class="poster-rating">4.9</div></div>
+        <div class="poster-meta">
+          <div class="poster-title">블러드본</div>
+          <div class="poster-sub">소울라이크 · PS4</div>
+        </div>
+      </div>
+      <div class="poster" onclick="showPage('detail')">
+        <div class="poster-img">🧙<div class="poster-rating">4.7</div></div>
+        <div class="poster-meta">
+          <div class="poster-title">발더스 게이트 3</div>
+          <div class="poster-sub">CRPG · PC</div>
+        </div>
+      </div>
+      <div class="poster" onclick="showPage('detail')">
+        <div class="poster-img">🦌<div class="poster-rating">4.7</div></div>
+        <div class="poster-meta">
+          <div class="poster-title">세키로</div>
+          <div class="poster-sub">액션 · PC/PS</div>
+        </div>
+      </div>
+      <div class="poster" onclick="showPage('detail')">
+        <div class="poster-img">🎵<div class="poster-rating">4.6</div></div>
+        <div class="poster-meta">
+          <div class="poster-title">하이파이 러시</div>
+          <div class="poster-sub">리듬 액션 · PC</div>
+        </div>
+      </div>
+      <div class="poster" onclick="showPage('detail')">
+        <div class="poster-img">🔫<div class="poster-rating">4.3</div></div>
+        <div class="poster-meta">
+          <div class="poster-title">헬다이버즈 2</div>
+          <div class="poster-sub">협동 슈터 · PS5</div>
+        </div>
+      </div>
+      <div class="poster" onclick="showPage('detail')">
+        <div class="poster-img">🥷<div class="poster-rating">4.2</div></div>
+        <div class="poster-meta">
+          <div class="poster-title">니오 2</div>
+          <div class="poster-sub">소울라이크 · PC/PS</div>
+        </div>
+      </div>
+      <div class="poster" onclick="showPage('detail')">
+        <div class="poster-img">🐉<div class="poster-rating">4.1</div></div>
+        <div class="poster-meta">
+          <div class="poster-title">드래곤즈 도그마 2</div>
+          <div class="poster-sub">액션 RPG · PC</div>
+        </div>
+      </div>
+      <div class="poster" onclick="showPage('detail')">
+        <div class="poster-img">🦝<div class="poster-rating">4.0</div></div>
+        <div class="poster-meta">
+          <div class="poster-title">팰월드</div>
+          <div class="poster-sub">서바이벌 · PC</div>
+        </div>
+      </div>
+      <div class="poster" onclick="showPage('detail')">
+        <div class="poster-img">🧟<div class="poster-rating">3.6</div></div>
+        <div class="poster-meta">
+          <div class="poster-title">데드 아일랜드 2</div>
+          <div class="poster-sub">액션 · PC/PS</div>
+        </div>
+      </div>
+      <div class="poster" onclick="showPage('detail')">
+        <div class="poster-img">🏎️<div class="poster-rating">3.5</div></div>
+        <div class="poster-meta">
+          <div class="poster-title">포르자 모터스포츠</div>
+          <div class="poster-sub">레이싱 · Xbox</div>
+        </div>
+      </div>
+      <div class="poster" onclick="showPage('detail')">
+        <div class="poster-img">🌌<div class="poster-rating">3.2</div></div>
+        <div class="poster-meta">
+          <div class="poster-title">스타필드</div>
+          <div class="poster-sub">SF RPG · PC/Xbox</div>
+        </div>
+      </div>
+      <div class="poster" onclick="showPage('detail')">
+        <div class="poster-img">🌸<div class="poster-rating">2.4</div></div>
+        <div class="poster-meta">
+          <div class="poster-title">포켓몬 스칼렛/바이올렛</div>
+          <div class="poster-sub">JRPG · Switch</div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ── DETAIL ── -->
+<div id="page-detail" class="page">
+  <div class="game-detail">
+
+    <div class="game-detail-header">
+      <div class="detail-thumb">⚔️</div>
+      <div class="detail-info">
+        <div class="detail-platform">PC · PS5 · XBOX</div>
+        <div class="detail-title">엘든 링: 황금나무의 그림자</div>
+        <div class="detail-sub">FromSoftware · 2024 · 액션 RPG / 오픈월드</div>
+
+        <div class="rating-block">
+          <div class="rating-avg">
+            <div class="rating-avg-num">4.8</div>
+            <div class="rating-avg-label">평균 별점</div>
+          </div>
+          <div class="rating-divider"></div>
+          <div class="my-rating-prompt">
+            <div class="my-rating-prompt-label">내 별점 매기기</div>
+            <div class="my-rating-stars" id="detailMyStars">
+              <span onclick="setDetailStar(1)">★</span>
+              <span onclick="setDetailStar(2)">★</span>
+              <span onclick="setDetailStar(3)">★</span>
+              <span onclick="setDetailStar(4)">★</span>
+              <span onclick="setDetailStar(5)">★</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="detail-actions">
+          <button class="action-pill active">📥 보고싶어요</button>
+          <button class="action-pill">🎮 플레이중</button>
+          <button class="action-pill">✓ 완료</button>
+          <button class="action-pill" onclick="showPage('write')">✍ 코멘트 남기기</button>
+        </div>
+
+        <div class="meta-row">
+          <div class="meta-cell">
+            <div class="meta-num accent">312</div>
+            <div class="meta-cell-label">평가 참여</div>
+          </div>
+          <div class="meta-cell">
+            <div class="meta-num">142</div>
+            <div class="meta-cell-label">코멘트</div>
+          </div>
+          <div class="meta-cell">
+            <div class="meta-num star">★ 4.8</div>
+            <div class="meta-cell-label">평균 별점</div>
+          </div>
+          <div class="meta-cell">
+            <div class="meta-num">98%</div>
+            <div class="meta-cell-label">추천율</div>
+          </div>
+        </div>
+
+        <p class="detail-body" style="margin-top:24px;">
+          엘든 링 본편의 거대한 확장팩. 플레이어를 새로운 그림자의 땅으로 안내하며, 신규 무기군과 스킬 시스템, 그리고 압도적 난이도의 보스들을 추가했다. 본편 클리어 유저를 위해 설계된 진정한 의미의 DLC.
+        </p>
+      </div>
+    </div>
+
+    <!-- 별점 분포 히스토그램 -->
+    <div class="grid-2-3">
+      <div class="histogram">
+        <div class="histo-head">
+          <div class="histo-title">별점 분포</div>
+          <div class="histo-avg"><b>4.8</b>/ 5.0 · 312명 평가</div>
+        </div>
+        <div class="histo-bars">
+          <div class="histo-col" style="height:6%"><span class="histo-col-count">2</span></div>
+          <div class="histo-col" style="height:4%"><span class="histo-col-count">1</span></div>
+          <div class="histo-col" style="height:4%"><span class="histo-col-count">1</span></div>
+          <div class="histo-col has-data" style="height:8%"><span class="histo-col-count">3</span></div>
+          <div class="histo-col has-data" style="height:12%"><span class="histo-col-count">8</span></div>
+          <div class="histo-col has-data" style="height:18%"><span class="histo-col-count">12</span></div>
+          <div class="histo-col has-data" style="height:28%"><span class="histo-col-count">22</span></div>
+          <div class="histo-col has-data" style="height:42%"><span class="histo-col-count">35</span></div>
+          <div class="histo-col has-data" style="height:68%"><span class="histo-col-count">68</span></div>
+          <div class="histo-col peak" style="height:100%"><span class="histo-col-count">160</span></div>
+        </div>
+        <div class="histo-axis">
+          <div>0.5</div><div>1.0</div><div>1.5</div><div>2.0</div><div>2.5</div>
+          <div>3.0</div><div>3.5</div><div>4.0</div><div>4.5</div><div>5.0</div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">이 게임을 좋아한 사람들의 취향</div>
+        <div class="panel-sub">평균 4.5점 이상 준 유저들의 다른 선호 게임</div>
+        <div class="h-scroll" style="margin-top:8px;">
+          <div class="poster compact" onclick="showPage('detail')">
+            <div class="poster-img">🩸<div class="poster-rating">4.9</div></div>
+            <div class="poster-meta"><div class="poster-title">블러드본</div></div>
+          </div>
+          <div class="poster compact" onclick="showPage('detail')">
+            <div class="poster-img">🦌<div class="poster-rating">4.7</div></div>
+            <div class="poster-meta"><div class="poster-title">세키로</div></div>
+          </div>
+          <div class="poster compact" onclick="showPage('detail')">
+            <div class="poster-img">🥷<div class="poster-rating">4.2</div></div>
+            <div class="poster-meta"><div class="poster-title">니오 2</div></div>
+          </div>
+          <div class="poster compact" onclick="showPage('detail')">
+            <div class="poster-img">⚜️<div class="poster-rating">4.0</div></div>
+            <div class="poster-meta"><div class="poster-title">로드 오브 더 폴른</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 키워드 -->
+    <div class="panel" style="margin-top:22px;">
+      <div class="panel-title">키워드로 보는 평가</div>
+      <div class="panel-sub">312명의 코멘트에서 자주 등장한 단어</div>
+      <div class="tag-cloud-grid">
+        <div class="tag-cloud-col pros">
+          <h4>👍 자주 언급된 장점</h4>
+          <div class="tag-bubbles">
+            <span class="tag-bubble pros-bub lg">전투의 깊이<span class="tag-count">198</span></span>
+            <span class="tag-bubble pros-bub lg">맵 디자인<span class="tag-count">176</span></span>
+            <span class="tag-bubble pros-bub md">보스전<span class="tag-count">154</span></span>
+            <span class="tag-bubble pros-bub md">분위기<span class="tag-count">132</span></span>
+            <span class="tag-bubble pros-bub">자유도<span class="tag-count">98</span></span>
+            <span class="tag-bubble pros-bub">OST<span class="tag-count">87</span></span>
+            <span class="tag-bubble pros-bub">탐험 보상<span class="tag-count">76</span></span>
+          </div>
+        </div>
+        <div class="tag-cloud-col cons">
+          <h4>👎 자주 언급된 단점</h4>
+          <div class="tag-bubbles">
+            <span class="tag-bubble cons-bub lg">PC 최적화<span class="tag-count">142</span></span>
+            <span class="tag-bubble cons-bub md">난이도<span class="tag-count">98</span></span>
+            <span class="tag-bubble cons-bub md">맵 표시 부족<span class="tag-count">78</span></span>
+            <span class="tag-bubble cons-bub">보스 반복<span class="tag-count">54</span></span>
+            <span class="tag-bubble cons-bub">스토리 모호<span class="tag-count">38</span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 코멘트 / 리뷰 -->
+    <div style="margin-top:36px;">
+      <div class="section-header">
+        <div class="section-title" style="font-size:18px;">코멘트 ∙ 리뷰 142</div>
+        <div class="sort-tabs">
+          <button class="sort-btn active" onclick="activateSort(this)">공감순</button>
+          <button class="sort-btn" onclick="activateSort(this)">최신순</button>
+          <button class="sort-btn" onclick="activateSort(this)">매운순</button>
+        </div>
+      </div>
+
+      <div class="panel" style="padding: 0 24px;">
+        <div class="review-card">
+          <div class="review-header">
+            <div class="avatar">⚔️</div>
+            <div>
+              <div class="reviewer-name">소울즈_장인</div>
+              <div class="reviewer-stat">평가 42개 · 평균 ★ 3.8 · 120시간 플레이</div>
+            </div>
+            <div class="review-stars">★★★★★</div>
+            <span class="review-rating-num">5.0</span>
+          </div>
+          <div class="review-headline">DLC가 본편을 능가한다는 게 가능한 일인가</div>
+          <p class="review-text">프롬소프트는 진짜 ‘게임 만드는 법’이 뭔지 다시 보여줬다. 본편 클리어했다고 들어왔는데 보스마다 새 빌드 짜야 함. 그게 짜증나는 게 아니라 재밌다는 게 핵심.</p>
+          <div class="review-tags">
+            <span class="review-tag">#소울라이크</span>
+            <span class="review-tag">#대작</span>
+            <span class="review-tag">#오픈월드</span>
+          </div>
+          <div class="review-actions">
+            <button class="react-btn">🌶️ 매운 솔직 487</button>
+            <button class="react-btn">💯 공감 654</button>
+            <button class="react-btn">💬 댓글 89</button>
+          </div>
+        </div>
+
+        <div class="review-card">
+          <div class="review-header">
+            <div class="avatar">🎮</div>
+            <div>
+              <div class="reviewer-name">캐주얼하게_겜</div>
+              <div class="reviewer-stat">평가 28개 · 평균 ★ 4.2 · 28시간 플레이</div>
+            </div>
+            <div class="review-stars">★★★☆☆</div>
+            <span class="review-rating-num">3.0</span>
+          </div>
+          <div class="review-headline">소울 시리즈 입문자에겐 절대 추천 못함</div>
+          <p class="review-text">이게 명작이라는 평가는 인정하지만, 모두가 좋아할 게임은 아님. 처음 소울 도전하는데 친구들이 추천해서 샀다가 후회. 본인이 도전 좋아하는 성격 아니면 다른 RPG 추천.</p>
+          <div class="review-tags">
+            <span class="review-tag">#입문비추</span>
+            <span class="review-tag">#하드코어</span>
+          </div>
+          <div class="review-actions">
+            <button class="react-btn">🌶️ 매운 솔직 312</button>
+            <button class="react-btn">💯 공감 287</button>
+            <button class="react-btn">💬 댓글 54</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── WRITE REVIEW ── -->
+<div id="page-write" class="page">
+  <div class="write-review">
+    <h2>코멘트 작성</h2>
+    <p class="write-sub">엘든 링: 황금나무의 그림자 · PC / PS5 / XBOX</p>
+
+    <div class="form-section">
+      <label class="form-label">별점</label>
+      <p class="form-help">0.5점 단위로 정확하게 매겨주세요</p>
+      <div class="star-input-row">
+        <div class="star-input" id="starInput">
+          <span onclick="setStar(1)">★</span>
+          <span onclick="setStar(2)">★</span>
+          <span onclick="setStar(3)">★</span>
+          <span onclick="setStar(4)" class="active">★</span>
+          <span onclick="setStar(5)" class="active">★</span>
+        </div>
+        <span class="star-label" id="starLabel">4.0 · 좋음</span>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <label class="form-label">한줄평</label>
+      <p class="form-help">이 게임을 한 문장으로 표현한다면?</p>
+      <input type="text" placeholder="예: '솔직히 칭찬할 거 없는데도 칭찬밖에 안 나옴'" />
+    </div>
+
+    <div class="form-section">
+      <label class="form-label">장점과 단점</label>
+      <p class="form-help">솔직한 리뷰를 위해 장점만, 단점만 적지 말고 둘 다 작성해주세요</p>
+      <div class="pros-cons-input">
+        <div class="pc-input-card pros">
+          <div class="pc-input-head">👍 장점</div>
+          <textarea placeholder="좋았던 점을 솔직하게"></textarea>
+        </div>
+        <div class="pc-input-card cons">
+          <div class="pc-input-head">👎 단점</div>
+          <textarea placeholder="아쉬웠던 점을 솔직하게"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <label class="form-label">자유 코멘트</label>
+      <p class="form-help">플레이 시간, 인상적이었던 점, 어떤 사람에게 추천하는지 자유롭게</p>
+      <textarea rows="6" placeholder="자유롭게 적어주세요"></textarea>
+    </div>
+
+    <div class="form-section">
+      <label class="form-label">플레이 상태</label>
+      <div class="tag-selector">
+        <button class="tag-option" onclick="toggleTag(this)">보고싶어요</button>
+        <button class="tag-option" onclick="toggleTag(this)">플레이 중</button>
+        <button class="tag-option selected" onclick="toggleTag(this)">완료</button>
+        <button class="tag-option" onclick="toggleTag(this)">중단</button>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <label class="form-label">태그</label>
+      <p class="form-help">최대 5개까지 선택할 수 있어요</p>
+      <div class="tag-selector">
+        <button class="tag-option selected" onclick="toggleTag(this)">#대작</button>
+        <button class="tag-option" onclick="toggleTag(this)">#할인_시_추천</button>
+        <button class="tag-option" onclick="toggleTag(this)">#친구필수</button>
+        <button class="tag-option selected" onclick="toggleTag(this)">#시간순삭</button>
+        <button class="tag-option" onclick="toggleTag(this)">#가성비</button>
+        <button class="tag-option" onclick="toggleTag(this)">#하드코어</button>
+        <button class="tag-option selected" onclick="toggleTag(this)">#오픈월드</button>
+        <button class="tag-option" onclick="toggleTag(this)">#스토리굿</button>
+      </div>
+    </div>
+
+    <button class="btn btn-primary btn-full">코멘트 등록하기</button>
+  </div>
+</div>
+
+<!-- ── PROFILE / 마이 게임 ── -->
+<div id="page-profile" class="page">
+  <div class="profile-cover"></div>
+  <div class="profile-wrap">
+    <div class="profile-top">
+      <div class="profile-avatar">🎮</div>
+      <div class="profile-info">
+        <div class="profile-name">소울즈_장인</div>
+        <div class="profile-handle">@soulslike_master · 2024.03.12 가입</div>
+        <div class="profile-bio">소울라이크와 액션 RPG를 사랑하는 게이머. 클리어 못한 게임은 평가 안 합니다.</div>
+      </div>
+      <div class="profile-actions">
+        <button class="btn btn-ghost">설정</button>
+      </div>
+    </div>
+
+    <div class="profile-stats-bar">
+      <div class="pstat">
+        <div class="pstat-num accent">142</div>
+        <div class="pstat-label">평가한 게임</div>
+      </div>
+      <div class="pstat">
+        <div class="pstat-num">28</div>
+        <div class="pstat-label">코멘트 작성</div>
+      </div>
+      <div class="pstat">
+        <div class="pstat-num">★ 3.8</div>
+        <div class="pstat-label">내 평균 별점</div>
+      </div>
+      <div class="pstat">
+        <div class="pstat-num">3,420시간</div>
+        <div class="pstat-label">총 플레이</div>
+      </div>
+    </div>
+
+    <div class="profile-tabs">
+      <button class="ptab active">평가한 게임</button>
+      <button class="ptab" onclick="showPage('analysis')">취향 분석</button>
+      <button class="ptab">위시리스트 (38)</button>
+      <button class="ptab">활동 기록</button>
+    </div>
+
+    <!-- 별점 필터 (Watcha 핵심 UI) -->
+    <div class="rating-filter">
+      <span class="rf-label">별점</span>
+      <button class="rf-chip active">전체 <span class="count">142</span></button>
+      <button class="rf-chip"><span class="star">★</span> 5.0 <span class="count">18</span></button>
+      <button class="rf-chip"><span class="star">★</span> 4.5 <span class="count">24</span></button>
+      <button class="rf-chip"><span class="star">★</span> 4.0 <span class="count">31</span></button>
+      <button class="rf-chip"><span class="star">★</span> 3.5 <span class="count">28</span></button>
+      <button class="rf-chip"><span class="star">★</span> 3.0 <span class="count">19</span></button>
+      <button class="rf-chip"><span class="star">★</span> 2.5 <span class="count">12</span></button>
+      <button class="rf-chip"><span class="star">★</span> 2.0 <span class="count">6</span></button>
+      <button class="rf-chip"><span class="star">★</span> 1.0 - 1.5 <span class="count">4</span></button>
+    </div>
+
+    <!-- 5점대 -->
+    <div class="band-head">
+      <span class="band-stars">★★★★★</span>
+      <span class="band-num">5.0</span>
+      <span class="band-count">18개</span>
+    </div>
+    <div class="poster-grid compact">
+      <div class="poster compact" onclick="showPage('detail')">
+        <div class="poster-img">🩸<div class="poster-rating mine">5.0</div></div>
+        <div class="poster-meta"><div class="poster-title">블러드본</div><div class="poster-sub">2024.11.03 평가</div></div>
+      </div>
+      <div class="poster compact" onclick="showPage('detail')">
+        <div class="poster-img">⚔️<div class="poster-rating mine">5.0</div></div>
+        <div class="poster-meta"><div class="poster-title">엘든 링 DLC</div><div class="poster-sub">2025.04.20 평가</div></div>
+      </div>
+      <div class="poster compact" onclick="showPage('detail')">
+        <div class="poster-img">🦌<div class="poster-rating mine">5.0</div></div>
+        <div class="poster-meta"><div class="poster-title">세키로</div><div class="poster-sub">2024.07.11 평가</div></div>
+      </div>
+      <div class="poster compact" onclick="showPage('detail')">
+        <div class="poster-img">🌿<div class="poster-rating mine">5.0</div></div>
+        <div class="poster-meta"><div class="poster-title">젤다: 왕국의 눈물</div><div class="poster-sub">2024.05.30 평가</div></div>
+      </div>
+      <div class="poster compact" onclick="showPage('detail')">
+        <div class="poster-img">🧙<div class="poster-rating mine">5.0</div></div>
+        <div class="poster-meta"><div class="poster-title">발더스 게이트 3</div><div class="poster-sub">2024.02.15 평가</div></div>
+      </div>
+      <div class="poster compact" onclick="showPage('detail')">
+        <div class="poster-img">🎵<div class="poster-rating mine">5.0</div></div>
+        <div class="poster-meta"><div class="poster-title">하이파이 러시</div><div class="poster-sub">2023.11.04 평가</div></div>
+      </div>
+    </div>
+
+    <!-- 4점대 -->
+    <div class="band-head">
+      <span class="band-stars">★★★★☆</span>
+      <span class="band-num">4.0 - 4.5</span>
+      <span class="band-count">55개</span>
+    </div>
+    <div class="poster-grid compact">
+      <div class="poster compact" onclick="showPage('detail')">
+        <div class="poster-img">🥷<div class="poster-rating mine">4.5</div></div>
+        <div class="poster-meta"><div class="poster-title">니오 2</div><div class="poster-sub">2025.01.18 평가</div></div>
+      </div>
+      <div class="poster compact" onclick="showPage('detail')">
+        <div class="poster-img">🐉<div class="poster-rating mine">4.5</div></div>
+        <div class="poster-meta"><div class="poster-title">드래곤즈 도그마 2</div><div class="poster-sub">2024.08.22 평가</div></div>
+      </div>
+      <div class="poster compact" onclick="showPage('detail')">
+        <div class="poster-img">🔫<div class="poster-rating mine">4.5</div></div>
+        <div class="poster-meta"><div class="poster-title">헬다이버즈 2</div><div class="poster-sub">2024.04.07 평가</div></div>
+      </div>
+      <div class="poster compact" onclick="showPage('detail')">
+        <div class="poster-img">⚜️<div class="poster-rating mine">4.0</div></div>
+        <div class="poster-meta"><div class="poster-title">로드 오브 더 폴른</div><div class="poster-sub">2024.03.14 평가</div></div>
+      </div>
+      <div class="poster compact" onclick="showPage('detail')">
+        <div class="poster-img">🦝<div class="poster-rating mine">4.0</div></div>
+        <div class="poster-meta"><div class="poster-title">팰월드</div><div class="poster-sub">2024.02.28 평가</div></div>
+      </div>
+      <div class="poster compact" onclick="showPage('detail')">
+        <div class="poster-img">🧟<div class="poster-rating mine">4.0</div></div>
+        <div class="poster-meta"><div class="poster-title">데드 아일랜드 2</div><div class="poster-sub">2023.12.30 평가</div></div>
+      </div>
+    </div>
+
+    <!-- 3점대 -->
+    <div class="band-head">
+      <span class="band-stars">★★★☆☆</span>
+      <span class="band-num">3.0 - 3.5</span>
+      <span class="band-count">47개</span>
+    </div>
+    <div class="poster-grid compact">
+      <div class="poster compact" onclick="showPage('detail')">
+        <div class="poster-img">🌌<div class="poster-rating mine">3.5</div></div>
+        <div class="poster-meta"><div class="poster-title">스타필드</div><div class="poster-sub">2024.09.12 평가</div></div>
+      </div>
+      <div class="poster compact" onclick="showPage('detail')">
+        <div class="poster-img">🏎️<div class="poster-rating mine">3.0</div></div>
+        <div class="poster-meta"><div class="poster-title">포르자 모터스포츠</div><div class="poster-sub">2024.10.08 평가</div></div>
+      </div>
+      <div class="poster compact" onclick="showPage('detail')">
+        <div class="poster-img">🚀<div class="poster-rating mine">3.0</div></div>
+        <div class="poster-meta"><div class="poster-title">아우터 월드 2</div><div class="poster-sub">2024.11.15 평가</div></div>
+      </div>
+    </div>
+
+    <!-- 2점대 이하 -->
+    <div class="band-head">
+      <span class="band-stars">★★☆☆☆</span>
+      <span class="band-num">2.5 이하</span>
+      <span class="band-count">22개</span>
+    </div>
+    <div class="poster-grid compact">
+      <div class="poster compact" onclick="showPage('detail')">
+        <div class="poster-img">🌸<div class="poster-rating mine">2.0</div></div>
+        <div class="poster-meta"><div class="poster-title">포켓몬 스칼렛</div><div class="poster-sub">2024.06.04 평가</div></div>
+      </div>
+      <div class="poster compact" onclick="showPage('detail')">
+        <div class="poster-img">⚙️<div class="poster-rating mine">1.5</div></div>
+        <div class="poster-meta"><div class="poster-title">레드폴</div><div class="poster-sub">2024.05.02 평가</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── ANALYSIS / 취향 분석 ── -->
+<div id="page-analysis" class="page">
+  <div class="profile-wrap" style="padding-top: 56px;">
+    <div style="margin-bottom: 32px;">
+      <div class="section-eyebrow">My taste</div>
+      <h2 style="font-size: 30px; font-weight: 900; letter-spacing: -1px; margin-bottom: 6px;">소울즈_장인 님의 취향 분석</h2>
+      <p style="color: var(--text-muted); font-size: 14px;">142개의 평가를 바탕으로 분석된 당신만의 게임 DNA</p>
+    </div>
+
+    <!-- 한눈에 보는 내 게임 인생 (Wrapped 스타일) -->
+    <div class="wrapped">
+      <div class="wrapped-eyebrow">My Gaming Life · 2024-2026</div>
+      <div class="wrapped-title">3,420시간을 게임에 썼어요</div>
+      <div class="wrapped-sub">그 시간 동안 142개의 게임을 평가하고, 28개의 코멘트를 남겼습니다.</div>
+      <div class="wrapped-grid">
+        <div class="wrapped-stat">
+          <div class="wrapped-stat-label">가장 긴 플레이</div>
+          <div class="wrapped-stat-num">엘든 링</div>
+          <div class="wrapped-stat-sub">312시간 · ★ 5.0</div>
+        </div>
+        <div class="wrapped-stat">
+          <div class="wrapped-stat-label">올해의 게임</div>
+          <div class="wrapped-stat-num">엘든 링 DLC</div>
+          <div class="wrapped-stat-sub">2025년 ★ 5.0 · 첫 별점</div>
+        </div>
+        <div class="wrapped-stat">
+          <div class="wrapped-stat-label">선호 장르</div>
+          <div class="wrapped-stat-num">소울라이크</div>
+          <div class="wrapped-stat-sub">평균 ★ 4.8 · 18개 평가</div>
+        </div>
+        <div class="wrapped-stat">
+          <div class="wrapped-stat-label">선호 개발사</div>
+          <div class="wrapped-stat-num">FromSoftware</div>
+          <div class="wrapped-stat-sub">평균 ★ 4.9 · 8개 평가</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 게이머 페르소나 -->
+    <div class="persona" style="margin-bottom: 22px;">
+      <div class="persona-eyebrow">Your Gamer Type</div>
+      <div class="persona-emoji">⚔️</div>
+      <div class="persona-name">고통을 즐기는 명상가</div>
+      <p class="persona-desc">
+        어려운 게임 앞에서 좌절하기보다 더 깊이 파고드는 타입. 액션 RPG와 소울라이크에 특히 후한 별점을 주고, 캐주얼한 게임에는 박합니다. 평균보다 0.7점 짜게 평가하지만, 한번 5점을 주면 끝까지 진심입니다.
+      </p>
+      <div class="persona-traits">
+        <span class="persona-trait">하드코어</span>
+        <span class="persona-trait">완주형</span>
+        <span class="persona-trait">짠 별점</span>
+        <span class="persona-trait">긴 플레이</span>
+        <span class="persona-trait">싱글 위주</span>
+      </div>
+    </div>
+
+    <!-- 별점 분포 + 평균 비교 -->
+    <div class="grid-2">
+      <div class="histogram">
+        <div class="histo-head">
+          <div class="histo-title">내 별점 분포</div>
+          <div class="histo-avg"><b>3.8</b>/ 5.0 · 142개 평가</div>
+        </div>
+        <div class="histo-bars">
+          <div class="histo-col has-data" style="height:14%"><span class="histo-col-count">2</span></div>
+          <div class="histo-col has-data" style="height:18%"><span class="histo-col-count">2</span></div>
+          <div class="histo-col has-data" style="height:24%"><span class="histo-col-count">3</span></div>
+          <div class="histo-col has-data" style="height:34%"><span class="histo-col-count">6</span></div>
+          <div class="histo-col has-data" style="height:48%"><span class="histo-col-count">12</span></div>
+          <div class="histo-col has-data" style="height:62%"><span class="histo-col-count">19</span></div>
+          <div class="histo-col has-data" style="height:78%"><span class="histo-col-count">28</span></div>
+          <div class="histo-col peak" style="height:100%"><span class="histo-col-count">31</span></div>
+          <div class="histo-col has-data" style="height:80%"><span class="histo-col-count">24</span></div>
+          <div class="histo-col has-data" style="height:60%"><span class="histo-col-count">18</span></div>
+        </div>
+        <div class="histo-axis">
+          <div>0.5</div><div>1.0</div><div>1.5</div><div>2.0</div><div>2.5</div>
+          <div>3.0</div><div>3.5</div><div>4.0</div><div>4.5</div><div>5.0</div>
+        </div>
+        <p style="font-size: 12px; color: var(--text-muted); margin-top: 16px; line-height: 1.5;">
+          가장 자주 주는 별점은 <b style="color:var(--text);">4.0점 (31개)</b>이에요. 4점대(★4-5)가 전체의 51%를 차지하며, 후한 평가자보다는 <b style="color:var(--text);">기준이 명확한 평가자</b>에 가까운 분포입니다.
+        </p>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">선호 장르 TOP 5</div>
+        <div class="panel-sub">평균 별점 기준으로 본 내가 좋아하는 장르</div>
+        <div class="genre-row">
+          <div class="genre-label">소울라이크</div>
+          <div class="genre-bar-wrap"><div class="genre-bar" style="width:96%"></div></div>
+          <div class="genre-val"><span class="num">★ 4.8</span></div>
+        </div>
+        <div class="genre-row">
+          <div class="genre-label">액션 RPG</div>
+          <div class="genre-bar-wrap"><div class="genre-bar" style="width:88%"></div></div>
+          <div class="genre-val"><span class="num">★ 4.4</span></div>
+        </div>
+        <div class="genre-row">
+          <div class="genre-label">CRPG</div>
+          <div class="genre-bar-wrap"><div class="genre-bar" style="width:84%"></div></div>
+          <div class="genre-val"><span class="num">★ 4.2</span></div>
+        </div>
+        <div class="genre-row">
+          <div class="genre-label">메트로배니아</div>
+          <div class="genre-bar-wrap"><div class="genre-bar" style="width:80%"></div></div>
+          <div class="genre-val"><span class="num">★ 4.0</span></div>
+        </div>
+        <div class="genre-row">
+          <div class="genre-label">오픈월드</div>
+          <div class="genre-bar-wrap"><div class="genre-bar" style="width:76%"></div></div>
+          <div class="genre-val"><span class="num">★ 3.8</span></div>
+        </div>
+        <div style="margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--border);">
+          <div class="panel-title" style="font-size:14px;">잘 안 맞는 장르</div>
+          <div class="panel-sub" style="margin-bottom: 14px;">평균보다 낮게 평가한 장르</div>
+          <div class="tag-bubbles">
+            <span class="tag-bubble cons-bub">캐주얼<span class="tag-count">★ 2.4</span></span>
+            <span class="tag-bubble cons-bub">JRPG<span class="tag-count">★ 2.8</span></span>
+            <span class="tag-bubble cons-bub">스포츠<span class="tag-count">★ 3.0</span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 플랫폼 분포 + 인사이트 -->
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-title">주로 플레이하는 플랫폼</div>
+        <div class="panel-sub">142개 평가 기준</div>
+        <div class="donut-wrap">
+          <div class="donut" id="donut" style="background: conic-gradient(var(--accent) 0% 52%, #14b8a6 52% 78%, #5eead4 78% 92%, #99f6e4 92% 100%);">
+            <div class="donut-center">
+              <div class="donut-num">PC</div>
+              <div class="donut-label">52%</div>
+            </div>
+          </div>
+          <div class="legend">
+            <div class="legend-row">
+              <div class="legend-dot" style="background: var(--accent);"></div>
+              <div class="legend-name">PC</div>
+              <div class="legend-pct">74게임 · 52%</div>
+            </div>
+            <div class="legend-row">
+              <div class="legend-dot" style="background: #14b8a6;"></div>
+              <div class="legend-name">PS5</div>
+              <div class="legend-pct">37게임 · 26%</div>
+            </div>
+            <div class="legend-row">
+              <div class="legend-dot" style="background: #5eead4;"></div>
+              <div class="legend-name">Switch</div>
+              <div class="legend-pct">20게임 · 14%</div>
+            </div>
+            <div class="legend-row">
+              <div class="legend-dot" style="background: #99f6e4;"></div>
+              <div class="legend-name">Xbox</div>
+              <div class="legend-pct">11게임 · 8%</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">내 평가 패턴 인사이트</div>
+        <div class="panel-sub">데이터로 보는 내 취향의 특징</div>
+        <div style="display:flex; flex-direction:column; gap:14px; margin-top: 18px;">
+          <div style="display:flex; gap:12px; align-items:flex-start;">
+            <div style="font-size:22px;">🎯</div>
+            <div>
+              <div style="font-size:13px; font-weight:700; margin-bottom:2px;">평균보다 0.7점 짜게 평가</div>
+              <div style="font-size:12px; color:var(--text-muted); line-height:1.5;">전체 유저 평균(★ 4.5)과 내 평균(★ 3.8)의 차이</div>
+            </div>
+          </div>
+          <div style="display:flex; gap:12px; align-items:flex-start;">
+            <div style="font-size:22px;">⏱️</div>
+            <div>
+              <div style="font-size:13px; font-weight:700; margin-bottom:2px;">한 게임당 평균 24시간 플레이</div>
+              <div style="font-size:12px; color:var(--text-muted); line-height:1.5;">5점을 준 게임은 평균 78시간 플레이 — 진심으로 빠져드는 타입</div>
+            </div>
+          </div>
+          <div style="display:flex; gap:12px; align-items:flex-start;">
+            <div style="font-size:22px;">📅</div>
+            <div>
+              <div style="font-size:13px; font-weight:700; margin-bottom:2px;">2024년에 가장 많이 평가</div>
+              <div style="font-size:12px; color:var(--text-muted); line-height:1.5;">올해 67개의 게임을 평가했어요 (전체의 47%)</div>
+            </div>
+          </div>
+          <div style="display:flex; gap:12px; align-items:flex-start;">
+            <div style="font-size:22px;">🔥</div>
+            <div>
+              <div style="font-size:13px; font-weight:700; margin-bottom:2px;">자주 사용하는 태그</div>
+              <div style="font-size:12px; color:var(--text-muted); line-height:1.5;">#하드코어 (28회) · #대작 (24회) · #시간순삭 (19회)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 활동 히트맵 -->
+    <div class="panel" style="margin-bottom: 22px;">
+      <div class="panel-title">평가 활동 히트맵</div>
+      <div class="panel-sub">최근 1년간 매일의 평가 활동 — 진할수록 더 많이 평가한 날</div>
+      <div class="heat-months">
+        <div>5월</div><div>6월</div><div>7월</div><div>8월</div><div>9월</div>
+        <div>10월</div><div>11월</div><div>12월</div><div>1월</div><div>2월</div>
+        <div>3월</div><div>4월</div>
+      </div>
+      <div class="heatmap" id="heatmap"></div>
+      <div class="heat-legend">
+        <span>적게</span>
+        <div class="heat-legend-cell" style="background: var(--surface2);"></div>
+        <div class="heat-legend-cell l1"></div>
+        <div class="heat-legend-cell l2"></div>
+        <div class="heat-legend-cell l3"></div>
+        <div class="heat-legend-cell l4"></div>
+        <div class="heat-legend-cell l5"></div>
+        <span>많이</span>
+      </div>
+      <p style="font-size: 12px; color: var(--text-muted); margin-top: 14px; line-height: 1.5;">
+        가장 많이 평가한 달은 <b style="color:var(--text);">2025년 6월 (14개)</b>이에요. 주말보다 <b style="color:var(--text);">평일 저녁</b>에 평가하는 패턴이 보여요.
+      </p>
+    </div>
+
+    <!-- 인생 게임 베스트 / 워스트 -->
+    <div class="best-worst-grid" style="margin-bottom: 22px;">
+      <div class="bw-card best">
+        <div class="bw-head">
+          <span class="bw-emoji">🏆</span>
+          <div class="bw-title">내 인생 게임 TOP 5</div>
+        </div>
+        <div class="bw-list-item">
+          <div class="bw-rank">1</div>
+          <div class="bw-thumb">🩸</div>
+          <div class="bw-info">
+            <div class="bw-game-title">블러드본</div>
+            <div class="bw-game-sub">240시간 플레이 · 2024.11 평가</div>
+          </div>
+          <div class="bw-score">★ 5.0</div>
+        </div>
+        <div class="bw-list-item">
+          <div class="bw-rank">2</div>
+          <div class="bw-thumb">⚔️</div>
+          <div class="bw-info">
+            <div class="bw-game-title">엘든 링: DLC</div>
+            <div class="bw-game-sub">312시간 플레이 · 2025.04 평가</div>
+          </div>
+          <div class="bw-score">★ 5.0</div>
+        </div>
+        <div class="bw-list-item">
+          <div class="bw-rank">3</div>
+          <div class="bw-thumb">🦌</div>
+          <div class="bw-info">
+            <div class="bw-game-title">세키로</div>
+            <div class="bw-game-sub">187시간 플레이 · 2024.07 평가</div>
+          </div>
+          <div class="bw-score">★ 5.0</div>
+        </div>
+        <div class="bw-list-item">
+          <div class="bw-rank">4</div>
+          <div class="bw-thumb">🌿</div>
+          <div class="bw-info">
+            <div class="bw-game-title">젤다: 왕국의 눈물</div>
+            <div class="bw-game-sub">142시간 플레이 · 2024.05 평가</div>
+          </div>
+          <div class="bw-score">★ 5.0</div>
+        </div>
+        <div class="bw-list-item">
+          <div class="bw-rank">5</div>
+          <div class="bw-thumb">🧙</div>
+          <div class="bw-info">
+            <div class="bw-game-title">발더스 게이트 3</div>
+            <div class="bw-game-sub">187시간 플레이 · 2024.02 평가</div>
+          </div>
+          <div class="bw-score">★ 5.0</div>
+        </div>
+      </div>
+
+      <div class="bw-card worst">
+        <div class="bw-head">
+          <span class="bw-emoji">💔</span>
+          <div class="bw-title">실망스러웠던 게임 TOP 5</div>
+        </div>
+        <div class="bw-list-item">
+          <div class="bw-rank">1</div>
+          <div class="bw-thumb">⚙️</div>
+          <div class="bw-info">
+            <div class="bw-game-title">레드폴</div>
+            <div class="bw-game-sub">8시간 플레이 후 중단</div>
+          </div>
+          <div class="bw-score">★ 1.5</div>
+        </div>
+        <div class="bw-list-item">
+          <div class="bw-rank">2</div>
+          <div class="bw-thumb">🦃</div>
+          <div class="bw-info">
+            <div class="bw-game-title">쇼군 2 토탈워: 폴른 다이너스티</div>
+            <div class="bw-game-sub">12시간 플레이</div>
+          </div>
+          <div class="bw-score">★ 1.5</div>
+        </div>
+        <div class="bw-list-item">
+          <div class="bw-rank">3</div>
+          <div class="bw-thumb">🌸</div>
+          <div class="bw-info">
+            <div class="bw-game-title">포켓몬 스칼렛</div>
+            <div class="bw-game-sub">22시간 플레이</div>
+          </div>
+          <div class="bw-score">★ 2.0</div>
+        </div>
+        <div class="bw-list-item">
+          <div class="bw-rank">4</div>
+          <div class="bw-thumb">⚡</div>
+          <div class="bw-info">
+            <div class="bw-game-title">콜라보 슈팅게임</div>
+            <div class="bw-game-sub">4시간 플레이 후 중단</div>
+          </div>
+          <div class="bw-score">★ 2.0</div>
+        </div>
+        <div class="bw-list-item">
+          <div class="bw-rank">5</div>
+          <div class="bw-thumb">🚙</div>
+          <div class="bw-info">
+            <div class="bw-game-title">사이버펑크 (출시일)</div>
+            <div class="bw-game-sub">15시간 플레이</div>
+          </div>
+          <div class="bw-score">★ 2.5</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 연대별 + 태그 워드 클라우드 -->
+    <div class="grid-2" style="margin-bottom: 22px;">
+      <div class="panel">
+        <div class="panel-title">시대별 취향</div>
+        <div class="panel-sub">출시 연대별로 본 내 별점 평균</div>
+        <div style="margin-top: 18px;">
+          <div class="decade-row">
+            <div class="decade-label">2020s</div>
+            <div class="decade-bar-wrap"><div class="decade-bar" style="width: 92%;">★ 4.6</div></div>
+            <div class="decade-val"><span class="num">68개</span></div>
+          </div>
+          <div class="decade-row">
+            <div class="decade-label">2010s</div>
+            <div class="decade-bar-wrap"><div class="decade-bar" style="width: 84%;">★ 4.2</div></div>
+            <div class="decade-val"><span class="num">52개</span></div>
+          </div>
+          <div class="decade-row">
+            <div class="decade-label">2000s</div>
+            <div class="decade-bar-wrap"><div class="decade-bar" style="width: 64%;">★ 3.2</div></div>
+            <div class="decade-val"><span class="num">15개</span></div>
+          </div>
+          <div class="decade-row">
+            <div class="decade-label">1990s</div>
+            <div class="decade-bar-wrap"><div class="decade-bar" style="width: 56%;">★ 2.8</div></div>
+            <div class="decade-val"><span class="num">5개</span></div>
+          </div>
+          <div class="decade-row">
+            <div class="decade-label">~1989</div>
+            <div class="decade-bar-wrap"><div class="decade-bar" style="width: 40%;">★ 2.0</div></div>
+            <div class="decade-val"><span class="num">2개</span></div>
+          </div>
+        </div>
+        <p style="font-size: 12px; color: var(--text-muted); margin-top: 18px; line-height: 1.5;">
+          확실히 <b style="color:var(--text);">최신 게임에 후한 편</b>이에요. 레트로보다는 현세대 게임에 마음을 더 여는 타입.
+        </p>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">내가 자주 쓴 태그</div>
+        <div class="panel-sub">코멘트에 가장 많이 등장한 단어들</div>
+        <div class="word-cloud">
+          <span class="wc-tag s5">#하드코어</span>
+          <span class="wc-tag s4">#대작</span>
+          <span class="wc-tag s4">#시간순삭</span>
+          <span class="wc-tag s3">#보스전</span>
+          <span class="wc-tag s3">#소울라이크</span>
+          <span class="wc-tag s3">#오픈월드</span>
+          <span class="wc-tag s2">#도전</span>
+          <span class="wc-tag s2">#분위기</span>
+          <span class="wc-tag s2">#액션</span>
+          <span class="wc-tag s2">#명작</span>
+          <span class="wc-tag s1">#OST</span>
+          <span class="wc-tag s1">#그래픽</span>
+          <span class="wc-tag s1">#솔로</span>
+          <span class="wc-tag s1">#할인_시</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 평균과 가장 다른 평가 -->
+    <div class="panel" style="margin-bottom: 22px;">
+      <div class="panel-title">남들과 평가가 가장 달랐던 게임</div>
+      <div class="panel-sub">전체 평균과 내 별점의 차이가 가장 큰 게임 — 내 취향이 또렷이 드러나는 지점</div>
+      <div style="margin-top: 18px;">
+        <div class="disparity-row">
+          <div class="disp-game">
+            <div class="disp-thumb">🌌</div>
+            <div class="disp-info">
+              <div class="disp-title">스타필드</div>
+              <div class="disp-sub">Bethesda · 2023</div>
+            </div>
+          </div>
+          <div class="disp-scores">
+            <div class="disp-score">
+              <div class="disp-score-num">4.2</div>
+              <div class="disp-score-label">전체 평균</div>
+            </div>
+            <span class="disp-arrow">→</span>
+            <div class="disp-score">
+              <div class="disp-score-num mine">2.0</div>
+              <div class="disp-score-label">내 별점</div>
+            </div>
+          </div>
+          <div class="disp-gap">-2.2</div>
+        </div>
+        <div class="disparity-row">
+          <div class="disp-game">
+            <div class="disp-thumb">🦝</div>
+            <div class="disp-info">
+              <div class="disp-title">팰월드</div>
+              <div class="disp-sub">Pocketpair · 2024</div>
+            </div>
+          </div>
+          <div class="disp-scores">
+            <div class="disp-score">
+              <div class="disp-score-num">4.5</div>
+              <div class="disp-score-label">전체 평균</div>
+            </div>
+            <span class="disp-arrow">→</span>
+            <div class="disp-score">
+              <div class="disp-score-num mine">2.5</div>
+              <div class="disp-score-label">내 별점</div>
+            </div>
+          </div>
+          <div class="disp-gap">-2.0</div>
+        </div>
+        <div class="disparity-row">
+          <div class="disp-game">
+            <div class="disp-thumb">🩸</div>
+            <div class="disp-info">
+              <div class="disp-title">블러드본</div>
+              <div class="disp-sub">FromSoftware · 2015</div>
+            </div>
+          </div>
+          <div class="disp-scores">
+            <div class="disp-score">
+              <div class="disp-score-num">3.8</div>
+              <div class="disp-score-label">전체 평균</div>
+            </div>
+            <span class="disp-arrow">→</span>
+            <div class="disp-score">
+              <div class="disp-score-num mine">5.0</div>
+              <div class="disp-score-label">내 별점</div>
+            </div>
+          </div>
+          <div class="disp-gap up">+1.2</div>
+        </div>
+        <div class="disparity-row">
+          <div class="disp-game">
+            <div class="disp-thumb">🎵</div>
+            <div class="disp-info">
+              <div class="disp-title">하이파이 러시</div>
+              <div class="disp-sub">Tango Gameworks · 2023</div>
+            </div>
+          </div>
+          <div class="disp-scores">
+            <div class="disp-score">
+              <div class="disp-score-num">3.9</div>
+              <div class="disp-score-label">전체 평균</div>
+            </div>
+            <span class="disp-arrow">→</span>
+            <div class="disp-score">
+              <div class="disp-score-num mine">5.0</div>
+              <div class="disp-score-label">내 별점</div>
+            </div>
+          </div>
+          <div class="disp-gap up">+1.1</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 별점 변화 추이 -->
+    <div class="panel" style="margin-bottom: 22px;">
+      <div class="panel-title">월별 평균 별점 변화</div>
+      <div class="panel-sub">시간에 따른 내 평가 패턴 — 점점 후해지는지, 짜지는지</div>
+      <div class="trend-chart" style="margin-left: 28px;">
+        <span class="trend-y-label" style="top: 0;">5.0</span>
+        <span class="trend-y-label" style="top: 50%;">3.0</span>
+        <span class="trend-y-label" style="bottom: 0;">1.0</span>
+        <svg class="trend-svg" viewBox="0 0 400 160" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="trendGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#0d9488" stop-opacity="0.25"/>
+              <stop offset="100%" stop-color="#0d9488" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <path d="M 0,80 L 33,72 L 66,64 L 100,76 L 133,52 L 166,60 L 200,48 L 233,40 L 266,56 L 300,36 L 333,28 L 366,32 L 400,24 L 400,160 L 0,160 Z" fill="url(#trendGrad)"/>
+          <path d="M 0,80 L 33,72 L 66,64 L 100,76 L 133,52 L 166,60 L 200,48 L 233,40 L 266,56 L 300,36 L 333,28 L 366,32 L 400,24" fill="none" stroke="#0d9488" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="0" cy="80" r="3" fill="#0d9488"/>
+          <circle cx="100" cy="76" r="3" fill="#0d9488"/>
+          <circle cx="200" cy="48" r="3" fill="#0d9488"/>
+          <circle cx="300" cy="36" r="3" fill="#0d9488"/>
+          <circle cx="400" cy="24" r="4" fill="#0d9488"/>
+        </svg>
+      </div>
+      <div class="trend-x" style="margin-left: 28px;">
+        <span>2024.05</span>
+        <span>2024.08</span>
+        <span>2024.11</span>
+        <span>2025.02</span>
+        <span>2025.05</span>
+        <span>2025.08</span>
+        <span>2025.11</span>
+        <span>2026.02</span>
+        <span>2026.05</span>
+      </div>
+      <p style="font-size: 12px; color: var(--text-muted); margin-top: 18px; line-height: 1.5;">
+        시간이 지날수록 평가가 <b style="color:var(--text);">점점 후해지고 있어요</b>. 첫 6개월 평균 ★ 3.2 → 최근 6개월 평균 ★ 4.4. 게임을 더 잘 고르게 됐거나, 너그러워지고 있다는 신호일 수 있어요.
+      </p>
+    </div>
+
+    <!-- 활동 타임라인 -->
+    <div class="panel" style="margin-bottom: 22px;">
+      <div class="panel-title">최근 활동 기록</div>
+      <div class="panel-sub">내가 게임에 남긴 발자취</div>
+      <div class="timeline" style="margin-top: 18px;">
+        <div class="tl-item">
+          <div class="tl-dot">★</div>
+          <div class="tl-content">
+            <div class="tl-date">2026.05.04</div>
+            <div class="tl-text"><b>엘든 링: 황금나무의 그림자</b>에 <span class="star-inline">★ 5.0</span> 별점과 코멘트를 남겼어요.</div>
+          </div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-dot">📥</div>
+          <div class="tl-content">
+            <div class="tl-date">2026.05.02</div>
+            <div class="tl-text"><b>페르소나 6</b>를 보고싶어요에 추가했어요.</div>
+          </div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-dot">🎮</div>
+          <div class="tl-content">
+            <div class="tl-date">2026.04.28</div>
+            <div class="tl-text"><b>드래곤즈 도그마 2</b>를 플레이 중으로 변경했어요.</div>
+          </div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-dot">★</div>
+          <div class="tl-content">
+            <div class="tl-date">2026.04.20</div>
+            <div class="tl-text"><b>니오 2</b>에 <span class="star-inline">★ 4.5</span> 별점을 남겼어요.</div>
+          </div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-dot">💬</div>
+          <div class="tl-content">
+            <div class="tl-date">2026.04.15</div>
+            <div class="tl-text"><b>블러드본</b> 코멘트에 <b>1.2K개의 공감</b>이 달렸어요.</div>
+          </div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-dot">✓</div>
+          <div class="tl-content">
+            <div class="tl-date">2026.04.10</div>
+            <div class="tl-text"><b>발더스 게이트 3</b>를 완료했어요. (총 187시간 플레이)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 비슷한 취향 유저 -->
+    <div class="panel">
+      <div class="panel-title">나와 취향이 비슷한 유저</div>
+      <div class="panel-sub">평가 패턴이 87% 이상 일치하는 사람들</div>
+      <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 18px;">
+        <div style="text-align:center; padding: 16px; background: var(--surface2); border-radius: var(--radius); cursor: pointer;">
+          <div style="width:54px; height:54px; border-radius:50%; background: var(--surface); margin: 0 auto 8px; display:flex; align-items:center; justify-content:center; font-size: 24px;">⚔️</div>
+          <div style="font-size:13px; font-weight:700;">검은별빛</div>
+          <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">취향 일치 94%</div>
+          <div style="font-size:11px; color:var(--accent); font-weight:700; margin-top:4px;">평가 218개</div>
+        </div>
+        <div style="text-align:center; padding: 16px; background: var(--surface2); border-radius: var(--radius); cursor: pointer;">
+          <div style="width:54px; height:54px; border-radius:50%; background: var(--surface); margin: 0 auto 8px; display:flex; align-items:center; justify-content:center; font-size: 24px;">🩸</div>
+          <div style="font-size:13px; font-weight:700;">소울_익스플로러</div>
+          <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">취향 일치 91%</div>
+          <div style="font-size:11px; color:var(--accent); font-weight:700; margin-top:4px;">평가 167개</div>
+        </div>
+        <div style="text-align:center; padding: 16px; background: var(--surface2); border-radius: var(--radius); cursor: pointer;">
+          <div style="width:54px; height:54px; border-radius:50%; background: var(--surface); margin: 0 auto 8px; display:flex; align-items:center; justify-content:center; font-size: 24px;">🦌</div>
+          <div style="font-size:13px; font-weight:700;">prom_lover</div>
+          <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">취향 일치 89%</div>
+          <div style="font-size:11px; color:var(--accent); font-weight:700; margin-top:4px;">평가 312개</div>
+        </div>
+        <div style="text-align:center; padding: 16px; background: var(--surface2); border-radius: var(--radius); cursor: pointer;">
+          <div style="width:54px; height:54px; border-radius:50%; background: var(--surface); margin: 0 auto 8px; display:flex; align-items:center; justify-content:center; font-size: 24px;">🧙</div>
+          <div style="font-size:13px; font-weight:700;">RPG_은둔자</div>
+          <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">취향 일치 87%</div>
+          <div style="font-size:11px; color:var(--accent); font-weight:700; margin-top:4px;">평가 89개</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── LOGIN ── -->
+<div id="page-login" class="page">
+  <div class="auth-wrap">
+    <div class="auth-card">
+      <div class="auth-logo"><div class="logo"><span class="logo-dot"></span>겜평</div></div>
+      <div class="auth-title">다시 오신 걸 환영해요</div>
+      <div class="auth-sub">기록한 게임을 보러 가요</div>
+      <div class="field"><label>이메일</label><input type="email" placeholder="hello@example.com" /></div>
+      <div class="field"><label>비밀번호</label><input type="password" placeholder="••••••••" /></div>
+      <button class="btn btn-primary btn-full" style="margin-top:8px;">로그인</button>
+      <div class="auth-divider">또는</div>
+      <button class="btn btn-ghost btn-full">🎮  게스트로 둘러보기</button>
+      <div class="auth-footer">
+        계정이 없으신가요? <a href="#" onclick="showPage('signup'); return false;">회원가입</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── SIGNUP ── -->
+<div id="page-signup" class="page">
+  <div class="auth-wrap">
+    <div class="auth-card">
+      <div class="auth-logo"><div class="logo"><span class="logo-dot"></span>겜평</div></div>
+      <div class="auth-title">내 게임 기록을 시작해요</div>
+      <div class="auth-sub">평가가 쌓일수록 겜평이 나를 더 잘 이해해요</div>
+      <div class="field"><label>닉네임</label><input type="text" placeholder="소울즈_장인" /></div>
+      <div class="field"><label>이메일</label><input type="email" placeholder="hello@example.com" /></div>
+      <div class="field"><label>비밀번호</label><input type="password" placeholder="8자 이상" /></div>
+      <button class="btn btn-primary btn-full" style="margin-top:8px;">가입하기</button>
+      <div class="auth-footer">
+        이미 계정이 있으신가요? <a href="#" onclick="showPage('login'); return false;">로그인</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="footer-logo">● 겜평</div>
+  <p>내가 한 게임, 내가 남긴 평가<br />© 2026 겜평 · 게임 인생을 기록하는 공간</p>
+</footer>
+
+<script>
+  function showPage(id) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById('page-' + id).classList.add('active');
+    const map = ['home', 'games', 'detail', 'write', 'profile', 'analysis', 'login', 'signup'];
+    document.querySelectorAll('.tab-btn').forEach((btn, i) => {
+      btn.classList.toggle('active', map[i] === id);
+    });
+    window.scrollTo(0, 0);
+  }
+
+  function setStar(n) {
+    document.querySelectorAll('#starInput span').forEach((s, i) => {
+      s.classList.toggle('active', i < n);
+    });
+    const labels = ['', '1.0 · 별로', '2.0 · 아쉬움', '3.0 · 평범', '4.0 · 좋음', '5.0 · 최고'];
+    document.getElementById('starLabel').textContent = labels[n];
+  }
+
+  function setDetailStar(n) {
+    document.querySelectorAll('#detailMyStars span').forEach((s, i) => {
+      s.classList.toggle('active', i < n);
+    });
+  }
+
+  function toggleTag(btn) {
+    btn.classList.toggle('selected');
+  }
+
+  function activateSort(btn) {
+    btn.closest('.sort-tabs, .rating-filter').querySelectorAll('.sort-btn, .rf-chip').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+
+  // 활동 히트맵 생성 (53주 x 7일)
+  (function buildHeatmap() {
+    const heatmap = document.getElementById('heatmap');
+    if (!heatmap) return;
+    const cells = 53 * 7;
+    let html = '';
+    // 가짜 데이터: 평일 저녁 활동이 많고, 6월에 피크
+    for (let i = 0; i < cells; i++) {
+      const week = Math.floor(i / 7);
+      const day = i % 7;
+      let level = 0;
+      // 무작위 + 5-6월(주차 4-9) 피크
+      const r = Math.random();
+      if (week >= 4 && week <= 10 && r > 0.45) level = Math.min(5, Math.ceil(r * 6));
+      else if (week >= 18 && week <= 26 && r > 0.6) level = Math.min(4, Math.ceil(r * 4));
+      else if (r > 0.78) level = Math.ceil((r - 0.78) * 18);
+      else if (r > 0.65) level = 1;
+      // 주말(토일)은 살짝 더 활발
+      if ((day === 5 || day === 6) && r > 0.5 && level === 0) level = 1;
+      const cls = level > 0 ? `l${Math.min(level, 5)}` : '';
+      html += `<div class="heat-cell ${cls}" title="활동 레벨 ${level}"></div>`;
+    }
+    heatmap.innerHTML = html;
+  })();
+</script>
+</body>
+</html>

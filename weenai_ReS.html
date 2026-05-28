@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>위나이 — 게임 리뷰</title>
+  <style>
+    :root {
+      --bg: #0f0f13;
+      --surface: #1a1a22;
+      --surface2: #22222e;
+      --border: #2e2e3e;
+      --accent: #7c6cfc;
+      --text: #e8e8f0;
+      --text-muted: #7c7c9a;
+      --hard: #7c6cfc;
+      --light: #4ecdc4;
+      --star: #ffd700;
+      --radius: 12px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Pretendard', 'Apple SD Gothic Neo', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* NAV */
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+      height: 60px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .logo {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      color: var(--accent);
+    }
+    .logo span { color: var(--text); }
+
+    .nav-links {
+      display: flex;
+      gap: 24px;
+      list-style: none;
+      font-size: 14px;
+    }
+    .nav-links a { color: var(--text-muted); text-decoration: none; transition: color .2s; }
+    .nav-links a:hover { color: var(--text); }
+
+    .nav-actions { display: flex; gap: 10px; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all .2s;
+    }
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+    }
+    .btn-ghost:hover { color: var(--text); border-color: var(--text-muted); }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { filter: brightness(1.1); }
+    .btn-full { width: 100%; justify-content: center; padding: 12px; font-size: 14px; }
+
+    /* DEMO TABS */
+    .page { display: none; }
+    .page.active { display: block; }
+
+    .demo-nav {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      padding: 12px 16px;
+      background: var(--surface2);
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+    .tab-btn {
+      padding: 5px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-muted);
+      transition: all .2s;
+    }
+    .tab-btn.active, .tab-btn:hover {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+
+    /* HERO */
+    .hero {
+      padding: 80px 32px 60px;
+      text-align: center;
+      background: radial-gradient(ellipse at 50% 0%, rgba(124,108,252,.15) 0%, transparent 70%);
+    }
+    .hero h1 {
+      font-size: 48px;
+      font-weight: 900;
+      letter-spacing: -1.5px;
+      line-height: 1.1;
+      margin-bottom: 16px;
+    }
+    .hero h1 em { font-style: normal; color: var(--accent); }
+    .hero p {
+      font-size: 17px;
+      color: var(--text-muted);
+      max-width: 480px;
+      margin: 0 auto 32px;
+      line-height: 1.6;
+    }
+    .hero-actions { display: flex; gap: 12px; justify-content: center; }
+
+    /* SECTION */
+    section { padding: 48px 32px; max-width: 1100px; margin: 0 auto; }
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+    .section-title { font-size: 20px; font-weight: 700; }
+    .sort-tabs { display: flex; gap: 4px; }
+    .sort-btn {
+      padding: 5px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-muted);
+    }
+    .sort-btn.active { background: var(--surface2); color: var(--text); border-color: var(--text-muted); }
+
+    /* GAME GRID */
+    .game-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 20px;
+    }
+    .game-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform .2s, border-color .2s;
+    }
+    .game-card:hover { transform: translateY(-4px); border-color: var(--accent); }
+    .game-thumb {
+      width: 100%;
+      aspect-ratio: 4/3;
+      background: var(--surface2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 48px;
+      position: relative;
+    }
+    .game-platform {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: rgba(0,0,0,.7);
+      color: var(--text-muted);
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 4px;
+      letter-spacing: .5px;
+    }
+    .game-info { padding: 12px; }
+    .game-title { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+    .game-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .stars { color: var(--star); letter-spacing: 1px; }
+
+    /* GAME DETAIL */
+    .game-detail { max-width: 900px; margin: 0 auto; padding: 40px 32px; }
+    .game-detail-header { display: flex; gap: 32px; margin-bottom: 40px; }
+    .detail-thumb {
+      width: 220px;
+      min-width: 220px;
+      aspect-ratio: 4/3;
+      background: var(--surface2);
+      border-radius: var(--radius);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 72px;
+    }
+    .detail-info { flex: 1; }
+    .detail-platform {
+      display: inline-block;
+      background: rgba(124,108,252,.15);
+      color: var(--accent);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 4px;
+      margin-bottom: 10px;
+    }
+    .detail-title { font-size: 32px; font-weight: 900; margin-bottom: 6px; letter-spacing: -1px; }
+    .detail-sub { font-size: 14px; color: var(--text-muted); margin-bottom: 16px; }
+    .rating-big { display: flex; align-items: baseline; gap: 8px; margin-bottom: 16px; }
+    .rating-num { font-size: 48px; font-weight: 900; color: var(--star); }
+    .rating-max { font-size: 18px; color: var(--text-muted); }
+    .stars-big { font-size: 22px; color: var(--star); }
+
+    .score-bars { display: flex; flex-direction: column; gap: 10px; margin-top: 24px; }
+    .score-row { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+    .score-label { width: 80px; color: var(--text-muted); flex-shrink: 0; }
+    .score-bar-wrap { flex: 1; height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+    .score-bar { height: 100%; border-radius: 3px; background: var(--accent); }
+    .score-val { width: 28px; text-align: right; color: var(--text-muted); font-size: 12px; }
+
+    /* REVIEW TABS */
+    .review-tabs {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 24px;
+      border-bottom: 1px solid var(--border);
+    }
+    .review-tab {
+      padding: 10px 20px;
+      border-radius: 8px 8px 0 0;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      margin-bottom: -1px;
+      border-bottom: 2px solid transparent;
+    }
+    .review-tab.hard.active { color: var(--hard); border-bottom-color: var(--hard); }
+    .review-tab.light.active { color: var(--light); border-bottom-color: var(--light); }
+
+    /* REVIEW CARD */
+    .review-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+    .review-header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+    .avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--surface2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+    .reviewer-name { font-size: 14px; font-weight: 700; }
+    .reviewer-type {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 4px;
+      margin-left: 6px;
+    }
+    .reviewer-type.hard { background: rgba(124,108,252,.15); color: var(--hard); }
+    .reviewer-type.light { background: rgba(78,205,196,.15); color: var(--light); }
+    .review-date { font-size: 12px; color: var(--text-muted); margin-left: auto; }
+    .review-score-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+    .score-chip {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--surface2);
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 12px;
+    }
+    .score-chip-label { color: var(--text-muted); }
+    .score-chip-val { font-weight: 700; }
+    .review-text { font-size: 14px; line-height: 1.7; }
+
+    /* WRITE REVIEW */
+    .write-review { max-width: 680px; margin: 0 auto; padding: 40px 32px; }
+    .write-review h2 { font-size: 24px; font-weight: 800; margin-bottom: 8px; }
+    .write-review > p { font-size: 14px; color: var(--text-muted); margin-bottom: 32px; }
+
+    .type-selector { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 32px; }
+    .type-card {
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .type-card:hover { border-color: var(--text-muted); }
+    .type-card.selected.hard { border-color: var(--hard); background: rgba(124,108,252,.06); }
+    .type-card.selected.light { border-color: var(--light); background: rgba(78,205,196,.06); }
+    .type-icon { font-size: 28px; margin-bottom: 8px; }
+    .type-name { font-size: 16px; font-weight: 800; margin-bottom: 4px; }
+    .type-name.hard { color: var(--hard); }
+    .type-name.light { color: var(--light); }
+    .type-desc { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+
+    .form-section { margin-bottom: 28px; }
+    .form-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      margin-bottom: 10px;
+    }
+
+    .star-input { display: flex; gap: 6px; font-size: 28px; cursor: pointer; }
+    .star-input span { color: var(--border); transition: color .1s; }
+    .star-input span.active { color: var(--star); }
+
+    .score-inputs { display: flex; flex-direction: column; gap: 12px; }
+    .score-input-row { display: flex; align-items: center; gap: 14px; }
+    .score-input-label { width: 90px; font-size: 13px; color: var(--text-muted); }
+    .score-slider {
+      flex: 1;
+      -webkit-appearance: none;
+      height: 4px;
+      border-radius: 2px;
+      background: var(--surface2);
+      outline: none;
+      cursor: pointer;
+    }
+    .score-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--accent);
+      cursor: pointer;
+    }
+    .score-display { width: 30px; text-align: center; font-size: 13px; font-weight: 700; }
+
+    textarea {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px;
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.6;
+      resize: vertical;
+      outline: none;
+      font-family: inherit;
+    }
+    textarea:focus { border-color: var(--accent); }
+
+    /* AUTH */
+    .auth-wrap { max-width: 420px; margin: 60px auto; padding: 0 24px; }
+    .auth-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 36px;
+    }
+    .auth-logo { text-align: center; margin-bottom: 28px; }
+    .auth-logo .logo { font-size: 28px; }
+    .auth-title { font-size: 22px; font-weight: 800; text-align: center; margin-bottom: 4px; }
+    .auth-sub { font-size: 13px; color: var(--text-muted); text-align: center; margin-bottom: 28px; }
+
+    .field { margin-bottom: 16px; }
+    .field label { display: block; font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom: 6px; letter-spacing: .5px; }
+    .field input {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 11px 14px;
+      color: var(--text);
+      font-size: 14px;
+      outline: none;
+    }
+    .field input:focus { border-color: var(--accent); }
+
+    .auth-divider {
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-muted);
+      margin: 20px 0;
+      position: relative;
+    }
+    .auth-divider::before, .auth-divider::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      width: calc(50% - 32px);
+      height: 1px;
+      background: var(--border);
+    }
+    .auth-divider::before { left: 0; }
+    .auth-divider::after { right: 0; }
+
+    .auth-footer { text-align: center; margin-top: 20px; font-size: 13px; color: var(--text-muted); }
+    .auth-footer a { color: var(--accent); text-decoration: none; }
+
+    footer {
+      text-align: center;
+      padding: 40px 32px;
+      border-top: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 13px;
+      margin-top: 60px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- 페이지 전환 탭 (데모용) -->
+<div class="demo-nav">
+  <button class="tab-btn active" onclick="showPage('home')">홈</button>
+  <button class="tab-btn" onclick="showPage('games')">게임 목록</button>
+  <button class="tab-btn" onclick="showPage('detail')">게임 상세</button>
+  <button class="tab-btn" onclick="showPage('write')">리뷰 작성</button>
+  <button class="tab-btn" onclick="showPage('login')">로그인</button>
+  <button class="tab-btn" onclick="showPage('signup')">회원가입</button>
+</div>
+
+<nav>
+  <div class="logo">위<span>나이</span></div>
+  <ul class="nav-links">
+    <li><a href="#">게임</a></li>
+    <li><a href="#">리뷰</a></li>
+    <li><a href="#">커뮤니티</a></li>
+  </ul>
+  <div class="nav-actions">
+    <button class="btn btn-ghost" onclick="showPage('login')">로그인</button>
+    <button class="btn btn-primary" onclick="showPage('signup')">시작하기</button>
+  </div>
+</nav>
+
+<!-- ── HOME ── -->
+<div id="page-home" class="page active">
+
+  <div class="hero">
+    <h1>진짜 게이머의<br /><em>진짜 리뷰</em></h1>
+    <p>하드코어 리뷰어와 라이트 리뷰어가 각자의 방식으로 게임을 평가합니다. 당신에게 맞는 리뷰를 찾아보세요.</p>
+    <div class="hero-actions">
+      <button class="btn btn-primary" onclick="showPage('games')">게임 목록 보기</button>
+      <button class="btn btn-ghost" onclick="showPage('write')">리뷰 작성하기</button>
+    </div>
+  </div>
+
+  <section>
+    <div class="section-header">
+      <div class="section-title">인기 게임</div>
+      <div class="sort-tabs">
+        <button class="sort-btn active" onclick="activateSort(this)">인기순</button>
+        <button class="sort-btn" onclick="activateSort(this)">최신순</button>
+      </div>
+    </div>
+    <div class="game-grid">
+      <div class="game-card" onclick="showPage('detail')">
+        <div class="game-thumb">🧙<span class="game-platform">NSW</span></div>
+        <div class="game-info">
+          <div class="game-title">젤다의 전설: 왕국의 눈물</div>
+          <div class="game-meta"><span class="stars">★★★★★</span><span>리뷰 142개</span></div>
+        </div>
+      </div>
+      <div class="game-card" onclick="showPage('detail')">
+        <div class="game-thumb">🌿<span class="game-platform">NSW</span></div>
+        <div class="game-info">
+          <div class="game-title">피크민 4</div>
+          <div class="game-meta"><span class="stars">★★★★☆</span><span>리뷰 89개</span></div>
+        </div>
+      </div>
+      <div class="game-card" onclick="showPage('detail')">
+        <div class="game-thumb">🔴<span class="game-platform">NSW</span></div>
+        <div class="game-info">
+          <div class="game-title">슈퍼 마리오 원더</div>
+          <div class="game-meta"><span class="stars">★★★★★</span><span>리뷰 204개</span></div>
+        </div>
+      </div>
+      <div class="game-card" onclick="showPage('detail')">
+        <div class="game-thumb">🦆<span class="game-platform">NSW</span></div>
+        <div class="game-info">
+          <div class="game-title">메트로이드 드레드</div>
+          <div class="game-meta"><span class="stars">★★★★★</span><span>리뷰 67개</span></div>
+        </div>
+      </div>
+      <div class="game-card" onclick="showPage('detail')">
+        <div class="game-thumb">🗡️<span class="game-platform">NSW</span></div>
+        <div class="game-info">
+          <div class="game-title">파이어 엠블렘 엔게이지</div>
+          <div class="game-meta"><span class="stars">★★★★☆</span><span>리뷰 51개</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-header">
+      <div class="section-title">최신 리뷰</div>
+    </div>
+    <div class="review-card">
+      <div class="review-header">
+        <div class="avatar">🎮</div>
+        <div>
+          <span class="reviewer-name">hardgamer_kr</span>
+          <span class="reviewer-type hard">하드 리뷰</span>
+        </div>
+        <div class="review-date">2026.05.01</div>
+      </div>
+      <div class="review-score-row">
+        <div class="score-chip"><span class="score-chip-label">게임성</span>&nbsp;<span class="score-chip-val">9.5</span></div>
+        <div class="score-chip"><span class="score-chip-label">조작감</span>&nbsp;<span class="score-chip-val">9.0</span></div>
+        <div class="score-chip"><span class="score-chip-label">최적화</span>&nbsp;<span class="score-chip-val">8.5</span></div>
+        <div class="score-chip"><span class="score-chip-label">전략성</span>&nbsp;<span class="score-chip-val">9.8</span></div>
+      </div>
+      <p class="review-text">왕국의 눈물은 오픈월드 설계의 새로운 기준을 제시했다. 빌드 시스템의 자유도가 전작 대비 압도적으로 향상되었고, 지하 세계 추가로 탐험 밀도 또한 크게 늘었다. 일부 구간 FPS 드랍은 아쉽지만, 전반적인 완성도는 최정상급.</p>
+    </div>
+    <div class="review-card">
+      <div class="review-header">
+        <div class="avatar">🌟</div>
+        <div>
+          <span class="reviewer-name">casual_nini</span>
+          <span class="reviewer-type light">라이트 리뷰</span>
+        </div>
+        <div class="review-date">2026.04.29</div>
+      </div>
+      <div class="review-score-row">
+        <div class="score-chip"><span class="score-chip-label">재미</span>&nbsp;<span class="score-chip-val">10</span></div>
+        <div class="score-chip"><span class="score-chip-label">접근성</span>&nbsp;<span class="score-chip-val">7.0</span></div>
+        <div class="score-chip"><span class="score-chip-label">피로감</span>&nbsp;<span class="score-chip-val">낮음</span></div>
+        <div class="score-chip"><span class="score-chip-label">추천 대상</span>&nbsp;<span class="score-chip-val">모두</span></div>
+      </div>
+      <p class="review-text">진짜 너무 재밌어요! 처음엔 빌드 시스템이 어렵게 느껴졌는데 하다 보면 자연스럽게 익혀져요. 한번 시작하면 시간 가는 줄 모르고 하게 되는 게임. 닌텐도 스위치 있다면 꼭 해야 할 타이틀.</p>
+    </div>
+  </section>
+
+</div>
+
+<!-- ── GAMES ── -->
+<div id="page-games" class="page">
+  <section>
+    <div class="section-header">
+      <div class="section-title">전체 게임 목록</div>
+      <div class="sort-tabs">
+        <button class="sort-btn active" onclick="activateSort(this)">인기순</button>
+        <button class="sort-btn" onclick="activateSort(this)">최신순</button>
+        <button class="sort-btn" onclick="activateSort(this)">평점순</button>
+      </div>
+    </div>
+    <div class="game-grid">
+      <div class="game-card" onclick="showPage('detail')">
+        <div class="game-thumb">🧙<span class="game-platform">NSW</span></div>
+        <div class="game-info">
+          <div class="game-title">젤다의 전설: 왕국의 눈물</div>
+          <div class="game-meta"><span class="stars">★★★★★</span><span>142개</span></div>
+        </div>
+      </div>
+      <div class="game-card" onclick="showPage('detail')">
+        <div class="game-thumb">🌿<span class="game-platform">NSW</span></div>
+        <div class="game-info">
+          <div class="game-title">피크민 4</div>
+          <div class="game-meta"><span class="stars">★★★★☆</span><span>89개</span></div>
+        </div>
+      </div>
+      <div class="game-card" onclick="showPage('detail')">
+        <div class="game-thumb">🔴<span class="game-platform">NSW</span></div>
+        <div class="game-info">
+          <div class="game-title">슈퍼 마리오 원더</div>
+          <div class="game-meta"><span class="stars">★★★★★</span><span>204개</span></div>
+        </div>
+      </div>
+      <div class="game-card" onclick="showPage('detail')">
+        <div class="game-thumb">🦆<span class="game-platform">NSW</span></div>
+        <div class="game-info">
+          <div class="game-title">메트로이드 드레드</div>
+          <div class="game-meta"><span class="stars">★★★★★</span><span>67개</span></div>
+        </div>
+      </div>
+      <div class="game-card" onclick="showPage('detail')">
+        <div class="game-thumb">🗡️<span class="game-platform">NSW</span></div>
+        <div class="game-info">
+          <div class="game-title">파이어 엠블렘 엔게이지</div>
+          <div class="game-meta"><span class="stars">★★★★☆</span><span>51개</span></div>
+        </div>
+      </div>
+      <div class="game-card" onclick="showPage('detail')">
+        <div class="game-thumb">🐉<span class="game-platform">NSW</span></div>
+        <div class="game-info">
+          <div class="game-title">제노블레이드 크로니클스 3</div>
+          <div class="game-meta"><span class="stars">★★★★★</span><span>38개</span></div>
+        </div>
+      </div>
+      <div class="game-card" onclick="showPage('detail')">
+        <div class="game-thumb">🎵<span class="game-platform">NSW</span></div>
+        <div class="game-info">
+          <div class="game-title">리듬 천국 메가믹스</div>
+          <div class="game-meta"><span class="stars">★★★★☆</span><span>22개</span></div>
+        </div>
+      </div>
+      <div class="game-card" onclick="showPage('detail')">
+        <div class="game-thumb">🌸<span class="game-platform">NSW</span></div>
+        <div class="game-info">
+          <div class="game-title">포켓몬스터 스칼렛/바이올렛</div>
+          <div class="game-meta"><span class="stars">★★★☆☆</span><span>178개</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ── DETAIL ── -->
+<div id="page-detail" class="page">
+  <div class="game-detail">
+
+    <div class="game-detail-header">
+      <div class="detail-thumb">🧙</div>
+      <div class="detail-info">
+        <div class="detail-platform">Nintendo Switch</div>
+        <div class="detail-title">젤다의 전설: 왕국의 눈물</div>
+        <div class="detail-sub">Nintendo · 2023 · 어드벤처 / 오픈월드</div>
+        <div class="rating-big">
+          <span class="rating-num">9.3</span>
+          <span class="rating-max">/ 10</span>
+          <span class="stars-big">★★★★★</span>
+        </div>
+        <div style="font-size:13px; color:var(--text-muted); margin-bottom:16px;">리뷰 142개 · 하드 58 · 라이트 84</div>
+        <button class="btn btn-primary" onclick="showPage('write')">리뷰 작성하기</button>
+      </div>
+    </div>
+
+    <div class="score-bars">
+      <div class="score-row">
+        <span class="score-label">게임성</span>
+        <div class="score-bar-wrap"><div class="score-bar" style="width:95%"></div></div>
+        <span class="score-val">9.5</span>
+      </div>
+      <div class="score-row">
+        <span class="score-label">그래픽</span>
+        <div class="score-bar-wrap"><div class="score-bar" style="width:82%"></div></div>
+        <span class="score-val">8.2</span>
+      </div>
+      <div class="score-row">
+        <span class="score-label">OST</span>
+        <div class="score-bar-wrap"><div class="score-bar" style="width:91%"></div></div>
+        <span class="score-val">9.1</span>
+      </div>
+      <div class="score-row">
+        <span class="score-label">조작감</span>
+        <div class="score-bar-wrap"><div class="score-bar" style="width:90%"></div></div>
+        <span class="score-val">9.0</span>
+      </div>
+      <div class="score-row">
+        <span class="score-label">몰입도</span>
+        <div class="score-bar-wrap"><div class="score-bar" style="width:97%"></div></div>
+        <span class="score-val">9.7</span>
+      </div>
+      <div class="score-row">
+        <span class="score-label">가성비</span>
+        <div class="score-bar-wrap"><div class="score-bar" style="width:88%"></div></div>
+        <span class="score-val">8.8</span>
+      </div>
+    </div>
+
+    <div style="margin-top:40px;">
+      <div class="review-tabs">
+        <button class="review-tab hard active">하드 리뷰 (58)</button>
+        <button class="review-tab light">라이트 리뷰 (84)</button>
+      </div>
+
+      <div class="review-card">
+        <div class="review-header">
+          <div class="avatar">🎮</div>
+          <div>
+            <span class="reviewer-name">hardgamer_kr</span>
+            <span class="reviewer-type hard">하드 리뷰</span>
+          </div>
+          <div class="review-date">2026.05.01</div>
+        </div>
+        <div class="review-score-row">
+          <div class="score-chip"><span class="score-chip-label">게임성</span>&nbsp;<span class="score-chip-val">9.5</span></div>
+          <div class="score-chip"><span class="score-chip-label">조작감</span>&nbsp;<span class="score-chip-val">9.0</span></div>
+          <div class="score-chip"><span class="score-chip-label">최적화</span>&nbsp;<span class="score-chip-val">8.5</span></div>
+          <div class="score-chip"><span class="score-chip-label">전략성</span>&nbsp;<span class="score-chip-val">9.8</span></div>
+          <div class="score-chip"><span class="score-chip-label">스토리</span>&nbsp;<span class="score-chip-val">8.0</span></div>
+        </div>
+        <p class="review-text">왕국의 눈물은 오픈월드 설계의 새로운 기준을 제시했다. 빌드 시스템의 자유도가 전작 대비 압도적으로 향상되었고, 지하 세계 추가로 탐험 밀도 또한 크게 늘었다. FPS 드랍이 일부 구간에서 발생하는 점은 아쉽지만, 전반적인 완성도는 최정상급.</p>
+      </div>
+
+      <div class="review-card">
+        <div class="review-header">
+          <div class="avatar">⚔️</div>
+          <div>
+            <span class="reviewer-name">ZeldaMaster_99</span>
+            <span class="reviewer-type hard">하드 리뷰</span>
+          </div>
+          <div class="review-date">2026.04.22</div>
+        </div>
+        <div class="review-score-row">
+          <div class="score-chip"><span class="score-chip-label">게임성</span>&nbsp;<span class="score-chip-val">9.8</span></div>
+          <div class="score-chip"><span class="score-chip-label">전략성</span>&nbsp;<span class="score-chip-val">9.5</span></div>
+          <div class="score-chip"><span class="score-chip-label">난이도</span>&nbsp;<span class="score-chip-val">중상</span></div>
+          <div class="score-chip"><span class="score-chip-label">OST</span>&nbsp;<span class="score-chip-val">9.3</span></div>
+        </div>
+        <p class="review-text">브레스 오브 더 와일드를 100% 클리어한 입장에서, 왕국의 눈물은 기대를 훨씬 뛰어넘었다. 용의 눈물 스토리 구성과 사당 퍼즐의 발전, 그리고 울트라핸드 메카닉의 깊이는 진정한 진화다.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── WRITE REVIEW ── -->
+<div id="page-write" class="page">
+  <div class="write-review">
+    <h2>리뷰 작성</h2>
+    <p>젤다의 전설: 왕국의 눈물 · Nintendo Switch</p>
+
+    <div class="form-section">
+      <label class="form-label">리뷰 유형 선택</label>
+      <div class="type-selector">
+        <div class="type-card selected hard" onclick="selectType(this, 'hard')">
+          <div class="type-icon">🔬</div>
+          <div class="type-name hard">하드 리뷰</div>
+          <div class="type-desc">게임성, 전략성, 조작감, 최적화 등 세부 요소를 깊게 분석합니다.</div>
+        </div>
+        <div class="type-card" onclick="selectType(this, 'light')">
+          <div class="type-icon">🎈</div>
+          <div class="type-name light">라이트 리뷰</div>
+          <div class="type-desc">재미, 접근성, 피로감, 추천 대상 등 체감 중심으로 평가합니다.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <label class="form-label">종합 별점</label>
+      <div class="star-input" id="starInput">
+        <span onclick="setStar(1)">★</span>
+        <span onclick="setStar(2)">★</span>
+        <span onclick="setStar(3)">★</span>
+        <span onclick="setStar(4)" class="active">★</span>
+        <span onclick="setStar(5)" class="active">★</span>
+      </div>
+    </div>
+
+    <div class="form-section" id="hardScores">
+      <label class="form-label">항목별 점수</label>
+      <div class="score-inputs">
+        <div class="score-input-row">
+          <span class="score-input-label">게임성</span>
+          <input type="range" class="score-slider" min="1" max="10" value="9" oninput="updateScore(this)" />
+          <span class="score-display">9</span>
+        </div>
+        <div class="score-input-row">
+          <span class="score-input-label">조작감</span>
+          <input type="range" class="score-slider" min="1" max="10" value="8" oninput="updateScore(this)" />
+          <span class="score-display">8</span>
+        </div>
+        <div class="score-input-row">
+          <span class="score-input-label">전략성</span>
+          <input type="range" class="score-slider" min="1" max="10" value="9" oninput="updateScore(this)" />
+          <span class="score-display">9</span>
+        </div>
+        <div class="score-input-row">
+          <span class="score-input-label">최적화/버그</span>
+          <input type="range" class="score-slider" min="1" max="10" value="7" oninput="updateScore(this)" />
+          <span class="score-display">7</span>
+        </div>
+        <div class="score-input-row">
+          <span class="score-input-label">스토리/세계관</span>
+          <input type="range" class="score-slider" min="1" max="10" value="8" oninput="updateScore(this)" />
+          <span class="score-display">8</span>
+        </div>
+        <div class="score-input-row">
+          <span class="score-input-label">그래픽</span>
+          <input type="range" class="score-slider" min="1" max="10" value="8" oninput="updateScore(this)" />
+          <span class="score-display">8</span>
+        </div>
+        <div class="score-input-row">
+          <span class="score-input-label">OST</span>
+          <input type="range" class="score-slider" min="1" max="10" value="9" oninput="updateScore(this)" />
+          <span class="score-display">9</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section" id="lightScores" style="display:none;">
+      <label class="form-label">항목별 점수</label>
+      <div class="score-inputs">
+        <div class="score-input-row">
+          <span class="score-input-label">재미</span>
+          <input type="range" class="score-slider" min="1" max="10" value="9" oninput="updateScore(this)" />
+          <span class="score-display">9</span>
+        </div>
+        <div class="score-input-row">
+          <span class="score-input-label">접근성</span>
+          <input type="range" class="score-slider" min="1" max="10" value="7" oninput="updateScore(this)" />
+          <span class="score-display">7</span>
+        </div>
+        <div class="score-input-row">
+          <span class="score-input-label">몰입도</span>
+          <input type="range" class="score-slider" min="1" max="10" value="10" oninput="updateScore(this)" />
+          <span class="score-display">10</span>
+        </div>
+        <div class="score-input-row">
+          <span class="score-input-label">안 질리는가</span>
+          <input type="range" class="score-slider" min="1" max="10" value="9" oninput="updateScore(this)" />
+          <span class="score-display">9</span>
+        </div>
+        <div class="score-input-row">
+          <span class="score-input-label">가성비</span>
+          <input type="range" class="score-slider" min="1" max="10" value="8" oninput="updateScore(this)" />
+          <span class="score-display">8</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <label class="form-label">리뷰 본문</label>
+      <textarea rows="6" placeholder="게임에 대한 솔직한 리뷰를 작성해주세요."></textarea>
+    </div>
+
+    <button class="btn btn-primary btn-full">리뷰 등록하기</button>
+  </div>
+</div>
+
+<!-- ── LOGIN ── -->
+<div id="page-login" class="page">
+  <div class="auth-wrap">
+    <div class="auth-card">
+      <div class="auth-logo"><div class="logo">위<span>나이</span></div></div>
+      <div class="auth-title">다시 돌아오셨군요</div>
+      <div class="auth-sub">계정에 로그인하세요</div>
+      <div class="field">
+        <label>이메일</label>
+        <input type="email" placeholder="hello@example.com" />
+      </div>
+      <div class="field">
+        <label>비밀번호</label>
+        <input type="password" placeholder="••••••••" />
+      </div>
+      <button class="btn btn-primary btn-full" style="margin-top:8px;">로그인</button>
+      <div class="auth-divider">또는</div>
+      <button class="btn btn-ghost btn-full">🎮&nbsp; 게스트로 둘러보기</button>
+      <div class="auth-footer">계정이 없으신가요? <a href="#" onclick="showPage('signup')">회원가입</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── SIGNUP ── -->
+<div id="page-signup" class="page">
+  <div class="auth-wrap">
+    <div class="auth-card">
+      <div class="auth-logo"><div class="logo">위<span>나이</span></div></div>
+      <div class="auth-title">위나이에 오신 것을 환영해요</div>
+      <div class="auth-sub">무료로 시작하세요</div>
+      <div class="field">
+        <label>닉네임</label>
+        <input type="text" placeholder="hardgamer_kr" />
+      </div>
+      <div class="field">
+        <label>이메일</label>
+        <input type="email" placeholder="hello@example.com" />
+      </div>
+      <div class="field">
+        <label>비밀번호</label>
+        <input type="password" placeholder="8자 이상" />
+      </div>
+      <button class="btn btn-primary btn-full" style="margin-top:8px;">가입하기</button>
+      <div class="auth-footer">이미 계정이 있으신가요? <a href="#" onclick="showPage('login')">로그인</a></div>
+    </div>
+  </div>
+</div>
+
+<footer>© 2026 위나이 · 게임을 사랑하는 사람들을 위한 리뷰 공간</footer>
+
+<script>
+  function showPage(id) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById('page-' + id).classList.add('active');
+    const map = ['home', 'games', 'detail', 'write', 'login', 'signup'];
+    document.querySelectorAll('.tab-btn').forEach((btn, i) => {
+      btn.classList.toggle('active', map[i] === id);
+    });
+    window.scrollTo(0, 0);
+  }
+
+  function setStar(n) {
+    document.querySelectorAll('#starInput span').forEach((s, i) => {
+      s.classList.toggle('active', i < n);
+    });
+  }
+
+  function updateScore(input) {
+    input.nextElementSibling.textContent = input.value;
+  }
+
+  function selectType(card, type) {
+    document.querySelectorAll('.type-card').forEach(c => {
+      c.classList.remove('selected', 'hard', 'light');
+    });
+    card.classList.add('selected', type);
+    document.getElementById('hardScores').style.display = type === 'hard' ? '' : 'none';
+    document.getElementById('lightScores').style.display = type === 'light' ? '' : 'none';
+  }
+
+  function activateSort(btn) {
+    btn.closest('.sort-tabs').querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+</script>
+</body>
+</html>

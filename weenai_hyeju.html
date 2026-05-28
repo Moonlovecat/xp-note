@@ -1,0 +1,3138 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Weenai — 콘솔 게임 리뷰 & 가이드</title>
+  <style>
+    :root {
+      --bg: #0f0f13;
+      --surface: #1a1a22;
+      --surface2: #22222e;
+      --border: #2e2e3e;
+      --accent: #7c6cfc;
+      --text: #e8e8f0;
+      --text-muted: #9a9ab6;
+      --hard: #7c6cfc;
+      --light: #4ecdc4;
+      --star: #ffd700;
+      --danger: #ff6b6b;
+      --radius: 14px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Pretendard', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    button, input, textarea, select { font-family: inherit; }
+
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+      height: 64px;
+      background: rgba(26, 26, 34, 0.92);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(10px);
+    }
+
+    .logo {
+      font-size: 22px;
+      font-weight: 900;
+      letter-spacing: -0.8px;
+      color: var(--accent);
+      cursor: pointer;
+    }
+    .logo span { color: var(--text); font-weight: 800; }
+
+    .nav-links {
+      display: flex;
+      gap: 24px;
+      list-style: none;
+      font-size: 14px;
+    }
+    .nav-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color .2s;
+      cursor: pointer;
+    }
+    .nav-links a:hover { color: var(--text); }
+
+    .nav-actions { display: flex; gap: 10px; align-items: center; }
+    .user-chip {
+      display: none;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: var(--surface2);
+      color: var(--text);
+      border: 1px solid var(--border);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border-radius: 9px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+      transition: all .2s;
+      text-decoration: none;
+    }
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+    }
+    .btn-ghost:hover { color: var(--text); border-color: var(--text-muted); }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { filter: brightness(1.12); transform: translateY(-1px); }
+    .btn-light { background: rgba(78,205,196,.15); color: var(--light); border: 1px solid rgba(78,205,196,.25); }
+    .btn-full { width: 100%; padding: 12px; font-size: 14px; }
+
+    .page { display: none; }
+    .page.active { display: block; }
+
+    .hero {
+      padding: 86px 32px 64px;
+      text-align: center;
+      background:
+        radial-gradient(ellipse at 50% 0%, rgba(124,108,252,.18) 0%, transparent 70%),
+        linear-gradient(180deg, rgba(124,108,252,.05), transparent);
+    }
+    .hero-badge {
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      padding: 7px 13px;
+      border-radius: 999px;
+      background: rgba(124,108,252,.12);
+      border: 1px solid rgba(124,108,252,.25);
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 800;
+      margin-bottom: 18px;
+    }
+    .hero h1 {
+      font-size: clamp(36px, 6vw, 58px);
+      font-weight: 950;
+      letter-spacing: -2px;
+      line-height: 1.08;
+      margin-bottom: 16px;
+    }
+    .hero h1 em { font-style: normal; color: var(--accent); }
+    .hero p {
+      font-size: 17px;
+      color: var(--text-muted);
+      max-width: 650px;
+      margin: 0 auto 32px;
+      line-height: 1.7;
+    }
+    .hero-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+
+    section { padding: 46px 32px; max-width: 1120px; margin: 0 auto; }
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .section-title { font-size: 22px; font-weight: 850; letter-spacing: -0.4px; }
+    .section-sub { color: var(--text-muted); font-size: 13px; margin-top: 6px; }
+
+    .platform-tabs, .sort-tabs, .detail-tabs {
+      display: flex;
+      gap: 7px;
+      flex-wrap: wrap;
+    }
+    .chip-btn, .sort-btn, .detail-tab {
+      padding: 7px 14px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-muted);
+      transition: all .2s;
+    }
+    .chip-btn.active, .chip-btn:hover,
+    .sort-btn.active, .sort-btn:hover,
+    .detail-tab.active, .detail-tab:hover {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+      margin-top: 26px;
+    }
+    .feature-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      text-align: left;
+    }
+    .feature-icon { font-size: 28px; margin-bottom: 12px; }
+    .feature-title { font-weight: 850; margin-bottom: 8px; }
+    .feature-text { color: var(--text-muted); font-size: 13px; line-height: 1.65; }
+
+    .game-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+      gap: 20px;
+    }
+    .game-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform .2s, border-color .2s, box-shadow .2s;
+    }
+    .game-card:hover {
+      transform: translateY(-5px);
+      border-color: var(--accent);
+      box-shadow: 0 14px 35px rgba(0,0,0,.22);
+    }
+    .game-thumb {
+      width: 100%;
+      aspect-ratio: 4/3;
+      background: linear-gradient(135deg, var(--surface2), #171720);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 54px;
+      position: relative;
+    }
+    .game-platform {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: rgba(0,0,0,.72);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 850;
+      padding: 4px 8px;
+      border-radius: 5px;
+      letter-spacing: .5px;
+    }
+    .guide-badge {
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      background: rgba(124,108,252,.88);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 850;
+      padding: 4px 8px;
+      border-radius: 999px;
+    }
+    .game-info { padding: 14px; }
+    .game-title { font-size: 15px; font-weight: 850; margin-bottom: 7px; line-height: 1.35; }
+    .game-genre { color: var(--text-muted); font-size: 12px; margin-bottom: 10px; }
+    .game-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--text-muted);
+      gap: 8px;
+    }
+    .stars { color: var(--star); letter-spacing: 1px; white-space: nowrap; }
+
+    .game-detail { max-width: 980px; margin: 0 auto; padding: 42px 32px; }
+    .back-link {
+      display: inline-flex;
+      margin-bottom: 22px;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 800;
+    }
+    .back-link:hover { color: var(--text); }
+
+    .game-detail-header { display: flex; gap: 32px; margin-bottom: 36px; align-items: flex-start; }
+    .detail-thumb {
+      width: 230px;
+      min-width: 230px;
+      aspect-ratio: 4/3;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 78px;
+    }
+    .detail-info { flex: 1; }
+    .detail-platform {
+      display: inline-block;
+      background: rgba(124,108,252,.15);
+      color: var(--accent);
+      font-size: 11px;
+      font-weight: 850;
+      padding: 4px 10px;
+      border-radius: 5px;
+      margin-bottom: 12px;
+    }
+    .detail-title { font-size: 34px; font-weight: 950; margin-bottom: 8px; letter-spacing: -1.1px; }
+    .detail-sub { font-size: 14px; color: var(--text-muted); margin-bottom: 16px; line-height: 1.5; }
+    .rating-big { display: flex; align-items: baseline; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+    .rating-num { font-size: 48px; font-weight: 950; color: var(--star); }
+    .rating-max { font-size: 18px; color: var(--text-muted); }
+    .stars-big { font-size: 22px; color: var(--star); }
+
+    .score-bars { display: flex; flex-direction: column; gap: 10px; margin: 20px 0 34px; }
+    .score-row { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+    .score-label { width: 95px; color: var(--text-muted); flex-shrink: 0; }
+    .score-bar-wrap { flex: 1; height: 7px; background: var(--surface2); border-radius: 4px; overflow: hidden; }
+    .score-bar { height: 100%; border-radius: 4px; background: var(--accent); }
+    .score-val { width: 30px; text-align: right; color: var(--text-muted); font-size: 12px; }
+
+    .detail-panel { display: none; }
+    .detail-panel.active { display: block; }
+
+    .review-tabs {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    .review-tab {
+      padding: 10px 18px;
+      border-radius: 8px 8px 0 0;
+      font-size: 13px;
+      font-weight: 850;
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      margin-bottom: -1px;
+      border-bottom: 2px solid transparent;
+    }
+    .review-tab.hard.active { color: var(--hard); border-bottom-color: var(--hard); }
+    .review-tab.light.active { color: var(--light); border-bottom-color: var(--light); }
+
+    .review-card, .guide-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+    .review-header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+    .avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: var(--surface2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 17px;
+      flex-shrink: 0;
+    }
+    .reviewer-name { font-size: 14px; font-weight: 850; }
+    .reviewer-type {
+      font-size: 11px;
+      font-weight: 850;
+      padding: 3px 8px;
+      border-radius: 5px;
+      margin-left: 6px;
+    }
+    .reviewer-type.hard { background: rgba(124,108,252,.15); color: var(--hard); }
+    .reviewer-type.light { background: rgba(78,205,196,.15); color: var(--light); }
+    .review-date { font-size: 12px; color: var(--text-muted); margin-left: auto; }
+    .review-score-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+    .score-chip {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--surface2);
+      border-radius: 7px;
+      padding: 5px 10px;
+      font-size: 12px;
+    }
+    .score-chip-label { color: var(--text-muted); }
+    .score-chip-val { font-weight: 850; }
+    .review-text { font-size: 14px; line-height: 1.75; color: var(--text); white-space: pre-wrap; }
+
+    .guide-title { font-size: 18px; font-weight: 900; margin-bottom: 14px; }
+    .guide-list { list-style: none; display: grid; gap: 12px; }
+    .guide-list li {
+      padding: 13px 14px;
+      border-radius: 10px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      line-height: 1.6;
+      font-size: 14px;
+    }
+    .guide-list strong { color: var(--accent); }
+    .tip-box {
+      margin-top: 16px;
+      padding: 14px;
+      border-radius: 10px;
+      background: rgba(78,205,196,.08);
+      border: 1px solid rgba(78,205,196,.18);
+      color: var(--text);
+      font-size: 13px;
+      line-height: 1.65;
+    }
+
+    .write-review { max-width: 760px; margin: 0 auto; padding: 42px 32px; }
+    .write-review h2 { font-size: 26px; font-weight: 900; margin-bottom: 8px; }
+    .write-review > p { font-size: 14px; color: var(--text-muted); margin-bottom: 26px; }
+
+    .form-section { margin-bottom: 28px; }
+    .form-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 850;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      margin-bottom: 10px;
+    }
+    .field { margin-bottom: 16px; }
+    .field label { display: block; font-size: 12px; font-weight: 800; color: var(--text-muted); margin-bottom: 6px; letter-spacing: .4px; }
+    .field input, .field select {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 11px 14px;
+      color: var(--text);
+      font-size: 14px;
+      outline: none;
+    }
+    .field input:focus, .field select:focus { border-color: var(--accent); }
+
+    .type-selector { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+    .type-card {
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      cursor: pointer;
+      transition: all .2s;
+      background: rgba(255,255,255,.01);
+    }
+    .type-card:hover { border-color: var(--text-muted); }
+    .type-card.selected.hard { border-color: var(--hard); background: rgba(124,108,252,.06); }
+    .type-card.selected.light { border-color: var(--light); background: rgba(78,205,196,.06); }
+    .type-icon { font-size: 28px; margin-bottom: 8px; }
+    .type-name { font-size: 16px; font-weight: 900; margin-bottom: 4px; }
+    .type-name.hard { color: var(--hard); }
+    .type-name.light { color: var(--light); }
+    .type-desc { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+
+    .star-input { display: flex; gap: 6px; font-size: 30px; cursor: pointer; }
+    .star-input span { color: var(--border); transition: color .1s, transform .1s; }
+    .star-input span:hover { transform: scale(1.07); }
+    .star-input span.active { color: var(--star); }
+
+    .score-inputs { display: flex; flex-direction: column; gap: 12px; }
+    .score-input-row { display: flex; align-items: center; gap: 14px; }
+    .score-input-label { width: 105px; font-size: 13px; color: var(--text-muted); }
+    .score-slider {
+      flex: 1;
+      -webkit-appearance: none;
+      height: 4px;
+      border-radius: 2px;
+      background: var(--surface2);
+      outline: none;
+      cursor: pointer;
+    }
+    .score-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--accent);
+      cursor: pointer;
+    }
+    .score-display { width: 30px; text-align: center; font-size: 13px; font-weight: 850; }
+
+    textarea {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      padding: 14px;
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.65;
+      resize: vertical;
+      outline: none;
+      min-height: 130px;
+    }
+    textarea:focus { border-color: var(--accent); }
+
+    .ai-helper {
+      background: rgba(124,108,252,.08);
+      border: 1px solid rgba(124,108,252,.22);
+      border-radius: var(--radius);
+      padding: 18px;
+    }
+    .ai-question {
+      font-size: 15px;
+      font-weight: 850;
+      line-height: 1.55;
+      margin-bottom: 12px;
+    }
+    .ai-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+
+
+    .user-guide-section {
+      margin-top: 22px;
+      padding-top: 18px;
+      border-top: 1px solid var(--border);
+    }
+    .user-guide-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+    .user-guide-title {
+      font-size: 15px;
+      font-weight: 900;
+    }
+    .role-notice {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+    .guide-add-box {
+      display: none;
+      background: rgba(124,108,252,.06);
+      border: 1px solid rgba(124,108,252,.18);
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 14px;
+    }
+    .guide-add-box.active { display: block; }
+    .user-guide-item {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 10px;
+    }
+    .user-guide-meta {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      color: var(--text-muted);
+      font-size: 12px;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
+    .user-guide-text {
+      font-size: 14px;
+      line-height: 1.65;
+      white-space: pre-wrap;
+      margin-bottom: 12px;
+    }
+    .vote-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .vote-btn {
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.03);
+      color: var(--text-muted);
+      padding: 6px 10px;
+      border-radius: 999px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .vote-btn:hover { border-color: var(--accent); color: var(--text); }
+
+
+    .auth-wrap { max-width: 430px; margin: 60px auto; padding: 0 24px; }
+    .auth-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 36px;
+    }
+    .auth-logo { text-align: center; margin-bottom: 28px; }
+    .auth-logo .logo { font-size: 30px; }
+    .auth-title { font-size: 22px; font-weight: 900; text-align: center; margin-bottom: 4px; }
+    .auth-sub { font-size: 13px; color: var(--text-muted); text-align: center; margin-bottom: 28px; }
+    .auth-footer { text-align: center; margin-top: 20px; font-size: 13px; color: var(--text-muted); }
+    .auth-footer a { color: var(--accent); text-decoration: none; cursor: pointer; }
+
+    .empty {
+      padding: 28px;
+      text-align: center;
+      color: var(--text-muted);
+      border: 1px dashed var(--border);
+      border-radius: var(--radius);
+    }
+
+
+    .stat-grid {
+      margin-top: 20px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-bottom: 22px;
+    }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+    }
+    .stat-label {
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+    .stat-value {
+      font-size: 26px;
+      font-weight: 950;
+      color: var(--accent);
+    }
+    .upload-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 18px;
+    }
+    .preview-img {
+      display: none;
+      max-width: 100%;
+      max-height: 280px;
+      object-fit: contain;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      margin: 12px 0;
+      background: var(--surface2);
+    }
+    .verification-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      margin-bottom: 12px;
+    }
+    .verification-meta {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--text-muted);
+      font-size: 12px;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
+    .progress-wrap {
+      width: 100%;
+      height: 9px;
+      background: var(--surface2);
+      border-radius: 999px;
+      overflow: hidden;
+      margin-top: 10px;
+    }
+    .progress-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 999px;
+      width: 0%;
+    }
+    .promotion-box {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+
+      line-height: 1.9;
+
+      background: rgba(124,108,252,.08);
+      border: 1px solid rgba(124,108,252,.22);
+      border-radius: var(--radius);
+      padding: 18px;
+      margin-bottom: 18px;
+      line-height: 1.65;
+      font-size: 14px;
+    }
+
+
+
+    .type-card.locked {
+      opacity: .45;
+      cursor: not-allowed;
+      position: relative;
+    }
+    .type-card.locked::after {
+      content: "하드 리뷰어 전용";
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-size: 10px;
+      font-weight: 900;
+      color: var(--hard);
+      background: rgba(124,108,252,.14);
+      border: 1px solid rgba(124,108,252,.25);
+      border-radius: 999px;
+      padding: 4px 7px;
+    }
+
+
+
+    .clickable-stat {
+      cursor: pointer;
+      transition: transform .2s, border-color .2s;
+    }
+    .clickable-stat:hover {
+      transform: translateY(-2px);
+      border-color: var(--accent);
+    }
+    .review-list-item {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 12px;
+      cursor: pointer;
+      transition: border-color .2s, transform .2s;
+    }
+    .review-list-item:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+    }
+    .review-list-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
+    .review-list-title {
+      font-weight: 900;
+      font-size: 15px;
+    }
+    .review-list-meta {
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+
+    .favorite-btn {
+      background: rgba(255,215,0,.12);
+      color: var(--star);
+      border: 1px solid rgba(255,215,0,.28);
+    }
+    .favorite-btn.active {
+      background: var(--star);
+      color: #181820;
+      border-color: var(--star);
+    }
+    .recommend-box {
+      margin-top: 26px;
+    }
+
+    .review-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 14px;
+      flex-wrap: wrap;
+    }
+    .btn-small {
+      padding: 6px 11px;
+      font-size: 12px;
+      border-radius: 7px;
+    }
+    .btn-danger {
+      background: rgba(255,107,107,.14);
+      color: var(--danger);
+      border: 1px solid rgba(255,107,107,.25);
+    }
+    .mypage-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 18px;
+      margin-bottom: 24px;
+    }
+    .mypage-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+    }
+    .mypage-title {
+      font-size: 18px;
+      font-weight: 900;
+      margin-bottom: 12px;
+    }
+
+    footer {
+      text-align: center;
+      padding: 42px 32px;
+      border-top: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 13px;
+      margin-top: 60px;
+    }
+
+
+    .link-add-box {
+      display: none;
+      background: rgba(78,205,196,.06);
+      border: 1px solid rgba(78,205,196,.18);
+      border-radius: 12px;
+      padding: 14px;
+      margin: 14px 0;
+    }
+    .link-add-box.active { display: block; }
+    .link-form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .link-form-grid input, .link-form-grid select {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 11px 12px;
+      color: var(--text);
+      outline: none;
+      font-size: 13px;
+    }
+    .link-form-grid input:focus, .link-form-grid select:focus { border-color: var(--accent); }
+    .user-link-item {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+    .user-link-title {
+      font-size: 15px;
+      font-weight: 900;
+      margin-bottom: 6px;
+    }
+    .user-link-url {
+      display: inline-flex;
+      margin-bottom: 10px;
+      color: var(--light);
+      font-size: 13px;
+      font-weight: 800;
+      text-decoration: none;
+    }
+    .user-link-url:hover { text-decoration: underline; }
+    .backup-note {
+      margin-top: 10px;
+      padding: 12px;
+      border-radius: 10px;
+      background: rgba(0,0,0,.16);
+      border: 1px solid var(--border);
+      font-size: 13px;
+      line-height: 1.65;
+      color: var(--text-muted);
+      white-space: pre-wrap;
+    }
+    .summary-output {
+      display: none;
+      margin-top: 10px;
+      padding: 12px;
+      border-radius: 10px;
+      background: rgba(124,108,252,.08);
+      border: 1px solid rgba(124,108,252,.22);
+      font-size: 13px;
+      line-height: 1.7;
+      color: var(--text);
+      white-space: pre-wrap;
+    }
+    .summary-output.active { display: block; }
+
+    
+    .locked-box {
+      margin-bottom: 20px;
+      padding: 20px;
+      border-radius: 12px;
+      border: 1px dashed var(--border);
+      text-align: center;
+      color: var(--text-muted);
+      background: rgba(0,0,0,0.2);
+    }
+
+@media (max-width: 760px) {
+      nav { padding: 0 18px; }
+      .nav-links { display: none; }
+      .hero { padding: 60px 22px 46px; }
+      section, .game-detail, .write-review { padding-left: 20px; padding-right: 20px; }
+      .feature-grid { grid-template-columns: 1fr; }
+      .game-detail-header { flex-direction: column; }
+      .detail-thumb { width: 100%; min-width: 0; }
+      .type-selector { grid-template-columns: 1fr; }
+      .link-form-grid { grid-template-columns: 1fr; }
+      .stat-grid {
+      margin-top: 20px; grid-template-columns: 1fr; }
+      .score-input-row { gap: 10px; }
+      .score-input-label { width: 92px; }
+    }
+  </style>
+</head>
+<body>
+<nav>
+  <div class="logo" onclick="showPage('home')">Wee<span>nai</span></div>
+  <ul class="nav-links">
+    <li><a onclick="showPage('games')">게임</a></li>
+    <li><a onclick="showPage('write')">리뷰 작성</a></li>
+    <li><a onclick="showPage('playtime')">플레이 인증</a></li>
+    <li><a onclick="showPage('mypage')">마이페이지</a></li>
+  </ul>
+  <div class="nav-actions">
+    <span class="user-chip" id="userChip"></span>
+    <button class="btn btn-ghost" id="navLoginBtn" onclick="showPage('login')">로그인</button>
+    <button class="btn btn-primary" id="navSignupBtn" onclick="showPage('signup')">회원가입</button>
+<button class="btn btn-ghost" id="navLogoutBtn" style="display:none;" onclick="logout()">로그아웃</button>
+  </div>
+</nav>
+
+<div id="page-home" class="page active">
+  <div class="hero">
+    <div class="hero-badge">🎮 콘솔 초보도 바로 시작하는 리뷰 사이트</div>
+    <h1>게임 리뷰를 넘어<br /><em>조작법과 공략까지</em></h1>
+    <p>
+      Weenai는 Nintendo와 PlayStation 게임을 하드 리뷰와 라이트 리뷰로 나누어 보여주고,
+      처음 시작할 때 막히는 조작법·2인 플레이·초보 공략까지 함께 안내합니다.
+    </p>
+    <div class="hero-actions">
+      <button class="btn btn-primary" onclick="showPage('games')">게임 목록 보기</button>
+      <button class="btn btn-light" onclick="showPage('games')">초보 공략 보기</button>
+      <button class="btn btn-ghost" onclick="showPage('write')">AI 질문으로 리뷰 쓰기</button>
+    </div>
+
+    <div class="feature-grid">
+      <div class="feature-card">
+        <div class="feature-icon">🕹️</div>
+        <div class="feature-title">조작법 가이드</div>
+        <div class="feature-text">컨트롤러 연결, 2인 플레이, 기본 버튼 조작처럼 처음에 가장 헷갈리는 부분을 정리합니다.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🌱</div>
+        <div class="feature-title">초보 공략</div>
+        <div class="feature-text">스타듀밸리처럼 정보가 많은 게임은 초반 루트와 핵심 팁을 쉽게 요약합니다.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🤖</div>
+        <div class="feature-title">AI 리뷰 도우미</div>
+        <div class="feature-text">무엇을 써야 할지 모르는 라이트 리뷰어에게 질문을 던져 자연스럽게 리뷰를 완성합니다.</div>
+      </div>
+    </div>
+  </div>
+
+  <section>
+    <div class="section-header">
+      <div>
+        <div class="section-title">추천 게임</div>
+        <div class="section-sub">조작법과 초보 공략이 함께 제공되는 게임을 먼저 보여드려요.</div>
+      </div>
+      <div class="platform-tabs">
+        <button class="chip-btn active" onclick="renderHomeGames('All', this)">전체</button>
+        <button class="chip-btn" onclick="renderHomeGames('Nintendo', this)">Nintendo</button>
+        <button class="chip-btn" onclick="renderHomeGames('PlayStation', this)">PlayStation</button>
+      </div>
+    </div>
+    <div class="game-grid" id="homeGameGrid"></div>
+  </section>
+
+  <section>
+    <div class="section-header">
+      <div>
+        <div class="section-title">최신 리뷰</div>
+        <div class="section-sub">사용자가 작성한 리뷰는 새로고침 후에도 저장됩니다.</div>
+      </div>
+    </div>
+    <div id="latestReviews"></div>
+  </section>
+
+  <section id="homeRecommendationSection">
+    <div class="section-header">
+      <div>
+        <div class="section-title">나를 위한 추천 게임</div>
+        <div class="section-sub">내 리뷰와 즐겨찾기 게임을 기준으로 추천합니다.</div>
+      </div>
+    </div>
+    <div class="game-grid" id="homeRecommendedGames"></div>
+  </section>
+</div>
+
+<div id="page-games" class="page">
+  <section>
+    <div class="section-header">
+      <div>
+        <div class="section-title">전체 게임 목록</div>
+        <div class="section-sub">Nintendo와 PlayStation 콘솔 게임을 분류해서 볼 수 있습니다.</div>
+      </div>
+      <div class="platform-tabs">
+        <button class="chip-btn active" onclick="setPlatform('All', this)">전체</button>
+        <button class="chip-btn" onclick="setPlatform('Nintendo', this)">Nintendo</button>
+        <button class="chip-btn" onclick="setPlatform('PlayStation', this)">PlayStation</button>
+      </div>
+    </div>
+
+    <div class="section-header" style="padding:0; margin-bottom:18px;">
+      <div class="sort-tabs">
+        <button class="sort-btn active" onclick="setSort('popular', this)">인기순</button>
+        <button class="sort-btn" onclick="setSort('rating', this)">평점순</button>
+        <button class="sort-btn" onclick="setSort('newest', this)">최신순</button>
+      </div>
+    </div>
+
+    <div class="game-grid" id="gameGrid"></div>
+  </section>
+</div>
+
+<div id="page-detail" class="page">
+  <div class="game-detail">
+    <div class="back-link" onclick="showPage('games')">← 게임 목록으로 돌아가기</div>
+
+    <div class="game-detail-header">
+      <div class="detail-thumb" id="detailThumb"></div>
+      <div class="detail-info">
+        <div class="detail-platform" id="detailPlatform"></div>
+        <div class="detail-title" id="detailTitle"></div>
+        <div class="detail-sub" id="detailSub"></div>
+        <div class="rating-big">
+          <span class="rating-num" id="detailRating"></span>
+          <span class="rating-max">/ 10</span>
+          <span class="stars-big" id="detailStars"></span>
+        </div>
+        <div style="font-size:13px; color:var(--text-muted); margin-bottom:16px;" id="detailReviewCount"></div>
+        <button class="btn btn-primary" onclick="showPage('write')">이 게임 리뷰 작성하기</button>
+        <button class="btn favorite-btn" id="detailFavoriteBtn" style="margin-left:8px;" onclick="toggleFavorite(currentGameId, event)">☆ 즐겨찾기</button>
+      </div>
+    </div>
+
+    <div class="score-bars" id="detailScoreBars"></div>
+
+    <div class="detail-tabs" style="margin-bottom:24px;">
+      <button class="detail-tab active" onclick="showDetailTab('reviews', this)">리뷰</button>
+      <button class="detail-tab" onclick="showDetailTab('controls', this)">조작법</button>
+      <button class="detail-tab" onclick="showDetailTab('guide', this)">초보 공략</button>
+    </div>
+
+    <div id="detail-panel-reviews" class="detail-panel active">
+      <div class="review-tabs">
+        <button class="review-tab hard active" onclick="setReviewFilter('hard', this)">하드 리뷰</button>
+        <button class="review-tab light" onclick="setReviewFilter('light', this)">라이트 리뷰</button>
+      </div>
+      <div id="detailReviews"></div>
+    </div>
+
+    <div id="detail-panel-controls" class="detail-panel">
+      <div class="guide-card">
+        <div class="guide-title">🕹️ 조작법 & 시작 방법</div>
+        <ul class="guide-list" id="controlList"></ul>
+        <div class="tip-box" id="controlTip"></div>
+
+        <div class="user-guide-section">
+          <div class="user-guide-head">
+            <div>
+              <div class="user-guide-title">유저 추가 조작법</div>
+              <div class="role-notice">하드 리뷰어만 추가할 수 있고, 싫어요가 5개 이상이면서 좋아요보다 많으면 자동 삭제됩니다.</div>
+            </div>
+          </div>
+          <div class="guide-add-box" id="controlAddBox">
+            <textarea id="controlAddText" rows="3" placeholder="예: PS5에서 2인 플레이는 두 번째 컨트롤러의 PS 버튼을 누르고 게스트를 선택해야 합니다."></textarea>
+            <button class="btn btn-primary" style="margin-top:10px;" onclick="addUserGuide('controls')">조작법 추가하기</button>
+          </div>
+          <div id="userControls"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="detail-panel-guide" class="detail-panel">
+      <div class="guide-card">
+        <div class="guide-title">📌 초보 공략</div>
+        <ul class="guide-list" id="guideList"></ul>
+        <div class="tip-box" id="guideTip"></div>
+
+        <div class="user-guide-section">
+          <div class="user-guide-head">
+            <div>
+              <div class="user-guide-title">유저 추가 공략</div>
+              <div class="role-notice">하드 리뷰어가 공략을 추가하면 다른 사용자가 좋아요/싫어요로 검증합니다.</div>
+            </div>
+          </div>
+          <div class="guide-add-box" id="guideAddBox">
+            <textarea id="guideAddText" rows="3" placeholder="예: 스타듀밸리는 첫해 봄에 감자와 딸기를 활용하면 초반 자금 마련에 좋습니다."></textarea>
+            <button class="btn btn-primary" style="margin-top:10px;" onclick="addUserGuide('guide')">공략 추가하기</button>
+          </div>
+          <div id="userGuides"></div>
+
+          <div class="user-guide-section">
+            <div class="user-guide-head">
+              <div>
+                <div class="user-guide-title">외부 공략 링크</div>
+                <div class="role-notice">하드 리뷰어는 공략 사이트 링크와 백업 메모를 함께 저장할 수 있습니다.</div>
+              </div>
+            </div>
+
+            <div class="link-add-box" id="linkAddBox">
+              <div class="link-form-grid">
+                <input id="linkTitle" type="text" placeholder="공략 제목">
+                <input id="linkUrl" type="url" placeholder="https://example.com">
+              </div>
+              <div class="link-form-grid">
+                <select id="linkCategory">
+                  <option value="guide">초보 공략</option>
+                  <option value="controls">조작법</option>
+                </select>
+                <input id="linkDesc" type="text" placeholder="짧은 설명">
+              </div>
+              <textarea id="linkBackup" rows="6" placeholder="링크가 사라져도 남길 핵심 내용이나 긴 공략 글을 붙여넣으세요."></textarea>
+              <div class="ai-actions">
+                <button class="btn btn-light" onclick="summarizeLinkBackup()">긴 글 세분화 요약</button>
+                <button class="btn btn-primary" onclick="addUserLink()">공략 링크 추가하기</button>
+              </div>
+              <div class="summary-output" id="summaryOutput"></div>
+            </div>
+
+            <div id="userLinks"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="page-write" class="page">
+  <div class="write-review">
+    <h2>리뷰 작성</h2>
+    <p>AI 질문 도우미를 활용하면 무엇을 적어야 할지 몰라도 쉽게 리뷰를 작성할 수 있습니다.</p>
+
+    <div class="form-section">
+      <div class="field">
+        <label>리뷰할 게임</label>
+        <select id="writeGameSelect" onchange="resetAiHelper()"></select>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <label class="form-label">리뷰 유형 선택</label>
+      <div class="type-selector">
+        <div class="type-card selected hard" onclick="selectType(this, 'hard')">
+          <div class="type-icon">🔬</div>
+          <div class="type-name hard">하드 리뷰</div>
+          <div class="type-desc">게임성, 조작감, 전략성, 최적화, 리플레이성 등 세부 요소를 분석합니다.</div>
+        </div>
+        <div class="type-card" onclick="selectType(this, 'light')">
+          <div class="type-icon">🎈</div>
+          <div class="type-name light">라이트 리뷰</div>
+          <div class="type-desc">재미, 접근성, 몰입도, 흥미 지속도 등 체감 중심으로 평가합니다.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <label class="form-label">종합 별점</label>
+      <div class="star-input" id="starInput">
+        <span onclick="setStar(1)">★</span>
+        <span onclick="setStar(2)">★</span>
+        <span onclick="setStar(3)">★</span>
+        <span onclick="setStar(4)">★</span>
+        <span onclick="setStar(5)">★</span>
+      </div>
+    </div>
+
+    <div class="form-section" id="hardScores">
+      <label class="form-label">항목별 점수</label>
+      <div class="score-inputs" id="hardScoreInputs"></div>
+    </div>
+
+    <div class="form-section" id="lightScores" style="display:none;">
+      <label class="form-label">항목별 점수</label>
+      <div class="score-inputs" id="lightScoreInputs"></div>
+    </div>
+
+    <div class="form-section ai-helper" id="aiHelperSection">
+      <label class="form-label">AI 리뷰 도우미</label>
+      <div class="ai-question" id="aiQuestion">질문을 불러오는 중...</div>
+      <textarea id="aiAnswer" rows="3" placeholder="질문에 답하면 리뷰 본문에 자연스럽게 추가됩니다."></textarea>
+      <div class="ai-actions">
+        <button class="btn btn-primary" onclick="addAiAnswer()">답변 추가</button>
+        <button class="btn btn-ghost" onclick="nextAiQuestion()">다음 질문</button>
+        <button class="btn btn-light" onclick="makeReviewDraft()">답변으로 리뷰 초안 만들기</button>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <label class="form-label">리뷰 본문</label>
+      <textarea id="reviewText" rows="7" placeholder="게임에 대한 솔직한 리뷰를 작성해주세요."></textarea>
+    </div>
+
+    <button class="btn btn-primary btn-full" onclick="submitReview()">리뷰 등록하기</button>
+  </div>
+</div>
+
+
+<div id="page-playtime" class="page">
+  <section>
+    <div class="section-header">
+      <div>
+        <div class="section-title">플레이 시간 인증</div>
+        <div class="section-sub">콘솔의 플레이 시간 화면을 업로드하면 AI가 시간을 추정하고, 사용자가 직접 수정해 저장할 수 있습니다.</div>
+      </div>
+    </div>
+
+    <div id="playtimeLoginNotice"></div>
+
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-label">누적 인증 시간</div>
+        <div class="stat-value" id="totalPlaytimeStat">0시간</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">인증한 게임 수</div>
+        <div class="stat-value" id="verifiedGamesStat">0개</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">현재 등급</div>
+        <div class="stat-value" id="currentRoleStat">일반</div>
+      </div>
+    </div>
+
+    <div class="promotion-box">
+      <strong>하드 리뷰어 승급 기준</strong><br>
+① 총 플레이 시간 300시간 이상<br><br>
+② 특정 게임 100시간 이상 플레이 인증<br><br>
+(필수) 리뷰 3개 이상 작성 시 신청 가능합니다.<br>
+① 또는 ② 만족 시 승급 신청 가능합니다.
+
+      <div class="progress-wrap"><div class="progress-fill" id="promotionProgress"></div></div>
+      <div style="margin-top:12px;">
+        <button class="btn btn-primary" id="promoteBtn" onclick="promoteToHardReviewer()">하드 리뷰어로 승급하기</button>
+      </div>
+    </div>
+
+    <div class="upload-box" id="playtimeUploadBox">
+      <div class="field">
+        <label>게임 선택</label>
+        <select id="playtimeGameSelect"></select>
+      </div>
+      <div class="field">
+        <label>플레이 시간 화면 업로드</label>
+        <input type="file" id="playtimeImage" accept="image/*" onchange="previewPlaytimeImage(event)" />
+      </div>
+      <img id="playtimePreview" class="preview-img" alt="플레이 시간 인증 이미지 미리보기" />
+
+      <div class="ai-actions">
+        <button class="btn btn-light" onclick="analyzePlaytimeImage()">AI로 플레이 시간 추정</button>
+      </div>
+
+      <div class="field" style="margin-top:16px;">
+        <label>AI 추정/수정 가능 플레이 시간</label>
+        <input type="number" id="detectedHours" min="0" step="0.5" placeholder="예: 12.5" />
+      </div>
+
+      <div class="field">
+        <label>인증 메모</label>
+        <input type="text" id="playtimeMemo" placeholder="예: PS5 프로필 화면에서 확인, 7시간 연속 플레이 알림 확인 등" />
+      </div>
+
+      <button class="btn btn-primary btn-full" onclick="savePlaytimeVerification()">플레이 시간 인증 저장</button>
+    </div>
+
+    <div class="section-header" style="padding:0; margin-top:28px;">
+      <div>
+        <div class="section-title">내 인증 기록</div>
+        <div class="section-sub">저장된 플레이 시간은 브라우저에 보관됩니다.</div>
+      </div>
+    </div>
+    <div id="playtimeList"></div>
+  </section>
+</div>
+
+
+<div id="page-mypage" class="page">
+  <section>
+    <div class="section-header">
+      <div>
+        <div class="section-title">마이페이지</div>
+        <div class="section-sub">내가 작성한 리뷰와 플레이 인증 기록을 확인할 수 있습니다.</div>
+      </div>
+    </div>
+
+    <div id="mypageLoginNotice"></div>
+
+    <div class="mypage-grid" id="mypageSummary">
+      <div class="mypage-card">
+        <div class="stat-label">내 등급</div>
+        <div class="stat-value" id="mypageRole">일반</div>
+      </div>
+      <div class="mypage-card clickable-stat" onclick="showPage('myreviews')">
+        <div class="stat-label">내 리뷰 수</div>
+        <div class="stat-value" id="mypageReviewCount">0개</div>
+        <div class="section-sub" style="margin-top:8px;">클릭하면 내가 쓴 리뷰를 볼 수 있습니다.</div>
+      </div>
+      <div class="mypage-card">
+        <div class="stat-label">누적 인증 시간</div>
+        <div class="stat-value" id="mypageTotalHours">0시간</div>
+      </div>
+      <div class="mypage-card">
+        <div class="stat-label">인증한 게임 수</div>
+        <div class="stat-value" id="mypageVerifiedGames">0개</div>
+      </div>
+    </div>
+
+    <div class="mypage-card" style="margin-top:18px;">
+      <div class="mypage-title">내 플레이 인증 기록</div>
+      <div id="myPlaytimeRecords"></div>
+    </div>
+
+    <div class="mypage-card recommend-box">
+      <div class="mypage-title">내 취향 기반 추천 게임</div>
+      <div class="section-sub" style="margin-bottom:14px;">내가 리뷰를 작성했거나 즐겨찾기한 게임을 기준으로 추천합니다.</div>
+      <div class="game-grid" id="myRecommendedGames"></div>
+    </div>
+
+    <div class="mypage-card recommend-box">
+      <div class="mypage-title">즐겨찾기한 게임</div>
+      <div class="game-grid" id="myFavoriteGames"></div>
+    </div>
+  </section>
+</div>
+
+
+<div id="page-myreviews" class="page">
+  <section>
+    <div class="section-header">
+      <div>
+        <div class="section-title">내 리뷰</div>
+        <div class="section-sub">내가 작성한 리뷰를 확인하고, 클릭해서 수정하거나 삭제할 수 있습니다.</div>
+      </div>
+      <button class="btn btn-ghost" onclick="showPage('mypage')">마이페이지로 돌아가기</button>
+    </div>
+
+    <div id="myReviewsPageLoginNotice"></div>
+    <div id="myReviewsPageList"></div>
+  </section>
+</div>
+
+<div id="page-login" class="page">
+  <div class="auth-wrap">
+    <div class="auth-card">
+      <div class="auth-logo"><div class="logo">Wee<span>nai</span></div></div>
+      <div class="auth-title">다시 돌아오셨군요</div>
+      <div class="auth-sub">회원가입한 닉네임으로만 로그인할 수 있습니다.</div>
+      <div class="field">
+        <label>닉네임</label>
+        <input type="text" id="loginName" placeholder="예: casual_hyeju" />
+      </div>
+      <button class="btn btn-primary btn-full" onclick="login()">로그인</button>
+      <button class="btn btn-ghost btn-full" style="margin-top:10px;" onclick="guestLogin()">🎮 둘러보기</button>
+      <div class="auth-footer">계정이 없으신가요? <a onclick="showPage('signup')">회원가입</a></div>
+    </div>
+  </div>
+</div>
+
+<div id="page-signup" class="page">
+  <div class="auth-wrap">
+    <div class="auth-card">
+      <div class="auth-logo"><div class="logo">Wee<span>nai</span></div></div>
+      <div class="auth-title">위네아이에 오신 것을 환영해요</div>
+      <div class="auth-sub">회원가입 시 기본 등급은 라이트 리뷰어로 설정됩니다.</div>
+      <div class="field">
+        <label>닉네임</label>
+        <input type="text" id="signupName" placeholder="예: light_gamer" />
+      </div>
+      <div class="field">
+        <label>이메일</label>
+        <input type="email" placeholder="hello@example.com" />
+      </div>
+      <div class="field">
+        <label>비밀번호</label>
+        <input type="password" placeholder="8자 이상" />
+      </div>
+      <button class="btn btn-primary btn-full" onclick="signup()">가입하기</button>
+      <div class="auth-footer">이미 계정이 있으신가요? <a onclick="showPage('login')">로그인</a></div>
+    </div>
+  </div>
+</div>
+
+<footer>© 2026 Weenai · 콘솔 게임을 더 쉽게 시작하는 리뷰 & 가이드 공간</footer>
+
+<script>
+  const games = [
+    {
+      id:'mario-wonder', title:'슈퍼 마리오브라더스 원더', platform:'Nintendo', short:'NSW',
+      emoji:'🍄', maker:'Nintendo', year:'2023', genre:'플랫포머 / 액션', rating:9.2, reviews:204, popularity:98,
+      scores:{'게임성':9.4,'그래픽':9.0,'사운드':8.8,'조작감':9.5,'몰입도':8.9,'가성비':8.7},
+      controls:[
+        '<strong>이동</strong>: 왼쪽 스틱 또는 방향 버튼으로 캐릭터를 움직입니다.',
+        '<strong>점프</strong>: B/A 버튼으로 점프하고, 길게 누르면 더 높게 뜁니다.',
+        '<strong>달리기/액션</strong>: Y/X 버튼을 누르면 달리거나 능력을 사용할 수 있습니다.',
+        '<strong>2인 플레이</strong>: Joy-Con을 나누거나 컨트롤러를 추가 연결한 뒤 캐릭터 선택 화면에서 참여합니다.'
+      ],
+      controlTip:'친구와 할 때는 각자 Joy-Con 하나씩 나누어 잡는 방식이 가장 간단합니다. 처음 하는 사람은 요시처럼 부담이 적은 캐릭터를 고르면 좋아요.',
+      guide:[
+        '<strong>처음에는 배지 기능</strong>을 하나씩 바꿔가며 본인에게 맞는 플레이 스타일을 찾으세요.',
+        '<strong>원더 플라워</strong>는 스테이지를 크게 바꾸는 핵심 요소라 가능하면 놓치지 않는 것이 좋습니다.',
+        '<strong>초보자라면</strong> 어려운 코인보다 클리어를 우선하고, 익숙해진 뒤 수집 요소를 다시 도전하세요.'
+      ],
+      guideTip:'마리오는 조작이 단순해 보여도 타이밍이 중요합니다. 초반에는 빠르게 달리기보다 안전하게 점프 감각을 익히는 것이 좋아요.'
+    },
+    {
+      id:'animal-crossing', title:'모여봐요 동물의 숲', platform:'Nintendo', short:'NSW',
+      emoji:'🏝️', maker:'Nintendo', year:'2020', genre:'힐링 / 생활 시뮬레이션', rating:8.9, reviews:178, popularity:92,
+      scores:{'게임성':8.6,'그래픽':8.8,'사운드':8.7,'조작감':8.4,'몰입도':9.2,'가성비':9.0},
+      controls:[
+        '<strong>이동</strong>: 왼쪽 스틱으로 이동합니다.',
+        '<strong>도구 사용</strong>: A 버튼으로 낚싯대, 잠자리채, 삽 등을 사용합니다.',
+        '<strong>인벤토리</strong>: X 버튼으로 소지품을 확인합니다.',
+        '<strong>2인 플레이</strong>: 같은 섬 주민끼리 파티 플레이 앱을 통해 함께 움직일 수 있습니다.'
+      ],
+      controlTip:'처음에는 도구를 자주 바꾸게 되므로 방향키 단축 선택을 익히면 훨씬 편합니다.',
+      guide:[
+        '<strong>초반에는 나무 흔들기, 낚시, 곤충 채집</strong>으로 돈과 재료를 모으세요.',
+        '<strong>마일리지 미션</strong>을 따라가면 자연스럽게 게임 흐름을 익힐 수 있습니다.',
+        '<strong>섬 꾸미기</strong>는 초반부터 완벽하게 하려 하지 말고, 생활 공간부터 천천히 정리하세요.'
+      ],
+      guideTip:'동물의 숲은 빠르게 깨는 게임이 아니라 매일 조금씩 쌓는 게임입니다. 부담 없이 꾸준히 하는 플레이가 잘 맞아요.'
+    },
+    {
+      id:'overcooked-ns', title:'오버쿡드! 올 유 캔 잇', platform:'Nintendo', short:'NSW',
+      emoji:'🍳', maker:'Team17', year:'2021', genre:'협동 / 파티', rating:8.5, reviews:96, popularity:90,
+      scores:{'게임성':8.8,'그래픽':7.8,'사운드':8.0,'조작감':8.1,'몰입도':9.0,'가성비':8.9},
+      controls:[
+        '<strong>이동</strong>: 왼쪽 스틱으로 요리사를 움직입니다.',
+        '<strong>집기/내려놓기</strong>: A/B 버튼으로 재료나 접시를 들고 내려놓습니다.',
+        '<strong>자르기/행동</strong>: X/Y 버튼으로 재료를 손질하거나 조리합니다.',
+        '<strong>2인 플레이</strong>: Joy-Con을 나누어 잡거나 컨트롤러를 추가한 뒤 플레이어 추가 버튼을 누릅니다.'
+      ],
+      controlTip:'오버쿡드는 조작보다 역할 분담이 중요합니다. 한 명은 재료 준비, 한 명은 조리와 서빙처럼 역할을 정하면 덜 싸웁니다.',
+      guide:[
+        '<strong>주문 순서</strong>를 먼저 보고 어떤 요리부터 완성할지 정하세요.',
+        '<strong>접시 설거지</strong>를 미루면 후반에 막히기 쉽습니다.',
+        '<strong>말로 계속 소통</strong>해야 합니다. 조용히 하면 거의 반드시 주방이 망가집니다.'
+      ],
+      guideTip:'초보자는 무조건 빠르게 움직이기보다 “한 가지 역할을 끝까지 맡는 것”이 더 효율적입니다.'
+    },
+    {
+      id:'mario-kart', title:'마리오 카트 8 디럭스', platform:'Nintendo', short:'NSW',
+      emoji:'🏎️', maker:'Nintendo', year:'2017', genre:'레이싱 / 파티', rating:9.1, reviews:230, popularity:99,
+      scores:{'게임성':9.1,'그래픽':8.8,'사운드':8.6,'조작감':9.2,'몰입도':9.0,'가성비':9.3},
+      controls:[
+        '<strong>가속</strong>: A 버튼으로 가속합니다.',
+        '<strong>아이템 사용</strong>: L 버튼으로 아이템을 사용합니다.',
+        '<strong>드리프트</strong>: R 버튼을 누른 채 코너를 돌면 미니 터보를 모을 수 있습니다.',
+        '<strong>2인 플레이</strong>: 메인 메뉴에서 멀티플레이를 선택하고 각 컨트롤러의 L/R 버튼을 눌러 참가합니다.'
+      ],
+      controlTip:'처음 하는 사람은 스마트 핸들 기능을 켜면 코스 밖으로 떨어지는 일이 줄어듭니다.',
+      guide:[
+        '<strong>초보자는 50cc 또는 100cc</strong>부터 시작하세요.',
+        '<strong>드리프트</strong>를 익히면 속도 차이가 크게 납니다.',
+        '<strong>아이템은 바로 쓰지 말고</strong> 방어용으로 뒤에 들고 있는 것도 좋습니다.'
+      ],
+      guideTip:'레이싱 게임에 익숙하지 않다면 자동 가속과 스마트 핸들을 켜고 시작하면 훨씬 편합니다.'
+    },
+    {
+      id:'zelda-totk', title:'젤다의 전설: 왕국의 눈물', platform:'Nintendo', short:'NSW',
+      emoji:'🧙', maker:'Nintendo', year:'2023', genre:'어드벤처 / 오픈월드', rating:9.5, reviews:142, popularity:96,
+      scores:{'게임성':9.7,'그래픽':8.8,'사운드':9.1,'조작감':9.0,'몰입도':9.8,'가성비':9.2},
+      controls:[
+        '<strong>이동/시점</strong>: 왼쪽 스틱은 이동, 오른쪽 스틱은 카메라 조작입니다.',
+        '<strong>공격</strong>: Y 버튼으로 무기를 사용합니다.',
+        '<strong>점프/회피</strong>: X 버튼과 방향 조작을 함께 사용합니다.',
+        '<strong>능력 사용</strong>: L 버튼으로 울트라핸드 등 특수 능력을 선택합니다.'
+      ],
+      controlTip:'조작이 많아서 초반에는 전투보다 탐험과 퍼즐 위주로 감각을 익히는 것이 좋습니다.',
+      guide:[
+        '<strong>초반에는 스태미나와 하트</strong>를 균형 있게 올리세요.',
+        '<strong>무기는 아끼기보다</strong> 스크래빌드로 계속 새로 만드는 게임에 가깝습니다.',
+        '<strong>지상, 하늘, 지저</strong>를 번갈아 탐험하면 재료와 장비를 다양하게 얻을 수 있습니다.'
+      ],
+      guideTip:'왕국의 눈물은 정답보다 실험이 중요한 게임입니다. 이상한 방법도 통하는 경우가 많으니 자유롭게 시도해보세요.'
+    },
+    {
+      id:'pikmin4', title:'피크민 4', platform:'Nintendo', short:'NSW',
+      emoji:'🌿', maker:'Nintendo', year:'2023', genre:'전략 / 어드벤처', rating:8.8, reviews:89, popularity:84,
+      scores:{'게임성':8.9,'그래픽':8.5,'사운드':8.2,'조작감':8.6,'몰입도':8.7,'가성비':8.4},
+      controls:[
+        '<strong>이동</strong>: 왼쪽 스틱으로 대장을 움직입니다.',
+        '<strong>피크민 던지기</strong>: A 버튼으로 피크민을 던집니다.',
+        '<strong>오치 조작</strong>: 탑승과 돌진을 활용하면 이동과 전투가 쉬워집니다.',
+        '<strong>작업 지시</strong>: 피크민 색상과 특성에 맞춰 물체 운반, 전투, 장애물 제거를 맡깁니다.'
+      ],
+      controlTip:'피크민은 색마다 역할이 다르므로 모든 피크민을 한꺼번에 쓰기보다 상황에 맞게 나누어 쓰는 것이 중요합니다.',
+      guide:[
+        '<strong>낮 시간 관리</strong>가 핵심입니다. 멀리 가기 전에 돌아올 시간을 계산하세요.',
+        '<strong>오치 업그레이드</strong>를 적극적으로 하면 난이도가 크게 내려갑니다.',
+        '<strong>보물 수집</strong>과 구조 목표를 동시에 진행하면 효율적입니다.'
+      ],
+      guideTip:'전략 게임이지만 분위기는 부드럽습니다. 초보자도 천천히 적응하기 좋아요.'
+    },
+    {
+      id:'stardew-ps', title:'스타듀밸리', platform:'PlayStation', short:'PS',
+      emoji:'🌱', maker:'ConcernedApe', year:'2016', genre:'농장 / 생활 시뮬레이션', rating:9.0, reviews:164, popularity:94,
+      scores:{'게임성':9.1,'그래픽':8.0,'사운드':9.0,'조작감':8.2,'몰입도':9.5,'가성비':9.6},
+      controls:[
+        '<strong>이동</strong>: 왼쪽 스틱으로 캐릭터를 움직입니다.',
+        '<strong>도구 사용</strong>: □ 버튼으로 선택한 도구를 사용합니다.',
+        '<strong>상호작용</strong>: X 버튼으로 NPC와 대화하거나 물건을 확인합니다.',
+        '<strong>인벤토리/메뉴</strong>: Options 버튼으로 가방, 제작, 스킬 등을 확인합니다.',
+        '<strong>2인 플레이</strong>: 농장에 오두막을 준비한 뒤 멀티플레이 메뉴에서 함께 플레이할 수 있습니다.'
+      ],
+      controlTip:'PlayStation에서 둘이 하려면 두 번째 컨트롤러를 켜고 PS 버튼으로 사용자/게스트를 선택해야 조작이 잡히는 경우가 많습니다.',
+      guide:[
+        '<strong>봄 초반 작물</strong>: 파스닙으로 시작하고, 돈이 모이면 감자나 딸기를 고려하세요.',
+        '<strong>첫해 봄 목표</strong>: 농사로 기본 자금을 만들고, 비 오는 날에는 낚시나 광산을 가세요.',
+        '<strong>광산</strong>: 5층 단위 엘리베이터를 열어두면 다음 탐험이 쉬워집니다.',
+        '<strong>주민 호감도</strong>: 생일 선물은 호감도 상승 폭이 크므로 달력을 확인하세요.',
+        '<strong>초반 돈벌이</strong>: 낚시는 익숙해지면 초반 수입이 매우 좋습니다.'
+      ],
+      guideTip:'스타듀밸리는 할 일이 많아서 오히려 막히기 쉽습니다. 첫해에는 완벽한 농장보다 “돈 벌기, 광산 열기, 주민 한두 명 친해지기” 정도만 목표로 잡아도 충분해요.'
+    },
+    {
+      id:'overcooked-ps', title:'오버쿡드! 올 유 캔 잇', platform:'PlayStation', short:'PS',
+      emoji:'🍳', maker:'Team17', year:'2021', genre:'협동 / 파티', rating:8.4, reviews:81, popularity:88,
+      scores:{'게임성':8.7,'그래픽':7.8,'사운드':8.0,'조작감':8.0,'몰입도':8.9,'가성비':8.8},
+      controls:[
+        '<strong>이동</strong>: 왼쪽 스틱으로 요리사를 움직입니다.',
+        '<strong>집기/내려놓기</strong>: X 버튼으로 재료나 접시를 듭니다.',
+        '<strong>자르기/행동</strong>: □ 버튼으로 재료를 손질합니다.',
+        '<strong>대시</strong>: ○ 버튼으로 빠르게 이동합니다.',
+        '<strong>2인 플레이</strong>: 두 번째 컨트롤러의 PS 버튼을 눌러 사용자/게스트를 선택한 뒤 게임 안에서 참가 버튼을 누릅니다.'
+      ],
+      controlTip:'TV 한 대에서 둘이 하려면 컨트롤러가 각각 PlayStation에 연결되어 있어야 합니다. 게임 안에서만 찾지 말고, 먼저 본체에서 두 번째 컨트롤러가 인식됐는지 확인하세요.',
+      guide:[
+        '<strong>역할 분담</strong>: 한 명은 재료, 한 명은 조리/서빙처럼 나누면 훨씬 안정적입니다.',
+        '<strong>재료를 미리 쌓기</strong>: 주문이 몰리기 전에 자주 쓰는 재료를 준비하세요.',
+        '<strong>설거지 담당</strong>을 정하지 않으면 후반에 접시가 없어 막힙니다.'
+      ],
+      guideTip:'오버쿡드는 잘하려면 말이 많아져야 하는 게임입니다. “내가 양파 자를게”, “접시 가져와”처럼 계속 말하는 게 공략입니다.'
+    },
+    {
+      id:'gran-turismo7', title:'그란 투리스모 7', platform:'PlayStation', short:'PS',
+      emoji:'🏁', maker:'Polyphony Digital', year:'2022', genre:'레이싱 / 시뮬레이션', rating:8.7, reviews:112, popularity:86,
+      scores:{'게임성':8.8,'그래픽':9.4,'사운드':8.9,'조작감':8.7,'몰입도':8.5,'가성비':8.0},
+      controls:[
+        '<strong>가속</strong>: R2 버튼으로 가속합니다.',
+        '<strong>브레이크</strong>: L2 버튼으로 감속합니다.',
+        '<strong>조향</strong>: 왼쪽 스틱으로 방향을 조절합니다.',
+        '<strong>시점 변경</strong>: R1 버튼으로 카메라 시점을 바꿉니다.',
+        '<strong>2인 플레이</strong>: 게임 모드에서 2P 대전 또는 로컬 멀티플레이 메뉴를 선택합니다.'
+      ],
+      controlTip:'레이싱 게임 초보자는 보조 주행선을 켜고 브레이크 타이밍부터 익히는 것이 좋습니다.',
+      guide:[
+        '<strong>처음에는 빠른 차보다</strong> 코너를 안정적으로 도는 차가 좋습니다.',
+        '<strong>브레이크를 늦게 밟기보다</strong> 일찍 감속하고 코너를 안정적으로 빠져나오세요.',
+        '<strong>튜닝</strong>은 한 번에 많이 바꾸지 말고 타이어, 브레이크, 출력 순서로 체감하세요.'
+      ],
+      guideTip:'그란 투리스모는 속도보다 안정성이 중요합니다. 코너에서 덜 부딪히는 것만으로도 기록이 크게 좋아집니다.'
+    },
+    {
+      id:'spiderman2', title:'마블 스파이더맨 2', platform:'PlayStation', short:'PS5',
+      emoji:'🕷️', maker:'Insomniac Games', year:'2023', genre:'액션 / 오픈월드', rating:9.1, reviews:147, popularity:93,
+      scores:{'게임성':9.0,'그래픽':9.6,'사운드':8.8,'조작감':9.4,'몰입도':9.2,'가성비':8.6},
+      controls:[
+        '<strong>웹 스윙</strong>: R2를 누르고 있으면 웹을 타고 이동합니다.',
+        '<strong>점프</strong>: X 버튼으로 점프합니다.',
+        '<strong>공격</strong>: □ 버튼으로 기본 공격을 합니다.',
+        '<strong>회피</strong>: ○ 버튼으로 적 공격을 피합니다.',
+        '<strong>능력 사용</strong>: L1/R1 조합으로 특수 능력을 사용합니다.'
+      ],
+      controlTip:'이동이 빠른 게임이라 처음에는 목적지까지 천천히 웹 스윙을 연습하는 것만으로도 충분합니다.',
+      guide:[
+        '<strong>초반 스킬</strong>은 이동 편의성과 회피 관련 능력을 먼저 올리면 좋습니다.',
+        '<strong>전투</strong>는 공격만 누르기보다 회피 표시를 보고 피하는 습관이 중요합니다.',
+        '<strong>수집 요소</strong>는 메인 스토리 중간중간 진행하면 강화 재료를 자연스럽게 얻습니다.'
+      ],
+      guideTip:'스파이더맨은 조작감이 좋은 편이라 초보자도 금방 익숙해집니다. 전투보다 이동에서 재미를 느끼기 쉬워요.'
+    },
+    {
+      id:'horizon-fw', title:'호라이즌 포비든 웨스트', platform:'PlayStation', short:'PS',
+      emoji:'🏹', maker:'Guerrilla Games', year:'2022', genre:'액션 RPG / 오픈월드', rating:8.8, reviews:88, popularity:79,
+      scores:{'게임성':8.7,'그래픽':9.7,'사운드':8.6,'조작감':8.5,'몰입도':8.9,'가성비':8.4},
+      controls:[
+        '<strong>이동/시점</strong>: 왼쪽 스틱 이동, 오른쪽 스틱 시점 조작입니다.',
+        '<strong>활 조준</strong>: L2를 누르고 R2로 발사합니다.',
+        '<strong>회피</strong>: ○ 버튼으로 굴러 피합니다.',
+        '<strong>스캔</strong>: R3 또는 포커스 기능으로 기계의 약점을 확인합니다.'
+      ],
+      controlTip:'기계의 약점을 먼저 스캔하고 속성 화살을 쓰면 전투 난이도가 크게 내려갑니다.',
+      guide:[
+        '<strong>약점 파악</strong>이 전투의 핵심입니다. 무작정 때리기보다 부위를 노리세요.',
+        '<strong>함정과 은신</strong>을 활용하면 강한 적도 쉽게 잡을 수 있습니다.',
+        '<strong>재료 파밍</strong>은 장비 강화에 중요하므로 필요한 부품을 체크하세요.'
+      ],
+      guideTip:'호라이즌은 화려하지만 정보가 많은 게임입니다. 초반에는 메인 퀘스트와 기본 무기 사용법부터 익히는 게 좋아요.'
+    },
+    {
+      id:'stray', title:'스트레이', platform:'PlayStation', short:'PS',
+      emoji:'🐈', maker:'BlueTwelve Studio', year:'2022', genre:'어드벤처 / 퍼즐', rating:8.6, reviews:76, popularity:82,
+      scores:{'게임성':8.2,'그래픽':8.9,'사운드':8.6,'조작감':8.3,'몰입도':9.0,'가성비':8.1},
+      controls:[
+        '<strong>이동</strong>: 왼쪽 스틱으로 고양이를 움직입니다.',
+        '<strong>점프/상호작용</strong>: X 버튼으로 표시된 장소에 점프하거나 상호작용합니다.',
+        '<strong>야옹</strong>: 전용 버튼으로 울음소리를 낼 수 있습니다.',
+        '<strong>카메라</strong>: 오른쪽 스틱으로 주변을 살펴봅니다.'
+      ],
+      controlTip:'스트레이는 복잡한 조작보다 주변 관찰이 중요합니다. 갈 수 있는 장소에는 버튼 표시가 뜨는 경우가 많아요.',
+      guide:[
+        '<strong>길을 잃으면</strong> 위아래 이동 가능한 구조물을 먼저 확인하세요.',
+        '<strong>수집 요소</strong>는 스토리 이해를 도와주지만 필수는 아닙니다.',
+        '<strong>퍼즐</strong>은 주변 물건을 떨어뜨리거나 이동시키는 방식이 자주 나옵니다.'
+      ],
+      guideTip:'액션보다 분위기와 탐험을 즐기는 게임입니다. 라이트 유저에게도 추천하기 좋은 편이에요.'
+    }
+  ];
+
+  const defaultReviews = [
+    {
+      gameId:'stardew-ps', type:'light', name:'farm_beginner', avatar:'🌱', date:'2026.05.05',
+      scores:{'재미':9,'접근성':7,'몰입도':10,'흥미 지속도':9,'가성비':10},
+      text:'처음에는 농사, 낚시, 광산이 한꺼번에 나와서 조금 정신없었지만 하다 보니 하루하루 목표를 세우는 재미가 컸어요. 특히 농작물이 자라는 걸 기다리는 과정이 은근히 중독적이었습니다.'
+    },
+    {
+      gameId:'overcooked-ps', type:'light', name:'couch_player', avatar:'🎈', date:'2026.05.04',
+      scores:{'재미':10,'접근성':8,'몰입도':9,'흥미 지속도':8,'가성비':9},
+      text:'친구랑 같이 하면 진짜 웃겨요. 처음에는 2인 연결 방법부터 헷갈렸는데, 한 번 연결하고 나면 게임 자체는 단순해서 금방 적응할 수 있었습니다.'
+    },
+    {
+      gameId:'zelda-totk', type:'hard', name:'hardgamer_kr', avatar:'🎮', date:'2026.05.01',
+      scores:{'게임성':10,'조작감':9,'전략성':10,'최적화':8,'서사':8,'시각적 완성도':9,'사운드':9,'리플레이성':10},
+      text:'왕국의 눈물은 오픈월드 설계와 시스템 상호작용 면에서 매우 높은 완성도를 보여준다. 울트라핸드와 스크래빌드가 단순한 기능이 아니라 플레이어의 문제 해결 방식을 확장한다는 점이 인상적이다.'
+    },
+    {
+      gameId:'mario-kart', type:'light', name:'racing_nini', avatar:'🏎️', date:'2026.04.29',
+      scores:{'재미':9,'접근성':9,'몰입도':8,'흥미 지속도':9,'가성비':9},
+      text:'친구들이랑 하면 분위기가 바로 살아나는 게임이에요. 스마트 핸들이 있어서 레이싱 게임을 잘 못해도 같이 즐길 수 있다는 점이 좋았습니다.'
+    },
+    {
+      gameId:'stardew-ps', type:'hard', name:'crop_analyst', avatar:'🔬', date:'2026.05.03',
+      scores:{'게임성':9,'조작감':8,'전략성':9,'최적화':9,'서사':8,'시각적 완성도':8,'사운드':9,'리플레이성':10},
+      text:'스타듀밸리는 단순 농장 게임처럼 보이지만 계절, 작물 수익, 광산 진행, 주민 호감도까지 연결되는 구조가 매우 탄탄하다. 초반에는 정보량이 많지만, 루틴이 잡히면 리플레이성이 강하게 살아난다.'
+    },
+    {
+      gameId:'stardew-ps', type:'light', name:'cozy_player', avatar:'🌟', date:'2026.05.02',
+      scores:{'재미':9,'접근성':7,'몰입도':10,'흥미 지속도':10,'피로도':4,'추천도':9},
+      text:'처음에는 뭘 해야 할지 몰라서 조금 헤맸지만, 작물을 심고 돈을 모으는 과정이 생각보다 재밌었어요. 하루가 짧아서 계속 “하루만 더” 하게 되는 게임이었습니다.'
+    },
+    {
+      gameId:'overcooked-ps', type:'hard', name:'coop_tester', avatar:'⚙️', date:'2026.05.02',
+      scores:{'게임성':8,'조작감':8,'전략성':9,'최적화':8,'서사':6,'시각적 완성도':8,'사운드':8,'리플레이성':9},
+      text:'오버쿡드는 조작 자체보다 협동 설계가 핵심인 게임이다. 스테이지마다 병목 구간이 다르게 배치되어 있어 역할 분담을 계속 바꾸게 만들고, 이 점이 반복 플레이를 유지시킨다.'
+    },
+    {
+      gameId:'overcooked-ns', type:'light', name:'party_mood', avatar:'🎉', date:'2026.05.01',
+      scores:{'재미':10,'접근성':8,'몰입도':9,'흥미 지속도':8,'피로도':6,'추천도':10},
+      text:'친구랑 하면 분위기가 바로 좋아지는 게임이에요. 실패해도 웃기고, 성공하면 더 신나요. 다만 서로 말 안 하면 금방 난장판이 됩니다.'
+    },
+    {
+      gameId:'mario-wonder', type:'hard', name:'platform_pro', avatar:'🎮', date:'2026.04.30',
+      scores:{'게임성':9,'조작감':10,'전략성':8,'최적화':9,'서사':7,'시각적 완성도':9,'사운드':9,'리플레이성':8},
+      text:'슈퍼 마리오브라더스 원더는 짧은 스테이지 안에 변주를 압축하는 능력이 뛰어나다. 조작 반응이 매우 안정적이고, 원더 플라워가 각 스테이지의 리듬을 바꾸는 방식도 훌륭하다.'
+    },
+    {
+      gameId:'mario-wonder', type:'light', name:'easy_start', avatar:'🍄', date:'2026.04.29',
+      scores:{'재미':9,'접근성':10,'몰입도':8,'흥미 지속도':8,'피로도':3,'추천도':10},
+      text:'게임을 잘 못해도 금방 적응할 수 있어서 좋았어요. 캐릭터도 귀엽고 스테이지마다 분위기가 달라서 가볍게 하기 좋았습니다.'
+    },
+    {
+      gameId:'animal-crossing', type:'hard', name:'slowgame_review', avatar:'📝', date:'2026.04.28',
+      scores:{'게임성':8,'조작감':8,'전략성':7,'최적화':9,'서사':7,'시각적 완성도':9,'사운드':9,'리플레이성':9},
+      text:'동물의 숲은 빠른 목표 달성보다 장기적 루틴과 꾸미기 동기를 중심으로 설계된 게임이다. 콘텐츠 소비 속도가 느린 만큼 장기 플레이에 강하지만, 즉각적인 성취를 원하는 유저에게는 답답할 수 있다.'
+    },
+    {
+      gameId:'animal-crossing', type:'light', name:'island_diary', avatar:'🏝️', date:'2026.04.27',
+      scores:{'재미':8,'접근성':9,'몰입도':9,'흥미 지속도':9,'피로도':2,'추천도':9},
+      text:'할 일이 많지만 강요하는 느낌이 아니라 편했어요. 매일 조금씩 섬이 바뀌는 게 좋고, 꾸미는 걸 좋아하는 사람에게 잘 맞을 것 같습니다.'
+    },
+    {
+      gameId:'gran-turismo7', type:'hard', name:'corner_master', avatar:'🏁', date:'2026.04.27',
+      scores:{'게임성':8,'조작감':9,'전략성':8,'최적화':9,'서사':6,'시각적 완성도':10,'사운드':9,'리플레이성':8},
+      text:'그란 투리스모 7은 브레이크 타이밍과 코너 탈출 속도를 익히는 과정이 핵심이다. 그래픽과 차량 사운드는 매우 강하지만, 레이싱 시뮬레이션에 익숙하지 않다면 초반 진입 장벽은 있다.'
+    },
+    {
+      gameId:'gran-turismo7', type:'light', name:'drive_beginner', avatar:'🚗', date:'2026.04.26',
+      scores:{'재미':8,'접근성':6,'몰입도':8,'흥미 지속도':7,'피로도':5,'추천도':7},
+      text:'처음에는 코너에서 자꾸 벽에 박아서 어려웠어요. 그래도 보조선을 켜고 천천히 하니까 조금씩 기록이 좋아져서 뿌듯했습니다.'
+    },
+    {
+      gameId:'spiderman2', type:'hard', name:'action_check', avatar:'🕷️', date:'2026.04.25',
+      scores:{'게임성':9,'조작감':10,'전략성':8,'최적화':9,'서사':8,'시각적 완성도':10,'사운드':9,'리플레이성':8},
+      text:'스파이더맨 2는 이동 조작의 손맛이 매우 뛰어나며, 전투도 회피와 능력 연계가 자연스럽다. 오픈월드 반복 콘텐츠는 익숙한 편이지만, 연출과 조작감이 이를 상당 부분 보완한다.'
+    },
+    {
+      gameId:'spiderman2', type:'light', name:'web_swing', avatar:'🕸️', date:'2026.04.24',
+      scores:{'재미':9,'접근성':8,'몰입도':9,'흥미 지속도':8,'피로도':4,'추천도':9},
+      text:'그냥 도시를 날아다니는 것만 해도 재밌었어요. 액션 게임을 잘 못해도 난이도를 조절하면 충분히 즐길 수 있을 것 같습니다.'
+    }
+  ];
+
+  const hardLabels = ['게임성','조작감','전략성','최적화','서사','시각적 완성도','사운드','리플레이성'];
+  const lightLabels = ['재미','접근성','몰입도','흥미 지속도','피로도','추천도'];
+
+  let currentPlatform = 'All';
+  let currentSort = 'popular';
+  let currentGameId = localStorage.getItem('weenaiCurrentGame') || 'stardew-ps';
+  let currentReviewFilter = 'hard';
+  let currentReviewType = 'hard';
+  let starRating = 4;
+  let aiIndex = 0;
+  let aiAnswers = [];
+  let editingReviewId = null;
+
+  const reviewsKey = 'weenaiReviews';
+  const userKey = 'weenaiUser';
+  const accountsKey = 'weenaiAccounts';
+  const roleKey = 'weenaiUserRole';
+  const guideKey = 'weenaiUserGuides';
+  const linkKey = 'weenaiUserLinks';
+  const playtimeKey = 'weenaiPlaytimeVerifications';
+  const favoriteKey = 'weenaiFavoriteGames';
+
+  const defaultUserGuides = [
+    {
+      id:'seed-control-stardew-1', gameId:'stardew-ps', type:'controls',
+      text:'PS5에서 스타듀밸리를 둘이 하려면 두 번째 컨트롤러의 PS 버튼을 먼저 누르고 사용자 또는 게스트를 선택한 뒤, 게임 안 멀티플레이 메뉴에서 참가하는 흐름으로 진행하면 됩니다.',
+      author:'crop_analyst', likes:12, dislikes:1, date:'2026.05.03'
+    },
+    {
+      id:'seed-guide-stardew-1', gameId:'stardew-ps', type:'guide',
+      text:'첫해 봄에는 파스닙으로 기본 자금을 만들고, 돈이 모이면 감자나 딸기처럼 수익이 좋은 작물을 늘리는 방식이 안정적입니다. 비 오는 날은 물 주는 시간이 줄어드니 광산이나 낚시에 쓰는 것을 추천합니다.',
+      author:'crop_analyst', likes:18, dislikes:2, date:'2026.05.03'
+    },
+    {
+      id:'seed-control-overcooked-ps-1', gameId:'overcooked-ps', type:'controls',
+      text:'오버쿡드에서 2P가 안 잡히면 게임 화면만 보지 말고 PlayStation 본체에서 두 번째 컨트롤러가 사용자/게스트로 연결됐는지 먼저 확인해야 합니다.',
+      author:'coop_tester', likes:15, dislikes:3, date:'2026.05.02'
+    },
+    {
+      id:'seed-guide-overcooked-ps-1', gameId:'overcooked-ps', type:'guide',
+      text:'초보 2인 플레이는 한 명이 재료 손질, 한 명이 조리와 서빙을 맡는 식으로 역할을 고정하는 것이 좋습니다. 둘 다 모든 일을 하려고 하면 동선이 꼬입니다.',
+      author:'coop_tester', likes:11, dislikes:2, date:'2026.05.02'
+    },
+    {
+      id:'seed-control-mario-1', gameId:'mario-wonder', type:'controls',
+      text:'조이콘을 나눠서 플레이할 때는 각 컨트롤러의 L/R 버튼을 눌러 인식시킨 뒤 캐릭터 선택 화면에서 각자 참가하면 됩니다.',
+      author:'platform_pro', likes:9, dislikes:1, date:'2026.04.30'
+    },
+    {
+      id:'seed-guide-mario-1', gameId:'mario-wonder', type:'guide',
+      text:'처음 하는 사람과 함께할 때는 요시나 톳텐처럼 부담이 적은 캐릭터를 선택하면 스테이지를 같이 즐기기 쉽습니다.',
+      author:'platform_pro', likes:8, dislikes:0, date:'2026.04.30'
+    },
+    {
+      id:'seed-control-gt7-1', gameId:'gran-turismo7', type:'controls',
+      text:'레이싱 초보자는 R2 가속을 계속 누르기보다 코너 전에 L2로 미리 감속하고, 코너를 빠져나오면서 다시 가속하는 연습을 먼저 하는 것이 좋습니다.',
+      author:'corner_master', likes:10, dislikes:2, date:'2026.04.27'
+    }
+  ];
+
+  if (!localStorage.getItem(guideKey)) {
+    localStorage.setItem(guideKey, JSON.stringify(defaultUserGuides));
+  }
+
+  const defaultUserLinks = [
+    {
+      id:'link-stardew-1', gameId:'stardew-ps', category:'guide',
+      title:'스타듀밸리 첫해 봄 운영 요약',
+      url:'https://stardewvalleywiki.com/',
+      desc:'작물, 낚시, 광산, 주민 호감도 흐름을 확인할 때 참고하기 좋은 외부 자료입니다.',
+      backup:'핵심 백업: 첫해 봄에는 파스닙으로 시작해 자금을 만들고, 감자나 딸기처럼 수익성이 높은 작물을 늘리는 방식이 안정적입니다. 비 오는 날에는 물 주는 시간을 아껴 광산이나 낚시에 투자하면 효율적입니다. 생일 선물은 호감도 상승 폭이 크므로 달력을 자주 확인하는 것이 좋습니다.',
+      summary:'1단계: 파스닙으로 기본 자금 확보\n2단계: 감자·딸기 등 수익 작물 확대\n3단계: 비 오는 날 낚시·광산 진행\n4단계: 생일 선물로 주민 호감도 관리',
+      author:'crop_analyst', likes:14, dislikes:1, date:'2026.05.03'
+    },
+    {
+      id:'link-overcooked-1', gameId:'overcooked-ps', category:'controls',
+      title:'오버쿡드 PlayStation 2인 플레이 체크',
+      url:'https://www.team17.com/',
+      desc:'컨트롤러 연결과 협동 플레이 전 확인할 내용을 정리한 링크입니다.',
+      backup:'핵심 백업: 2인 플레이가 안 될 때는 게임 안 설정만 확인하지 말고, PlayStation 본체에서 두 번째 컨트롤러가 사용자 또는 게스트로 연결되었는지 먼저 확인해야 합니다. 연결 후 게임 내 참가 버튼을 눌러야 2P가 활성화됩니다.',
+      summary:'1단계: 두 번째 컨트롤러 PS 버튼 누르기\n2단계: 사용자 또는 게스트 선택\n3단계: 게임 안에서 참가 버튼 누르기\n4단계: 역할을 나눠 플레이 시작',
+      author:'coop_tester', likes:10, dislikes:0, date:'2026.05.02'
+    }
+  ];
+
+  if (!localStorage.getItem(linkKey)) {
+    localStorage.setItem(linkKey, JSON.stringify(defaultUserLinks));
+  }
+
+
+  function isLoggedIn() {
+    return !!localStorage.getItem(userKey);
+  }
+
+  function getReviews() {
+    const saved = JSON.parse(localStorage.getItem(reviewsKey) || '[]');
+    let changed = false;
+    saved.forEach((r, i) => {
+      if (!r.id) {
+        r.id = 'review-migrated-' + i + '-' + Date.now();
+        changed = true;
+      }
+    });
+    if (changed) localStorage.setItem(reviewsKey, JSON.stringify(saved));
+    return saved;
+  }
+
+  function saveReview(review) {
+    const saved = JSON.parse(localStorage.getItem(reviewsKey) || '[]');
+    if (!review.id) review.id = 'review-' + Date.now();
+    saved.unshift(review);
+    localStorage.setItem(reviewsKey, JSON.stringify(saved));
+  }
+
+  function updateSavedReview(reviewId, updatedReview) {
+    const saved = JSON.parse(localStorage.getItem(reviewsKey) || '[]');
+    const idx = saved.findIndex(r => r.id === reviewId);
+    if (idx >= 0) {
+      saved[idx] = { ...saved[idx], ...updatedReview, id: reviewId };
+      localStorage.setItem(reviewsKey, JSON.stringify(saved));
+    }
+  }
+
+  function deleteSavedReview(reviewId) {
+    const saved = JSON.parse(localStorage.getItem(reviewsKey) || '[]');
+    localStorage.setItem(reviewsKey, JSON.stringify(saved.filter(r => r.id !== reviewId)));
+  }
+
+  function showPage(id, platform, addHistory = true) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    const target = document.getElementById('page-' + id);
+    if (!target) return;
+    target.classList.add('active');
+
+    if (id === 'games') {
+      if (platform) currentPlatform = platform;
+      renderGames();
+      syncPlatformButtons();
+    }
+    if (id === 'detail') renderDetail();
+    if (id === 'write') renderWriteForm();
+    if (id === 'playtime') renderPlaytimePage();
+    if (id === 'mypage') renderMyPage();
+    if (id === 'myreviews') renderMyReviewsPage();
+    if (id === 'home') renderHomeRecommendations();
+
+    if (addHistory) {
+      const hash = platform ? `#${id}/${platform}` : `#${id}`;
+      if (location.hash !== hash) {
+        history.pushState({ page: id, platform: platform || null }, '', hash);
+      }
+    }
+
+    window.scrollTo(0, 0);
+  }
+
+  function openPageFromHistory() {
+    const raw = location.hash.replace('#', '');
+    if (!raw) {
+      showPage('home', null, false);
+      return;
+    }
+
+    const [page, value] = raw.split('/');
+
+    if (page === 'detail' && value) {
+      currentGameId = value;
+      localStorage.setItem('weenaiCurrentGame', value);
+      showPage('detail', null, false);
+      return;
+    }
+
+    if (page === 'games' && value) {
+      currentPlatform = value;
+      showPage('games', value, false);
+      return;
+    }
+
+    showPage(page || 'home', null, false);
+  }
+
+  window.addEventListener('popstate', openPageFromHistory);
+
+
+  function starsFromRating(rating) {
+    const full = Math.round(rating / 2);
+    return '★★★★★'.slice(0, full) + '☆☆☆☆☆'.slice(0, 5 - full);
+  }
+
+  function openGame(id) {
+    currentGameId = id;
+    localStorage.setItem('weenaiCurrentGame', id);
+    renderHomeRecommendations();
+    showPage('detail');
+    history.replaceState({ page: 'detail', gameId: id }, '', `#detail/${id}`);
+  }
+
+
+  function getFavorites() {
+    const user = localStorage.getItem(userKey);
+    if (!user) return [];
+    const all = JSON.parse(localStorage.getItem(favoriteKey) || '{}');
+    return all[user] || [];
+  }
+
+  function saveFavorites(list) {
+    const user = localStorage.getItem(userKey);
+    if (!user) return;
+    const all = JSON.parse(localStorage.getItem(favoriteKey) || '{}');
+    all[user] = list;
+    localStorage.setItem(favoriteKey, JSON.stringify(all));
+  }
+
+  function isFavorite(gameId) {
+    return getFavorites().includes(gameId);
+  }
+
+  function toggleFavorite(gameId, event) {
+    if (event) event.stopPropagation();
+    if (!isLoggedIn()) {
+      alert('로그인 후 즐겨찾기를 사용할 수 있습니다.');
+      showPage('login');
+      return;
+    }
+
+    let list = getFavorites();
+    if (list.includes(gameId)) {
+      list = list.filter(id => id !== gameId);
+    } else {
+      list.push(gameId);
+    }
+    saveFavorites(list);
+
+    renderGames();
+    renderHomeGames();
+    renderDetail();
+    renderMyPage();
+    renderHomeRecommendations();
+    alert(list.includes(gameId) ? '즐겨찾기에 추가되었습니다.' : '즐겨찾기에서 삭제되었습니다.');
+  }
+
+  function getPreferenceGameIds() {
+    const favs = getFavorites();
+    const user = localStorage.getItem(userKey);
+    const reviewed = getReviews().filter(r => r.name === user).map(r => r.gameId);
+    return [...new Set([...favs, ...reviewed])];
+  }
+
+  function getRecommendedGames(limit = 4) {
+    const baseIds = getPreferenceGameIds();
+    if (!baseIds.length) return [];
+
+    const baseGames = games.filter(g => baseIds.includes(g.id));
+    const basePlatforms = new Set(baseGames.map(g => g.platform));
+    const baseGenreWords = new Set(
+      baseGames.flatMap(g => g.genre.split(/[\\/·,\s]+/).filter(Boolean))
+    );
+
+    return games
+      .filter(g => !baseIds.includes(g.id))
+      .map(g => {
+        let score = 0;
+        if (basePlatforms.has(g.platform)) score += 3;
+        g.genre.split(/[\\/·,\s]+/).filter(Boolean).forEach(word => {
+          if (baseGenreWords.has(word)) score += 2;
+        });
+        score += g.rating / 10;
+        return { game: g, score };
+      })
+      .filter(x => x.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, limit)
+      .map(x => x.game);
+  }
+
+
+  function renderGameCard(game) {
+    const favActive = isFavorite(game.id) ? 'active' : '';
+    const favText = isFavorite(game.id) ? '★ 즐겨찾기됨' : '☆ 즐겨찾기';
+    return `
+      <div class="game-card" onclick="openGame('${game.id}')">
+        <div class="game-thumb">${game.emoji}<span class="game-platform">${game.short}</span><span class="guide-badge">가이드 포함</span></div>
+        <div class="game-info">
+          <div class="game-title">${game.title}</div>
+          <div class="game-genre">${game.genre}</div>
+          <div class="game-meta"><span class="stars">${starsFromRating(game.rating)}</span><span>리뷰 ${game.reviews}개</span></div>
+          <button class="btn btn-small favorite-btn ${favActive}" style="margin-top:12px; width:100%;" onclick="toggleFavorite('${game.id}', event)">${favText}</button>
+        </div>
+      </div>
+    `;
+  }
+
+  function sortGames(list) {
+    const copied = [...list];
+    if (currentSort === 'rating') copied.sort((a,b) => b.rating - a.rating);
+    else if (currentSort === 'newest') copied.sort((a,b) => b.year - a.year);
+    else copied.sort((a,b) => b.popularity - a.popularity);
+    return copied;
+  }
+
+  function renderHomeGames(platform = 'All', btn) {
+    if (btn) {
+      btn.closest('.platform-tabs').querySelectorAll('.chip-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+    let list = platform === 'All' ? games : games.filter(g => g.platform === platform);
+    document.getElementById('homeGameGrid').innerHTML = sortGames(list).slice(0, 6).map(renderGameCard).join('');
+  }
+
+  function syncPlatformButtons() {
+    document.querySelectorAll('#page-games .platform-tabs .chip-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.textContent.trim() === (currentPlatform === 'All' ? '전체' : currentPlatform));
+    });
+  }
+
+  function setPlatform(platform, btn) {
+    currentPlatform = platform;
+    if (btn) {
+      btn.closest('.platform-tabs').querySelectorAll('.chip-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+    renderGames();
+    syncPlatformButtons();
+  }
+
+  function setSort(sort, btn) {
+    currentSort = sort;
+    btn.closest('.sort-tabs').querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderGames();
+  }
+
+  function renderGames() {
+    let list = currentPlatform === 'All' ? games : games.filter(g => g.platform === currentPlatform);
+    document.getElementById('gameGrid').innerHTML = sortGames(list).map(renderGameCard).join('');
+  }
+
+  function renderScoreBars(scores) {
+    return Object.entries(scores).map(([label, val]) => `
+      <div class="score-row">
+        <span class="score-label">${label}</span>
+        <div class="score-bar-wrap"><div class="score-bar" style="width:${val * 10}%"></div></div>
+        <span class="score-val">${val}</span>
+      </div>
+    `).join('');
+  }
+
+
+  function getUserGuides() {
+    const list = JSON.parse(localStorage.getItem(guideKey) || '[]');
+    const cleaned = list.filter(item => !(item.dislikes >= 5 && item.dislikes > item.likes));
+    if (cleaned.length !== list.length) localStorage.setItem(guideKey, JSON.stringify(cleaned));
+    return cleaned;
+  }
+
+  function saveUserGuides(list) {
+    localStorage.setItem(guideKey, JSON.stringify(list));
+  }
+
+  function isHardReviewer() {
+    return localStorage.getItem(roleKey) === 'hard';
+  }
+
+  function addUserGuide(type) {
+    if (!isLoggedIn()) {
+      alert('로그인 후 작성할 수 있습니다.');
+      showPage('login');
+      return;
+    }
+    if (!isHardReviewer()) {
+      alert('하드 리뷰어만 조작법과 공략을 추가할 수 있습니다.');
+      return;
+    }
+    const textId = type === 'controls' ? 'controlAddText' : 'guideAddText';
+    const textarea = document.getElementById(textId);
+    const text = textarea.value.trim();
+    if (!text) {
+      alert(type === 'controls' ? '추가할 조작법을 입력해주세요.' : '추가할 공략을 입력해주세요.');
+      return;
+    }
+    const user = localStorage.getItem(userKey) || 'hard_reviewer';
+    const list = getUserGuides();
+    list.unshift({
+      id: 'guide-' + Date.now(),
+      gameId: currentGameId,
+      type,
+      text,
+      author: user,
+      likes: 0,
+      dislikes: 0,
+      date: today()
+    });
+    saveUserGuides(list);
+    textarea.value = '';
+    if (isLoggedIn()) {
+      renderUserGuides();
+    } else {
+      document.getElementById('userGuides').innerHTML = `<div class="locked-box">로그인 후 유저 조작법을 확인할 수 있습니다.</div>`;
+    }
+  }
+
+  function voteUserGuide(id, vote) {
+    const list = getUserGuides();
+    const item = list.find(g => g.id === id);
+    if (!item) return;
+    if (vote === 'like') item.likes += 1;
+    if (vote === 'dislike') item.dislikes += 1;
+    saveUserGuides(list);
+    const willDelete = item.dislikes >= 5 && item.dislikes > item.likes;
+    if (willDelete) {
+      alert('싫어요가 5개 이상이고 좋아요보다 많아 해당 항목이 자동 삭제됩니다.');
+    }
+    if (isLoggedIn()) {
+      renderUserGuides();
+    } else {
+      document.getElementById('userGuides').innerHTML = `<div class="locked-box">로그인 후 유저 조작법을 확인할 수 있습니다.</div>`;
+    }
+  }
+
+  function renderGuideItem(item) {
+    return `
+      <div class="user-guide-item">
+        <div class="user-guide-meta">
+          <span>하드 리뷰어 · ${item.author}</span>
+          <span>${item.date}</span>
+        </div>
+        <div class="user-guide-text">${item.text}</div>
+        <div class="vote-actions">
+          <button class="vote-btn" onclick="voteUserGuide('${item.id}', 'like')">👍 좋아요 ${item.likes}</button>
+          <button class="vote-btn" onclick="voteUserGuide('${item.id}', 'dislike')">👎 싫어요 ${item.dislikes}</button>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderUserGuides() {
+    const hard = isHardReviewer();
+    const controlBox = document.getElementById('controlAddBox');
+    const guideBox = document.getElementById('guideAddBox');
+    if (controlBox) controlBox.classList.toggle('active', hard);
+    if (guideBox) guideBox.classList.toggle('active', hard);
+
+    const list = getUserGuides().filter(g => g.gameId === currentGameId);
+    const controls = list.filter(g => g.type === 'controls');
+    const guides = list.filter(g => g.type === 'guide');
+
+    const controlsEl = document.getElementById('userControls');
+    const guidesEl = document.getElementById('userGuides');
+    if (controlsEl) controlsEl.innerHTML = controls.length ? controls.map(renderGuideItem).join('') : '<div class="empty">아직 유저가 추가한 조작법이 없습니다.</div>';
+    if (guidesEl) guidesEl.innerHTML = guides.length ? guides.map(renderGuideItem).join('') : '<div class="empty">아직 유저가 추가한 공략이 없습니다.</div>';
+  }
+
+
+  function getUserLinks() {
+    const list = JSON.parse(localStorage.getItem(linkKey) || '[]');
+    const cleaned = list.filter(item => !(item.dislikes >= 5 && item.dislikes > item.likes));
+    if (cleaned.length !== list.length) localStorage.setItem(linkKey, JSON.stringify(cleaned));
+    return cleaned;
+  }
+
+  function saveUserLinks(list) {
+    localStorage.setItem(linkKey, JSON.stringify(list));
+  }
+
+  function summarizeLongText(text) {
+    const raw = text.replace(/\s+/g, ' ').trim();
+    if (!raw) return '';
+    const sentences = raw.split(/(?<=[.!?。！？])\s+|(?<=다\.)\s+|(?<=요\.)\s+/).filter(Boolean);
+    const picked = sentences.length >= 4 ? sentences.slice(0, 4) : raw.split(/[.\n]/).filter(Boolean).slice(0, 4);
+    const keywords = ['초반', '조작', '2인', '컨트롤러', '농사', '낚시', '광산', '역할', '추천', '공략', '주의', '팁'];
+    const keyFound = keywords.filter(k => raw.includes(k)).slice(0, 5);
+    const steps = picked.map((s, i) => `${i + 1}단계: ${s.trim().replace(/[.。]$/, '')}`).join('\\n');
+    return `핵심 키워드: ${keyFound.length ? keyFound.join(', ') : '게임 진행, 초보 팁, 플레이 흐름'}\\n\\n${steps || '1단계: 핵심 내용을 짧게 정리하세요.'}`;
+  }
+
+  function summarizeLinkBackup() {
+    const backup = document.getElementById('linkBackup').value.trim();
+    if (!backup) {
+      alert('요약할 긴 글이나 백업 메모를 먼저 입력해주세요.');
+      return;
+    }
+    const summary = summarizeLongText(backup);
+    const output = document.getElementById('summaryOutput');
+    output.textContent = summary;
+    output.classList.add('active');
+  }
+
+  function addUserLink() {
+    if (!isLoggedIn()) {
+      alert('로그인 후 작성할 수 있습니다.');
+      showPage('login');
+      return;
+    }
+    if (!isHardReviewer()) {
+      alert('하드 리뷰어만 공략 링크를 추가할 수 있습니다.');
+      return;
+    }
+    const title = document.getElementById('linkTitle').value.trim();
+    const url = document.getElementById('linkUrl').value.trim();
+    const category = document.getElementById('linkCategory').value;
+    const desc = document.getElementById('linkDesc').value.trim();
+    const backup = document.getElementById('linkBackup').value.trim();
+    let summary = document.getElementById('summaryOutput').textContent.trim();
+
+    if (!title || !url) {
+      alert('공략 제목과 링크를 입력해주세요.');
+      return;
+    }
+    if (!backup) {
+      alert('링크가 사라질 때를 대비해 백업 메모를 입력해주세요.');
+      return;
+    }
+    if (!summary) summary = summarizeLongText(backup);
+
+    const user = localStorage.getItem(userKey) || 'hard_reviewer';
+    const list = getUserLinks();
+    list.unshift({
+      id:'link-' + Date.now(),
+      gameId: currentGameId,
+      category,
+      title,
+      url,
+      desc,
+      backup,
+      summary,
+      author:user,
+      likes:0,
+      dislikes:0,
+      date:today()
+    });
+    saveUserLinks(list);
+
+    ['linkTitle','linkUrl','linkDesc','linkBackup'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('summaryOutput').textContent = '';
+    document.getElementById('summaryOutput').classList.remove('active');
+    if (isLoggedIn()) {
+      renderUserLinks();
+    } else {
+      document.getElementById('userLinks').innerHTML = `<div class="locked-box">로그인 후 공략 링크를 확인할 수 있습니다.</div>`;
+    }
+  }
+
+  function voteUserLink(id, vote) {
+    const list = getUserLinks();
+    const item = list.find(g => g.id === id);
+    if (!item) return;
+    if (vote === 'like') item.likes += 1;
+    if (vote === 'dislike') item.dislikes += 1;
+    saveUserLinks(list);
+    if (item.dislikes >= 5 && item.dislikes > item.likes) {
+      alert('싫어요가 5개 이상이고 좋아요보다 많아 해당 링크가 자동 삭제됩니다.');
+    }
+    if (isLoggedIn()) {
+      renderUserLinks();
+    } else {
+      document.getElementById('userLinks').innerHTML = `<div class="locked-box">로그인 후 공략 링크를 확인할 수 있습니다.</div>`;
+    }
+  }
+
+  function renderLinkItem(item) {
+    const categoryText = item.category === 'controls' ? '조작법' : '초보 공략';
+    return `
+      <div class="user-link-item">
+        <div class="user-guide-meta">
+          <span>하드 리뷰어 · ${item.author} · ${categoryText}</span>
+          <span>${item.date}</span>
+        </div>
+        <div class="user-link-title">${item.title}</div>
+        <a class="user-link-url" href="${item.url}" target="_blank" rel="noopener noreferrer">외부 공략 링크 열기 ↗</a>
+        <div class="user-guide-text">${item.desc || '등록된 설명이 없습니다.'}</div>
+        <div class="backup-note"><strong>백업 메모</strong><br>${item.backup}</div>
+        <div class="backup-note"><strong>AI 세분화 요약</strong><br>${item.summary}</div>
+        <div class="vote-actions">
+          <button class="vote-btn" onclick="voteUserLink('${item.id}', 'like')">👍 좋아요 ${item.likes}</button>
+          <button class="vote-btn" onclick="voteUserLink('${item.id}', 'dislike')">👎 싫어요 ${item.dislikes}</button>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderUserLinks() {
+    const hard = isHardReviewer();
+    const linkBox = document.getElementById('linkAddBox');
+    if (linkBox) linkBox.classList.toggle('active', hard);
+
+    const list = getUserLinks().filter(g => g.gameId === currentGameId);
+    const linkEl = document.getElementById('userLinks');
+    if (linkEl) linkEl.innerHTML = list.length ? list.map(renderLinkItem).join('') : '<div class="empty">아직 하드 리뷰어가 추가한 외부 공략 링크가 없습니다.</div>';
+  }
+
+
+  function renderDetail() {
+    const game = games.find(g => g.id === currentGameId) || games[0];
+    document.getElementById('detailThumb').textContent = game.emoji;
+    document.getElementById('detailPlatform').textContent = game.platform;
+    document.getElementById('detailTitle').textContent = game.title;
+    document.getElementById('detailSub').textContent = `${game.maker} · ${game.year} · ${game.genre}`;
+    document.getElementById('detailRating').textContent = game.rating.toFixed(1);
+    document.getElementById('detailStars').textContent = starsFromRating(game.rating);
+    const reviewList = getReviews().filter(r => r.gameId === game.id);
+    const hardCount = reviewList.filter(r => r.type === 'hard').length;
+    const lightCount = reviewList.filter(r => r.type === 'light').length;
+    document.getElementById('detailReviewCount').textContent = `리뷰 ${game.reviews + reviewList.length}개 · 하드 ${hardCount} · 라이트 ${lightCount}`;
+    const favBtn = document.getElementById('detailFavoriteBtn');
+    if (favBtn) {
+      favBtn.classList.toggle('active', isFavorite(game.id));
+      favBtn.textContent = isFavorite(game.id) ? '★ 즐겨찾기됨' : '☆ 즐겨찾기';
+    }
+    document.getElementById('detailScoreBars').innerHTML = renderScoreBars(game.scores);
+    if (!isLoggedIn()) {
+      document.getElementById('controlList').innerHTML = `<div class="locked-box">로그인 후 조작법을 확인할 수 있습니다.</div>`;
+      document.getElementById('controlTip').innerHTML = '';
+      document.getElementById('guideList').innerHTML = `<div class="locked-box">로그인 후 공략을 확인할 수 있습니다.</div>`;
+      document.getElementById('guideTip').innerHTML = '';
+    } else {
+      document.getElementById('controlList').innerHTML = game.controls.map(x => `<li>${x}</li>`).join('');
+      document.getElementById('controlTip').innerHTML = `<strong>Tip.</strong> ${game.controlTip}`;
+      document.getElementById('guideList').innerHTML = game.guide.map(x => `<li>${x}</li>`).join('');
+      document.getElementById('guideTip').innerHTML = `<strong>Tip.</strong> ${game.guideTip}`;
+    }
+    if (isLoggedIn()) {
+      renderUserGuides();
+    } else {
+      document.getElementById('userGuides').innerHTML = `<div class="locked-box">로그인 후 유저 조작법을 확인할 수 있습니다.</div>`;
+    }
+    if (isLoggedIn()) {
+      renderUserLinks();
+    } else {
+      document.getElementById('userLinks').innerHTML = `<div class="locked-box">로그인 후 공략 링크를 확인할 수 있습니다.</div>`;
+    }
+    renderDetailReviews();
+  }
+
+  function showDetailTab(tab, btn) {
+    document.querySelectorAll('.detail-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('detail-panel-' + tab).classList.add('active');
+    btn.closest('.detail-tabs').querySelectorAll('.detail-tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+
+  function setReviewFilter(type, btn) {
+    currentReviewFilter = type;
+    btn.closest('.review-tabs').querySelectorAll('.review-tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderDetailReviews();
+  }
+
+  function renderReviewCard(review) {
+    const chips = Object.entries(review.scores).map(([k,v]) =>
+      `<div class="score-chip"><span class="score-chip-label">${k}</span>&nbsp;<span class="score-chip-val">${v}</span></div>`
+    ).join('');
+    const currentUser = localStorage.getItem(userKey);
+    const canEdit = review.id && review.name === currentUser;
+    const actions = canEdit ? `
+      <div class="review-actions">
+        <button class="btn btn-ghost btn-small" onclick="editReview('${review.id}')">수정</button>
+        <button class="btn btn-danger btn-small" onclick="removeReview('${review.id}')">삭제</button>
+      </div>
+    ` : '';
+    return `
+      <div class="review-card">
+        <div class="review-header">
+          <div class="avatar">${review.avatar || (review.type === 'hard' ? '🎮' : '🌟')}</div>
+          <div>
+            <span class="reviewer-name">${review.name}</span>
+            <span class="reviewer-type ${review.type}">${review.type === 'hard' ? '하드 리뷰' : '라이트 리뷰'}</span>
+          </div>
+          <div class="review-date">${review.date}</div>
+        </div>
+        <div class="review-score-row">${chips}</div>
+        <p class="review-text">${review.text}</p>
+        ${actions}
+      </div>
+    `;
+  }
+
+  function editReview(reviewId) {
+    const saved = JSON.parse(localStorage.getItem(reviewsKey) || '[]');
+    const review = saved.find(r => r.id === reviewId);
+    if (!review) {
+      alert('수정할 수 있는 리뷰를 찾지 못했습니다.');
+      return;
+    }
+    if (review.type === 'hard' && localStorage.getItem(roleKey) !== 'hard') {
+      alert('하드 리뷰는 하드 리뷰어만 수정할 수 있습니다.');
+      return;
+    }
+
+    editingReviewId = reviewId;
+    currentGameId = review.gameId;
+    currentReviewType = review.type;
+    localStorage.setItem('weenaiCurrentGame', currentGameId);
+    showPage('write');
+
+    setTimeout(() => {
+      document.getElementById('writeGameSelect').value = review.gameId;
+      const typeCard = document.querySelector(`.type-card.${review.type}`);
+      if (typeCard) selectType(typeCard, review.type);
+      document.getElementById('reviewText').value = review.text;
+      if (review.scores && review.scores['별점']) setStar(Number(review.scores['별점']));
+
+      const scoreArea = review.type === 'hard' ? document.getElementById('hardScores') : document.getElementById('lightScores');
+      scoreArea.querySelectorAll('.score-value').forEach(input => {
+        const label = input.dataset.label;
+        if (review.scores[label] !== undefined) {
+          input.value = review.scores[label];
+          updateScore(input);
+        }
+      });
+
+      const submitBtn = document.querySelector('#page-write .btn-full');
+      if (submitBtn) submitBtn.textContent = '리뷰 수정 완료';
+    }, 0);
+  }
+
+  function removeReview(reviewId) {
+    if (!confirm('이 리뷰를 삭제할까요?')) return;
+    deleteSavedReview(reviewId);
+    renderDetailReviews();
+    renderLatestReviews();
+    renderMyPage();
+    renderMyReviewsPage();
+    renderHomeRecommendations();
+    alert('리뷰가 삭제되었습니다.');
+  }
+
+  function renderDetailReviews() {
+    const list = getReviews().filter(r => r.gameId === currentGameId && r.type === currentReviewFilter);
+    document.getElementById('detailReviews').innerHTML = list.length
+      ? list.map(renderReviewCard).join('')
+      : `<div class="empty">아직 ${currentReviewFilter === 'hard' ? '하드' : '라이트'} 리뷰가 없습니다. 첫 리뷰를 작성해보세요.</div>`;
+  }
+
+  function renderLatestReviews() {
+    const list = getReviews().slice(0, 4);
+    document.getElementById('latestReviews').innerHTML = list.map(renderReviewCard).join('');
+  }
+
+
+  function renderHomeRecommendations() {
+    const section = document.getElementById('homeRecommendationSection');
+    const box = document.getElementById('homeRecommendedGames');
+    if (!section || !box) return;
+
+    if (!isLoggedIn()) {
+      section.style.display = 'none';
+      return;
+    }
+
+    const recs = getRecommendedGames(4);
+    if (!recs.length) {
+      section.style.display = 'none';
+      return;
+    }
+
+    section.style.display = '';
+    box.innerHTML = recs.map(renderGameCard).join('');
+  }
+
+
+  function renderWriteForm() {
+    const select = document.getElementById('writeGameSelect');
+    select.innerHTML = games.map(g => `<option value="${g.id}" ${g.id === currentGameId ? 'selected' : ''}>[${g.platform}] ${g.title}</option>`).join('');
+
+    const isHard = localStorage.getItem(roleKey) === 'hard';
+    const hardCard = document.querySelector('.type-card.hard');
+    const lightCard = document.querySelector('.type-card.light');
+
+    if (hardCard) hardCard.classList.toggle('locked', !isHard);
+
+    if (!isHard && currentReviewType === 'hard') {
+      currentReviewType = 'light';
+    }
+
+    document.querySelectorAll('.type-card').forEach(c => c.classList.remove('selected', 'hard', 'light'));
+    if (currentReviewType === 'hard' && hardCard) {
+      hardCard.classList.add('selected', 'hard');
+    } else if (lightCard) {
+      currentReviewType = 'light';
+      lightCard.classList.add('selected', 'light');
+    }
+
+    document.getElementById('hardScores').style.display = currentReviewType === 'hard' ? '' : 'none';
+    document.getElementById('lightScores').style.display = currentReviewType === 'light' ? '' : 'none';
+
+    renderScoreInputs();
+    setStar(starRating);
+    updateAiVisibility();
+    if (currentReviewType === 'light') resetAiHelper();
+  }
+
+  function renderScoreInputs() {
+    document.getElementById('hardScoreInputs').innerHTML = hardLabels.map(label => scoreInput(label, 8)).join('');
+    document.getElementById('lightScoreInputs').innerHTML = lightLabels.map(label => scoreInput(label, label === '피로도' ? 3 : 8)).join('');
+  }
+
+  function scoreInput(label, value) {
+    return `
+      <div class="score-input-row">
+        <span class="score-input-label">${label}</span>
+        <input type="range" class="score-slider score-value" data-label="${label}" min="1" max="10" value="${value}" oninput="updateScore(this)" />
+        <span class="score-display">${value}</span>
+      </div>
+    `;
+  }
+
+  function updateScore(input) {
+    input.nextElementSibling.textContent = input.value;
+  }
+
+  function setStar(n) {
+    starRating = n;
+    document.querySelectorAll('#starInput span').forEach((s, i) => {
+      s.classList.toggle('active', i < n);
+    });
+  }
+
+  function updateAiVisibility() {
+    const helper = document.getElementById('aiHelperSection');
+    if (!helper) return;
+    helper.style.display = currentReviewType === 'light' ? '' : 'none';
+  }
+
+  function selectType(card, type) {
+    if (type === 'hard' && localStorage.getItem(roleKey) !== 'hard') {
+      alert('하드 리뷰는 하드 리뷰어만 작성할 수 있습니다. 플레이 시간 인증 조건을 충족한 뒤 승급해주세요.');
+      showPage('playtime');
+      return;
+    }
+
+    currentReviewType = type;
+    document.querySelectorAll('.type-card').forEach(c => {
+      c.classList.remove('selected', 'hard', 'light');
+    });
+    card.classList.add('selected', type);
+    document.getElementById('hardScores').style.display = type === 'hard' ? '' : 'none';
+    document.getElementById('lightScores').style.display = type === 'light' ? '' : 'none';
+    updateAiVisibility();
+    if (type === 'light') resetAiHelper();
+  }
+
+  function aiQuestionsFor(game, type) {
+    const common = [
+      `${game.title}을 처음 시작했을 때 조작법은 쉽게 익숙해졌나요?`,
+      `이 게임을 친구나 가족에게 추천하고 싶나요? 그 이유는 무엇인가요?`,
+      `플레이하면서 가장 재미있었던 순간은 언제였나요?`
+    ];
+    const stardew = [
+      '스타듀밸리의 농사 시스템은 재밌으셨나요?',
+      '낚시, 광산, 주민 호감도 중 어떤 활동이 가장 흥미로웠나요?',
+      '초반에 무엇을 해야 할지 막막했나요, 아니면 목표가 잘 보였나요?'
+    ];
+    const overcooked = [
+      '오버쿡드를 2인으로 플레이할 때 역할 분담은 쉬웠나요?',
+      '조작 방법이나 컨트롤러 연결에서 헷갈린 부분이 있었나요?',
+      '같이 플레이한 사람과 소통하는 과정이 재미있었나요?'
+    ];
+    const racing = [
+      '레이싱 조작에서 가속, 브레이크, 코너링은 익숙했나요?',
+      '초보자가 하기에도 부담 없는 난이도였나요?',
+      '반복해서 달리고 싶은 코스나 모드가 있었나요?'
+    ];
+    const hard = [
+      `${game.title}의 핵심 시스템은 얼마나 완성도 있다고 느꼈나요?`,
+      `반복 플레이를 유도하는 리플레이성은 충분했나요?`,
+      `최적화, 프레임, 버그 측면에서 아쉬운 점이 있었나요?`
+    ];
+
+    let specific = [];
+    if (game.id.includes('stardew')) specific = stardew;
+    else if (game.id.includes('overcooked')) specific = overcooked;
+    else if (game.genre.includes('레이싱')) specific = racing;
+    return type === 'hard' ? [...hard, ...specific, ...common] : [...specific, ...common];
+  }
+
+  function resetAiHelper() {
+    aiIndex = 0;
+    aiAnswers = [];
+    const game = games.find(g => g.id === document.getElementById('writeGameSelect').value) || games[0];
+    const questionEl = document.getElementById('aiQuestion');
+    const answerEl = document.getElementById('aiAnswer');
+    if (questionEl) questionEl.textContent = aiQuestionsFor(game, currentReviewType)[0];
+    if (answerEl) answerEl.value = '';
+  }
+
+  function nextAiQuestion() {
+    const game = games.find(g => g.id === document.getElementById('writeGameSelect').value) || games[0];
+    const questions = aiQuestionsFor(game, currentReviewType);
+    aiIndex = (aiIndex + 1) % questions.length;
+    document.getElementById('aiQuestion').textContent = questions[aiIndex];
+    document.getElementById('aiAnswer').value = '';
+  }
+
+  function addAiAnswer() {
+    const question = document.getElementById('aiQuestion').textContent;
+    const answer = document.getElementById('aiAnswer').value.trim();
+    if (!answer) {
+      alert('먼저 답변을 입력해주세요.');
+      return;
+    }
+    aiAnswers.push({ question, answer });
+    const reviewText = document.getElementById('reviewText');
+    reviewText.value += (reviewText.value ? '\n\n' : '') + answer;
+    nextAiQuestion();
+  }
+
+  function makeReviewDraft() {
+    if (aiAnswers.length === 0) {
+      alert('먼저 AI 질문에 답변을 추가해주세요.');
+      return;
+    }
+    const game = games.find(g => g.id === document.getElementById('writeGameSelect').value) || games[0];
+    const answers = aiAnswers.map(a => a.answer);
+    const draft = `${game.title}을 플레이하면서 ${answers.join(' ')} 전체적으로 ${currentReviewType === 'hard' ? '시스템과 완성도를 기준으로 봐도 충분히 평가할 만한 게임이라고 느꼈습니다.' : '가볍게 즐기기에도 좋고, 처음 하는 사람도 비교적 쉽게 접근할 수 있는 게임이라고 느꼈습니다.'}`;
+    document.getElementById('reviewText').value = draft;
+  }
+
+  function collectScores() {
+    const area = currentReviewType === 'hard' ? document.getElementById('hardScores') : document.getElementById('lightScores');
+    const result = {};
+    area.querySelectorAll('.score-value').forEach(input => {
+      result[input.dataset.label] = Number(input.value);
+    });
+    result['별점'] = starRating;
+    return result;
+  }
+
+  function today() {
+    const d = new Date();
+    return `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
+  }
+
+  function submitReview() {
+    if (!isLoggedIn()) {
+      alert('로그인 후 리뷰를 작성할 수 있습니다.');
+      showPage('login');
+      return;
+    }
+    if (currentReviewType === 'hard' && localStorage.getItem(roleKey) !== 'hard') {
+      alert('하드 리뷰는 하드 리뷰어만 작성할 수 있습니다.');
+      currentReviewType = 'light';
+      renderWriteForm();
+      return;
+    }
+
+    const text = document.getElementById('reviewText').value.trim();
+    if (!text) {
+      alert('리뷰 본문을 작성해주세요.');
+      return;
+    }
+    const user = localStorage.getItem(userKey) || 'guest_reviewer';
+    const review = {
+      gameId: document.getElementById('writeGameSelect').value,
+      type: currentReviewType,
+      name: user,
+      avatar: currentReviewType === 'hard' ? '🎮' : '🌟',
+      date: today(),
+      scores: collectScores(),
+      text
+    };
+
+    if (editingReviewId) {
+      updateSavedReview(editingReviewId, review);
+      editingReviewId = null;
+      alert('리뷰가 수정되었습니다.');
+    } else {
+      saveReview(review);
+      alert('리뷰가 등록되었습니다.');
+    }
+
+    currentGameId = review.gameId;
+    localStorage.setItem('weenaiCurrentGame', currentGameId);
+    document.getElementById('reviewText').value = '';
+    const submitBtn = document.querySelector('#page-write .btn-full');
+    if (submitBtn) submitBtn.textContent = '리뷰 등록하기';
+    showPage('detail');
+  }
+
+
+  function getPlaytimeRecords() {
+    return JSON.parse(localStorage.getItem(playtimeKey) || '[]');
+  }
+
+  function savePlaytimeRecords(records) {
+    localStorage.setItem(playtimeKey, JSON.stringify(records));
+  }
+
+  
+  
+  function showMyReviewList() {
+    if (!isLoggedIn()) {
+      showPage('login');
+      return;
+    }
+    const box = document.getElementById('myReviewListBox');
+    if (box) {
+      box.style.display = box.style.display === 'none' ? 'block' : 'none';
+      renderMyReviewsPage();
+      if (box.style.display === 'block') box.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
+
+  function renderMyReviewList() {
+    if (!myReviews) return;
+
+    const user = localStorage.getItem(userKey);
+    const myReviewList = getReviews().filter(r => r.name === user);
+
+    if (!myReviewList.length) {
+      myReviews.innerHTML = `<div class="empty">아직 작성한 리뷰가 없습니다.</div>`;
+      return;
+    }
+
+    myReviews.innerHTML = myReviewList.map(review => {
+      const game = games.find(g => g.id === review.gameId);
+      const gameTitle = game ? game.title : review.gameId;
+      const typeText = review.type === 'hard' ? '하드 리뷰' : '라이트 리뷰';
+      const preview = (review.text || '').length > 90 ? review.text.slice(0, 90) + '...' : review.text;
+      return `
+        <div class="review-list-item" onclick="editReview('${review.id}')">
+          <div class="review-list-top">
+            <div>
+              <div class="review-list-title">${gameTitle}</div>
+              <div class="review-list-meta">${typeText} · ${review.date}</div>
+            </div>
+            <div class="review-actions" onclick="event.stopPropagation()" style="margin-top:0;">
+              <button class="btn btn-ghost btn-small" onclick="editReview('${review.id}')">수정</button>
+              <button class="btn btn-danger btn-small" onclick="removeReview('${review.id}')">삭제</button>
+            </div>
+          </div>
+          <div class="review-text">${preview}</div>
+        </div>
+      `;
+    }).join('');
+  }
+
+function renderMyPage() {
+    const notice = document.getElementById('mypageLoginNotice');
+    const summary = document.getElementById('mypageSummary');
+    const myPlaytimeRecords = document.getElementById('myPlaytimeRecords');
+    const favEl = document.getElementById('myFavoriteGames');
+    const recEl = document.getElementById('myRecommendedGames');
+
+    if (!notice || !summary) return;
+
+    if (!isLoggedIn()) {
+      notice.innerHTML = `<div class="locked-box">로그인 후 마이페이지를 확인할 수 있습니다.<br><br><button class="btn btn-primary" onclick="showPage('login')">로그인하러 가기</button></div>`;
+      summary.style.display = 'none';
+      if (myPlaytimeRecords) myPlaytimeRecords.innerHTML = '';
+      if (favEl) favEl.innerHTML = '';
+      if (recEl) recEl.innerHTML = '';
+      return;
+    }
+
+    notice.innerHTML = '';
+    summary.style.display = 'grid';
+
+    const user = localStorage.getItem(userKey);
+    const role = localStorage.getItem(roleKey) === 'hard' ? '하드' : '라이트';
+    const myReviewList = getReviews().filter(r => r.name === user);
+    const records = getMyPlaytimeRecords();
+    const total = records.reduce((sum, r) => sum + Number(r.hours || 0), 0);
+    const gameCount = new Set(records.map(r => r.gameId)).size;
+
+    document.getElementById('mypageRole').textContent = role;
+    document.getElementById('mypageReviewCount').textContent = `${myReviewList.length}개`;
+    document.getElementById('mypageTotalHours').textContent = `${total}시간`;
+    document.getElementById('mypageVerifiedGames').textContent = `${gameCount}개`;
+
+    if (myPlaytimeRecords) {
+      myPlaytimeRecords.innerHTML = records.length
+        ? records.map(r => `
+          <div class="verification-card">
+            <div class="verification-meta">
+              <span>${r.platform} · ${r.date}</span>
+              <span>업로드 파일: ${r.fileName}</span>
+            </div>
+            <div class="user-link-title">${r.gameTitle}</div>
+            <div class="review-score-row">
+              <div class="score-chip"><span class="score-chip-label">인증 시간</span>&nbsp;<span class="score-chip-val">${r.hours}시간</span></div>
+              <div class="score-chip"><span class="score-chip-label">인증 방식</span>&nbsp;<span class="score-chip-val">이미지 업로드</span></div>
+            </div>
+            <div class="review-text">${r.memo || '메모 없음'}</div>
+          </div>
+        `).join('')
+        : `<div class="empty">아직 플레이 인증 기록이 없습니다.</div>`;
+    }
+
+    const favoriteGames = games.filter(g => getFavorites().includes(g.id));
+    const recommendedGames = getRecommendedGames(6);
+
+    if (favEl) {
+      favEl.innerHTML = favoriteGames.length
+        ? favoriteGames.map(renderGameCard).join('')
+        : `<div class="empty">아직 즐겨찾기한 게임이 없습니다.</div>`;
+    }
+
+    if (recEl) {
+      recEl.innerHTML = recommendedGames.length
+        ? recommendedGames.map(renderGameCard).join('')
+        : `<div class="empty">리뷰를 작성하거나 게임을 즐겨찾기하면 추천 게임이 표시됩니다.</div>`;
+    }
+  }
+
+function renderPlaytimePage() {
+    const select = document.getElementById('playtimeGameSelect');
+    if (select) {
+      select.innerHTML = games.map(g => `<option value="${g.id}">[${g.platform}] ${g.title}</option>`).join('');
+      select.value = currentGameId;
+    }
+
+    const notice = document.getElementById('playtimeLoginNotice');
+    const uploadBox = document.getElementById('playtimeUploadBox');
+    if (!isLoggedIn()) {
+      notice.innerHTML = `<div class="locked-box">로그인 후 플레이 시간 인증을 저장할 수 있습니다.<br><br><button class="btn btn-primary" onclick="showPage('login')">로그인하러 가기</button></div>`;
+      if (uploadBox) uploadBox.style.display = 'none';
+    } else {
+      notice.innerHTML = '';
+      if (uploadBox) uploadBox.style.display = '';
+    }
+
+    renderPlaytimeStats();
+    renderPlaytimeList();
+  }
+
+  function previewPlaytimeImage(event) {
+    const file = event.target.files && event.target.files[0];
+    const preview = document.getElementById('playtimePreview');
+    if (!file) {
+      preview.style.display = 'none';
+      preview.src = '';
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = e => {
+      preview.src = e.target.result;
+      preview.style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  }
+
+  async function analyzePlaytimeImage() {
+    if (!isLoggedIn()) {
+      alert('로그인 후 이용할 수 있습니다.');
+      showPage('login');
+      return;
+    }
+
+    const input = document.getElementById('playtimeImage');
+    if (!input.files || !input.files[0]) {
+      alert('먼저 플레이 시간 화면 이미지를 업로드해주세요.');
+      return;
+    }
+
+    /*
+      나중에 Node 서버를 붙이면 이 부분만 교체하면 됩니다.
+
+      예시:
+      const formData = new FormData();
+      formData.append('image', input.files[0]);
+      const res = await fetch('/api/ocr-playtime', { method: 'POST', body: formData });
+      const data = await res.json();
+      document.getElementById('detectedHours').value = data.hours;
+
+      현재 HTML 데모에서는 파일명이나 기존 기록을 참고해 임시 추정값을 넣습니다.
+    */
+
+    const fileName = input.files[0].name.toLowerCase();
+    let guessed = 7;
+
+    const match = fileName.match(/(\d+(\.\d+)?)/);
+    if (match) guessed = Number(match[1]);
+    else {
+      const gameId = document.getElementById('playtimeGameSelect').value;
+      const existing = getPlaytimeRecords().filter(r => r.gameId === gameId);
+      guessed = existing.length ? Math.max(...existing.map(r => Number(r.hours))) + 1 : 7;
+    }
+
+    document.getElementById('detectedHours').value = guessed;
+    alert(`AI 분석 데모 결과: 약 ${guessed}시간으로 추정되었습니다. 실제 시간과 다르면 직접 수정해주세요.`);
+  }
+
+  function savePlaytimeVerification() {
+    if (!isLoggedIn()) {
+      alert('로그인 후 저장할 수 있습니다.');
+      showPage('login');
+      return;
+    }
+
+    const gameId = document.getElementById('playtimeGameSelect').value;
+    const hours = Number(document.getElementById('detectedHours').value);
+    const memo = document.getElementById('playtimeMemo').value.trim();
+    const fileInput = document.getElementById('playtimeImage');
+
+    if (!hours || hours <= 0) {
+      alert('플레이 시간을 입력해주세요.');
+      return;
+    }
+
+    const game = games.find(g => g.id === gameId);
+    const records = getPlaytimeRecords();
+    records.unshift({
+      id:'playtime-' + Date.now(),
+      user: localStorage.getItem(userKey),
+      gameId,
+      gameTitle: game ? game.title : gameId,
+      platform: game ? game.platform : '',
+      hours,
+      memo,
+      fileName: fileInput.files && fileInput.files[0] ? fileInput.files[0].name : '이미지 없음',
+      date: today()
+    });
+    savePlaytimeRecords(records);
+
+    document.getElementById('detectedHours').value = '';
+    document.getElementById('playtimeMemo').value = '';
+    document.getElementById('playtimeImage').value = '';
+    document.getElementById('playtimePreview').style.display = 'none';
+    document.getElementById('playtimePreview').src = '';
+
+    renderPlaytimePage();
+    alert('플레이 시간 인증이 저장되었습니다.');
+  }
+
+  function getMyPlaytimeRecords() {
+    const user = localStorage.getItem(userKey);
+    return getPlaytimeRecords().filter(r => r.user === user);
+  }
+
+  function getMyReviewCount() {
+    const user = localStorage.getItem(userKey);
+    return getReviews().filter(r => r.name === user).length;
+  }
+
+  function renderPlaytimeStats() {
+    const records = getMyPlaytimeRecords();
+    const total = records.reduce((sum, r) => sum + Number(r.hours || 0), 0);
+    const gamesCount = new Set(records.map(r => r.gameId)).size;
+    const maxSingle = records.length ? Math.max(...records.map(r => Number(r.hours || 0))) : 0;
+    const reviewCount = getMyReviewCount();
+
+    const roleText = localStorage.getItem(roleKey) === 'hard' ? '하드' : '일반';
+    document.getElementById('totalPlaytimeStat').textContent = `${total}시간`;
+    document.getElementById('verifiedGamesStat').textContent = `${gamesCount}개`;
+    document.getElementById('currentRoleStat').textContent = roleText;
+
+    const progress = Math.min(100, Math.max((total / 300) * 100, (maxSingle / 10) * 70 + (reviewCount / 3) * 30));
+    document.getElementById('promotionProgress').style.width = `${progress}%`;
+
+    const eligible = total >= 300 || (maxSingle >= 10 && reviewCount >= 3);
+    const btn = document.getElementById('promoteBtn');
+    if (localStorage.getItem(roleKey) === 'hard') {
+      btn.disabled = true;
+      btn.textContent = '이미 하드 리뷰어입니다';
+    } else if (eligible) {
+      btn.disabled = false;
+      btn.textContent = '하드 리뷰어로 승급하기';
+    } else {
+      btn.disabled = true;
+      btn.textContent = `조건 미충족: ${total}/300시간 또는 한 게임 100시간 + (필수) 리뷰 3개`;
+    }
+  }
+
+  function renderPlaytimeList() {
+    const records = getMyPlaytimeRecords();
+    const box = document.getElementById('playtimeList');
+    if (!records.length) {
+      box.innerHTML = `<div class="empty">아직 저장된 플레이 시간 인증이 없습니다.</div>`;
+      return;
+    }
+
+    box.innerHTML = records.map(r => `
+      <div class="verification-card">
+        <div class="verification-meta">
+          <span>${r.platform} · ${r.date}</span>
+          <span>업로드 파일: ${r.fileName}</span>
+        </div>
+        <div class="user-link-title">${r.gameTitle}</div>
+        <div class="review-score-row">
+          <div class="score-chip"><span class="score-chip-label">인증 시간</span>&nbsp;<span class="score-chip-val">${r.hours}시간</span></div>
+          <div class="score-chip"><span class="score-chip-label">인증 방식</span>&nbsp;<span class="score-chip-val">이미지 업로드</span></div>
+        </div>
+        <div class="review-text">${r.memo || '메모 없음'}</div>
+      </div>
+    `).join('');
+  }
+
+  function promoteToHardReviewer() {
+    if (!isLoggedIn()) {
+      alert('로그인 후 신청할 수 있습니다.');
+      showPage('login');
+      return;
+    }
+    const records = getMyPlaytimeRecords();
+    const total = records.reduce((sum, r) => sum + Number(r.hours || 0), 0);
+    const maxSingle = records.length ? Math.max(...records.map(r => Number(r.hours || 0))) : 0;
+    const reviewCount = getMyReviewCount();
+
+    if (total >= 300 || (maxSingle >= 10 && reviewCount >= 3)) {
+      localStorage.setItem(roleKey, 'hard');
+      updateCurrentAccountRole('hard');
+      updateUserChip();
+      renderPlaytimePage();
+      alert('하드 리뷰어로 승급되었습니다. 이제 조작법, 공략, 외부 공략 링크를 추가할 수 있습니다.');
+    } else {
+      alert('아직 하드 리뷰어 승급 조건을 충족하지 못했습니다.');
+    }
+  }
+
+
+  
+  function getAccounts() {
+    return JSON.parse(localStorage.getItem(accountsKey) || '[]');
+  }
+
+  function saveAccounts(accounts) {
+    localStorage.setItem(accountsKey, JSON.stringify(accounts));
+  }
+
+function login() {
+    const name = document.getElementById('loginName').value.trim();
+    if (!name) {
+      alert('닉네임을 입력해주세요.');
+      return;
+    }
+
+    const accounts = getAccounts();
+    const account = accounts.find(a => a.name === name);
+    if (!account) {
+      alert('가입된 닉네임이 없습니다. 먼저 회원가입을 해주세요.');
+      showPage('signup');
+      return;
+    }
+
+    localStorage.setItem(userKey, account.name);
+    localStorage.setItem(roleKey, account.role || 'light');
+    updateUserChip();
+    showPage('home');
+  }
+
+  function signup() {
+    const name = document.getElementById('signupName').value.trim();
+    if (!name) {
+      alert('닉네임을 입력해주세요.');
+      return;
+    }
+
+    const accounts = getAccounts();
+    if (accounts.some(a => a.name === name)) {
+      alert('이미 가입된 닉네임입니다. 로그인해주세요.');
+      showPage('login');
+      return;
+    }
+
+    accounts.push({ name, role: 'light', createdAt: today() });
+    saveAccounts(accounts);
+
+    localStorage.setItem(userKey, name);
+    localStorage.setItem(roleKey, 'light');
+    updateUserChip();
+    showPage('home');
+    alert('회원가입이 완료되었습니다. 기본 등급은 라이트 리뷰어입니다.');
+  }
+
+  function guestLogin() {
+    alert('게스트는 로그인 없이 둘러보기만 가능합니다. 리뷰 작성과 인증 저장은 회원가입 후 이용해주세요.');
+    localStorage.removeItem(userKey);
+    localStorage.removeItem(roleKey);
+    updateUserChip();
+    showPage('home');
+  }
+
+  function updateCurrentAccountRole(role) {
+    const user = localStorage.getItem(userKey);
+    if (!user) return;
+    const accounts = getAccounts();
+    const account = accounts.find(a => a.name === user);
+    if (account) {
+      account.role = role;
+      saveAccounts(accounts);
+    }
+  }
+
+  function logout() {
+    localStorage.removeItem('weenaiUser');
+    localStorage.removeItem('weenaiRole');
+    updateUserChip();
+    showPage('home');
+  }
+
+  function updateUserChip() {
+    const user = localStorage.getItem(userKey);
+    const chip = document.getElementById('userChip');
+    const loginBtn = document.getElementById('navLoginBtn');
+    const logoutBtn = document.getElementById('navLogoutBtn');
+    const signupBtn = document.getElementById('navSignupBtn');
+
+    if (user) {
+      chip.style.display = 'inline-flex';
+      if (logoutBtn) logoutBtn.style.display = 'inline-flex';
+      const role = localStorage.getItem(roleKey) === 'hard' ? '하드 리뷰어' : '라이트 리뷰어';
+      chip.textContent = `👤 ${user} · ${role}`;
+      if (loginBtn) loginBtn.style.display = 'none';
+      if (logoutBtn) logoutBtn.style.display = 'inline-flex';
+      if (signupBtn) signupBtn.style.display = 'none';
+    } else {
+      chip.style.display = 'none';
+      if (logoutBtn) logoutBtn.style.display = 'none';
+      if (loginBtn) loginBtn.style.display = 'inline-flex';
+      if (signupBtn) signupBtn.style.display = 'inline-flex';
+    }
+  }
+
+  
+  function normalizeLoginState() {
+    const user = localStorage.getItem(userKey);
+    if (!user) {
+      localStorage.removeItem(roleKey);
+      return;
+    }
+    const account = getAccounts().find(a => a.name === user);
+    if (!account) {
+      localStorage.removeItem(userKey);
+      localStorage.removeItem(roleKey);
+      return;
+    }
+    localStorage.setItem(roleKey, account.role || 'light');
+  }
+
+function init() {
+    normalizeLoginState();
+    renderHomeGames();
+    renderGames();
+    syncPlatformButtons();
+    renderDetail();
+    renderWriteForm();
+    renderLatestReviews();
+    renderHomeRecommendations();
+    updateUserChip();
+  }
+
+  init();
+</script>
+</body>
+</html>
