@@ -1,0 +1,8 @@
+{
+  "name": "xp-note",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "cd server && npm install && npx prisma generate",
+    "install": "cd server && npm install"
+  }
+}

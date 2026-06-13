@@ -3,12 +3,12 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "mongodb"
   url      = env("DATABASE_URL")
 }
 
 model User {
-  id           String        @id @default(cuid())
+  id           String        @id @default(auto()) @map("_id") @db.ObjectId
   email        String        @unique
   nickname     String        @unique
   passwordHash String
@@ -18,7 +18,8 @@ model User {
 }
 
 model Game {
-  id       Int      @id
+  id_mongo String   @id @default(auto()) @map("_id") @db.ObjectId
+  id       Int      @unique
   title    String
   platform String
   maker    String
@@ -31,14 +32,14 @@ model Game {
 }
 
 model Review {
-  id            String        @id @default(cuid())
-  userId        String
+  id            String        @id @default(auto()) @map("_id") @db.ObjectId
+  userId        String        @db.ObjectId
   gameId        Int
   type          String
   rating        Float
   headline      String?
   comment       String
-  tags          Json          @default("[]")
+  tags          Json
   playtimeHours Int           @default(0)
   helpfulCount  Int           @default(0)
   createdAt     DateTime      @default(now())
@@ -47,13 +48,11 @@ model Review {
   scores        ReviewScore[]
 
   @@unique([userId, gameId])
-  @@index([gameId, type])
-  @@index([createdAt])
 }
 
 model ReviewScore {
-  id             String @id @default(cuid())
-  reviewId       String
+  id             String @id @default(auto()) @map("_id") @db.ObjectId
+  reviewId       String @db.ObjectId
   criterionKey   String
   criterionLabel String
   value          Int
@@ -63,8 +62,8 @@ model ReviewScore {
 }
 
 model GameRequest {
-  id        String   @id @default(cuid())
-  userId    String
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
   title     String
   platform  String
   year      Int?
@@ -72,6 +71,4 @@ model GameRequest {
   status    String   @default("pending")
   createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId, createdAt])
 }
